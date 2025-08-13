@@ -107,10 +107,12 @@ function attachDragStartListener(itemElement) {
 }
 
 function setupDragAndDrop() {
+    // Koppel dragstart listeners aan alle drag-items in de zijbalk
     document.querySelectorAll('.drag-item').forEach(item => {
         attachDragStartListener(item);
     });
 
+    // Koppel drag-and-drop listeners aan alle dropzones
     document.querySelectorAll('.drop-zone, .lesson-drop-zone').forEach(zone => {
         zone.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -408,11 +410,18 @@ function checkAndAddPlaceholder(zone) {
 
 // --- Laadfuncties voor opgeslagen items ---
 async function loadAvailableLessons() {
-    availableLessonsList.innerHTML = '';
+    // Ensure the element exists before trying to manipulate it
+    const listElement = document.getElementById('available-lessons-list');
+    if (!listElement) {
+        console.error("Element 'available-lessons-list' not found. Skipping loadAvailableLessons.");
+        return;
+    }
+    listElement.innerHTML = ''; // Clear existing content
+
     try {
         const lessons = await getAllData('lessons');
         if (lessons.length === 0) {
-            availableLessonsList.innerHTML = '<p class="text-gray-400">Geen lessen gevonden.</p>';
+            listElement.innerHTML = '<p class="text-gray-400">Geen lessen gevonden.</p>';
             return;
         }
 
@@ -436,19 +445,19 @@ async function loadAvailableLessons() {
                     <button class="remove-saved-item-btn text-red-400 hover:text-red-300" data-id="${lesson.id}" data-list="lessons"><i class="fas fa-times"></i></button>
                 </div>
             `;
-            availableLessonsList.appendChild(lessonCard);
+            listElement.appendChild(lessonCard);
         });
-        setupDragAndDrop();
+        // setupDragAndDrop() is now called once at the end of initLessonPlannerView
+        // attachDragStartListener is called directly when creating new elements
         addRemoveListenersToSavedItems();
     } catch (error) {
         console.error("Fout bij laden van lessen:", error);
-        availableLessonsList.innerHTML = '<p class="text-red-400">Fout bij het laden van lessen.</p>';
+        listElement.innerHTML = '<p class="text-red-400">Fout bij het laden van lessen.</p>';
         showNotification('Fout bij het laden van lessen.', 'error');
     }
 }
 
 async function loadSavedLessonDays() {
-    const savedLessonDaysList = document.getElementById('all-saved-lesson-items-list'); // Wordt gerenderd in de gecombineerde lijst
     const savedDays = await getAllData('lessonDays');
     return savedDays.map(day => ({
         ...day,
@@ -460,7 +469,6 @@ async function loadSavedLessonDays() {
 }
 
 async function loadSavedLessonWeeks() {
-    const savedLessonWeeksList = document.getElementById('all-saved-lesson-items-list'); // Wordt gerenderd in de gecombineerde lijst
     const savedWeeks = await getAllData('lessonSchedules'); // Gebruikt lessonSchedules store
     return savedWeeks.map(week => ({
         ...week,
@@ -472,7 +480,6 @@ async function loadSavedLessonWeeks() {
 }
 
 async function loadSavedLessonBlocks() {
-    const savedLessonBlocksList = document.getElementById('all-saved-lesson-items-list'); // Wordt gerenderd in de gecombineerde lijst
     const savedBlocks = await getAllData('lessonBlocks');
     return savedBlocks.map(block => ({
         ...block,
@@ -484,11 +491,13 @@ async function loadSavedLessonBlocks() {
 }
 
 async function renderAllSavedLessonItems() {
-    if (!allSavedLessonItemsList) {
-        console.error("Container for all saved lesson items not found.");
+    // Ensure the element exists before trying to manipulate it
+    const listElement = document.getElementById('all-saved-lesson-items-list');
+    if (!listElement) {
+        console.error("Element 'all-saved-lesson-items-list' not found. Skipping renderAllSavedLessonItems.");
         return;
     }
-    allSavedLessonItemsList.innerHTML = '';
+    listElement.innerHTML = ''; // Clear existing content
 
     const lessons = await getAllData('lessons'); // Individuele lessen
     const savedLessonDays = await loadSavedLessonDays();
@@ -509,7 +518,7 @@ async function renderAllSavedLessonItems() {
     });
 
     if (allItems.length === 0) {
-        allSavedLessonItemsList.innerHTML = '<p class="text-gray-400 col-span-full">Nog geen les schema\'s opgeslagen.</p>';
+        listElement.innerHTML = '<p class="text-gray-400 col-span-full">Nog geen les schema\'s opgeslagen.</p>';
         return;
     }
 
@@ -553,8 +562,9 @@ async function renderAllSavedLessonItems() {
             </div>
             ${summaryText}
         `;
-        allSavedLessonItemsList.appendChild(itemCard);
-        attachDragStartListener(itemCard);
+        listElement.appendChild(itemCard);
+        // attachDragStartListener is now called once at the end of initLessonPlannerView
+        // It will be called for all new items after they are rendered.
     });
     addRemoveListenersToSavedItems();
 }
@@ -696,7 +706,8 @@ async function saveLessonWeek() {
             slot.innerHTML = '<p class="text-gray-400 text-center text-sm">Sleep les dag hier</p>';
         });
         renderAllSavedLessonItems();
-    } catch (error) {
+    }
+    catch (error) {
         console.error("Fout bij opslaan les weekrooster:", error);
         showNotification('Fout bij het opslaan van het les weekrooster.', 'error');
     }
@@ -786,8 +797,16 @@ async function addRemoveListenersToSavedItems() {
 
 // Populeer docent- en lokaal-dropdowns
 async function populateTeacherAndRoomDropdowns() {
-    lessonTeacherSelect.innerHTML = '<option value="">Selecteer Docent</option>';
-    lessonRoomSelect.innerHTML = '<option value="">Selecteer Lokaal</option>';
+    // Ensure elements exist before trying to manipulate them
+    const teacherSelect = document.getElementById('lessonTeacher');
+    const roomSelect = document.getElementById('lessonRoom');
+    if (!teacherSelect || !roomSelect) {
+        console.error("Teacher or Room select element not found. Skipping populateTeacherAndRoomDropdowns.");
+        return;
+    }
+
+    teacherSelect.innerHTML = '<option value="">Selecteer Docent</option>';
+    roomSelect.innerHTML = '<option value="">Selecteer Lokaal</option>';
 
     try {
         const lessons = await getAllData('lessons');
@@ -803,14 +822,14 @@ async function populateTeacherAndRoomDropdowns() {
             const option = document.createElement('option');
             option.value = teacher;
             option.textContent = teacher;
-            lessonTeacherSelect.appendChild(option);
+            teacherSelect.appendChild(option);
         });
 
         uniqueRooms.forEach(room => {
             const option = document.createElement('option');
             option.value = room;
             option.textContent = room;
-            lessonRoomSelect.appendChild(option);
+            roomSelect.appendChild(option);
         });
 
     } catch (error) {
@@ -823,7 +842,7 @@ async function populateTeacherAndRoomDropdowns() {
 function generateTimeLabels(containerId) {
     const timeLabelsContainer = document.getElementById(containerId);
     if (!timeLabelsContainer) {
-        console.error(`Element with ID '${containerId}' not found.`);
+        console.error(`Element with ID '${containerId}' not found. Skipping generateTimeLabels.`);
         return;
     }
     timeLabelsContainer.innerHTML = '';
@@ -912,15 +931,18 @@ export async function initLessonPlannerView() {
         lessonBlockDropZone.innerHTML = '<p class="text-gray-400 text-center">Sleep les weken hierheen om het blok te configureren.</p>';
     });
 
-    // Initiële data laden
-    await loadAvailableLessons();
-    await populateTeacherAndRoomDropdowns();
-    await renderAllSavedLessonItems();
-
     // Setup UI componenten
     setupCollapsibles();
     setupTabNavigation();
 
-    // Activeer standaard de eerste tab
-    document.querySelector('.tab-button[data-tab="lesson-builder"]').click();
+    // Initiële data laden (uitgesteld om DOM-elementen tijd te geven om te laden)
+    // De setupDragAndDrop() wordt hier expliciet aangeroepen na het laden van alle items.
+    setTimeout(async () => {
+        await loadAvailableLessons();
+        await populateTeacherAndRoomDropdowns();
+        await renderAllSavedLessonItems();
+        setupDragAndDrop(); // Zorg ervoor dat drag-and-drop na alle DOM-updates wordt ingesteld
+        // Activeer standaard de eerste tab
+        document.querySelector('.tab-button[data-tab="lesson-builder"]').click();
+    }, 0);
 }

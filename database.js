@@ -1,5 +1,5 @@
 const DB_NAME = 'SportsCRMDB';
-const DB_VERSION = 17; // VERSIE VERHOOGD NAAR 17 om de IndexedDB upgrade te forceren
+const DB_VERSION = 18; // VERSIE VERHOOGD NAAR 18 voor nieuwe stores
 
 const USER_PROFILE_STORE = 'userProfile';
 const TRAINING_SESSIONS_STORE = 'trainingSessions';
@@ -30,17 +30,22 @@ const NOTES_STORE = 'notesData';
 const ACTION_CENTER_STORE = 'actionCenterData';
 const USER_ROLE_STORE = 'userRoles';
 const SLEEP_DATA_STORE = 'sleepData';
-const LESSONS_STORE = 'lessons'; // Correctly defined
+const LESSONS_STORE = 'lessons';
 const TEST_PROTOCOLS_STORE = 'testProtocols';
 
 // New stores for schedule builder content
 const TRAINING_DAYS_STORE = 'trainingDays';
 const TRAINING_WEEKS_STORE = 'trainingWeeks';
 const TRAINING_BLOCKS_STORE = 'trainingBlocks';
-const CUSTOM_MEASUREMENTS_STORE = 'customMeasurements'; // For custom training/rest measurements (from form builder)
-const CONFIGURED_SESSIONS_STORE = 'configuredSessions'; // NIEUW: Voor opgeslagen sessies uit de Sessie Bouwer
-const ROLES_STORE = 'roles'; // Added for permissions module
-const LINKED_DOCUMENTS_STORE = 'linkedDocuments'; // Added for documents module
+const CUSTOM_MEASUREMENTS_STORE = 'customMeasurements';
+const CONFIGURED_SESSIONS_STORE = 'configuredSessions';
+const ROLES_STORE = 'roles';
+const LINKED_DOCUMENTS_STORE = 'linkedDocuments';
+
+// NIEUWE STORES VOOR LESPLANNER
+const LESSON_DAYS_STORE = 'lessonDays'; // Nieuwe store voor opgeslagen lesdagen
+const LESSON_BLOCKS_STORE = 'lessonBlocks'; // Nieuwe store voor opgeslagen lesblokken
+
 
 let dbInstance;
 
@@ -68,20 +73,21 @@ export async function openDatabase() {
                 'restSessionsAdvanced',
                 LESSONS_STORE, TEST_PROTOCOLS_STORE,
                 TRAINING_DAYS_STORE, TRAINING_WEEKS_STORE, TRAINING_BLOCKS_STORE, CUSTOM_MEASUREMENTS_STORE,
-                CONFIGURED_SESSIONS_STORE, // NIEUW
-                ROLES_STORE, // NIEUW
-                LINKED_DOCUMENTS_STORE // NIEUW
+                CONFIGURED_SESSIONS_STORE,
+                ROLES_STORE,
+                LINKED_DOCUMENTS_STORE,
+                LESSON_DAYS_STORE, // NIEUW
+                LESSON_BLOCKS_STORE // NIEUW
             ];
 
             stores.forEach(storeName => {
                 if (!db.objectStoreNames.contains(storeName)) {
                     let options = { keyPath: 'id', autoIncrement: true };
                     if (storeName === USER_PROFILE_STORE || storeName === ADMIN_SECRET_STORE || storeName === LESSON_SCHEDULES_STORE || storeName === USER_ROLE_STORE) {
-                        // userRoles uses 'userId' as keyPath, not 'id'
                         if (storeName === USER_ROLE_STORE) {
                             options = { keyPath: 'userId' };
                         } else {
-                            options = { keyPath: 'id' }; // These stores use 'id' as keyPath, no autoIncrement
+                            options = { keyPath: 'id' };
                         }
                     }
                     db.createObjectStore(storeName, options);
@@ -136,6 +142,10 @@ export async function getData(storeName, id) {
 
 export async function getAllData(storeName) {
     const db = await openDatabase();
+    // Ensure the store exists before creating a transaction
+    if (!db.objectStoreNames.contains(storeName)) {
+        return Promise.reject(new DOMException(`The object store '${storeName}' was not found.`, 'NotFoundError'));
+    }
     const transaction = db.transaction([storeName], 'readonly');
     const store = transaction.objectStore(storeName);
     return new Promise((resolve, reject) => {
