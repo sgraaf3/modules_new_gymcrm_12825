@@ -46,7 +46,8 @@ import { initPermissionsView } from './js/permissionsView.js';
 import { initNotesView } from './js/notesView.js';
 import { initActionCenterView } from './js/actionCenterView.js';
 import { initScheduleBuilderView } from './js/scheduleBuilderView.js';
-import { initLessonPlannerView } from './js/lessonPlannerView.js'; // NIEUW: Importeer de nieuwe Lessenplanner
+import { initLessonPlannerView } from './js/lessonPlannerView.js';
+import { initGymSectionsView } from './js/gymSectionsView.js';
 
 // Importeer het nieuwe notificatiesysteem
 import { showNotification } from './js/notifications.js';
@@ -85,21 +86,21 @@ const viewConfig = {
     'dashboardView': { html: './views/dashboardView.html', init: initDashboardView },
     'userProfileView': { html: './views/userProfileView.html', init: initUserProfileView },
     'restMeasurementLiveView': { html: './views/restMeasurementLiveView.html', init: initRestMeasurementLiveView },
-    'restMeasurementLiveView_2': { html: './views/restMeasurementLiveView_2.html', init: initRestMeasurementLiveView_2 }, // NIEUW: Entry voor de tweede meting
+    'restMeasurementLiveView_2': { html: './views/restMeasurementLiveView_2.html', init: initRestMeasurementLiveView_2 },
     'liveTrainingView': { html: './views/liveTrainingView.html', init: initLiveTrainingView },
     'hrDataView': { html: './views/hrDataView.html', init: initHrDataView },
     'testingView': { html: './views/testingView.html', init: initTestingView },
     'trainingView': { html: './views/trainingView.html', init: initTrainingView },
-    // 'restMeasurementView' is vervangen door 'restMeasurementLiveView' en de oude content is verwijderd.
     'nutritionView': { html: './views/nutritionView.html', init: initNutritionView },
     'sleepView': { html: './views/sleepView.html', init: initSleepView },
     'trainingReportsView': { html: 'views/trainingReportsView.html', init: initTrainingReportsView },
-    'restReportsView': { html: 'views/restReportsView.html', init: initRestReportsView }, // NIEUW: Voeg de rustrapporten view toe
+    'restReportsView': { html: 'views/restReportsView.html', init: initRestReportsView },
     'dashboardReportsView': { html: 'views/dashboardReportsView.html', init: initDashboardReportsView },
     'schedulesView': { html: 'views/schedulesView.html', init: initSchedulesView },
     'lessonSchedulerView': { html: 'views/lessonSchedulerView.html', init: initLessonSchedulerView },
-    'lessonScheduleBuilderView': { html: './views/lessonScheduleBuilder.html', init: LessonScheduleBuilder.initLessonScheduleBuilderView }, // FIX: Gebruik namespace
-    'lessonPlannerView': { html: './views/lessonPlannerView.html', init: initLessonPlannerView }, // NIEUW: Lessenplanner
+    'lessonScheduleBuilderView': { html: './views/lessonScheduleBuilder.html', init: LessonScheduleBuilder.initLessonScheduleBuilderView },
+    'meetingPlannerView': { html: './views/meetingPlannerView.html', init: initMeetingPlannerView },
+    'lessonPlannerView': { html: './views/lessonPlannerView.html', init: initLessonPlannerView },
     'messagesView': { html: './views/messagesView.html', init: initMessagesView },
     'memberSpecificprogressView': { html: './views/memberSpecificprogressView.html', init: initMemberSpecificprogressView },
     'webGraphsView': { html: './views/webGraphsView.html', init: showDetailedGraph },
@@ -114,6 +115,7 @@ const viewConfig = {
     'docsView': { html: './views/docsView.html', init: initDocsView },
     'adminOnlyView': { html: './views/adminOnlyView.html', init: initAdminOnlyView },
     'toggleFunctionalityView': { html: './views/toggleFunctionalityView.html', init: initToggleFunctionalityView },
+    'gymSectionsView': { html: './views/gymSectionsView.html', init: initGymSectionsView },
     'dashboardOverviewView': { html: './views/dashboardOverviewView.html', init: initDashboardOverviewView },
     'sportView': { html: './views/sportView.html', init: initSportView },
     'activitiesView': { html: './views/activitiesView.html', init: initActivitiesView },
@@ -122,7 +124,6 @@ const viewConfig = {
     'actionCenterView': { html: './views/actionCenterView.html', init: initActionCenterView },
     'scheduleBuilderView': { html: './views/scheduleBuilderView.html', init: initScheduleBuilderView },
 };
-
 
 document.addEventListener('DOMContentLoaded', async () => {
     const mainContentArea = document.getElementById('main-content-area');

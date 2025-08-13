@@ -26,7 +26,7 @@ export async function initMemberSpecificprogressView(showView, data) {
         const trainingSessions = await getAllData('trainingSessions');
         const userSessions = trainingSessions.filter(s => s.userId === userId);
 
-        if (window.userProgressMainChart) {
+        if (window.userProgressMainChart && typeof window.userProgressMainChart.destroy === 'function') {
             window.userProgressMainChart.destroy();
         }
 

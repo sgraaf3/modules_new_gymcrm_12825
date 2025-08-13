@@ -83,22 +83,17 @@ export async function initSubscriptionsView() {
         subscriptionForm.addEventListener('submit', async (event) => {
             event.preventDefault();
 
-            // Robuuste ID-verwerking:
-            let subscriptionId = undefined;
-            if (subscriptionIdInput.value) {
-                const parsedId = parseInt(subscriptionIdInput.value);
-                if (!isNaN(parsedId)) {
-                    subscriptionId = parsedId;
-                }
-            }
-
             const subscription = {
-                id: subscriptionId, // Dit zal of een geldig nummer zijn, of undefined (voor autoIncrement)
+                id: subscriptionIdInput.value ? parseInt(subscriptionIdInput.value, 10) : undefined,
                 name: subscriptionNameInput.value,
-                price: parseFloat(subscriptionPriceInput.value) || 0, // Zorg voor een standaardwaarde als NaN
-                duration: parseInt(subscriptionDurationInput.value) || 0, // Zorg voor een standaardwaarde als NaN
+                price: parseFloat(subscriptionPriceInput.value) || 0,
+                duration: parseInt(subscriptionDurationInput.value) || 0,
                 description: subscriptionDescriptionInput.value
             };
+
+            if (isNaN(subscription.id)) {
+                delete subscription.id;
+            }
             try {
                 await putData('subscriptions', subscription);
                 showNotification('Abonnement opgeslagen!', 'success');

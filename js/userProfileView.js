@@ -46,10 +46,10 @@ export async function initUserProfileView(showView, data) {
                     document.getElementById('userEmail').value = registryData.email || '';
                     document.getElementById('userPhone').value = registryData.phone || '';
                     // Initialiseer met default profielfoto
-                    profilePictureElement.src = "https://via.placeholder.com/128?text=Profiel";
+                    profilePictureElement.src = "https://placehold.co/128?text=Profiel";
                 } else {
                     userProfileTitle.textContent = `Profiel`;
-                    profilePictureElement.src = "https://via.placeholder.com/128?text=Profiel";
+                    profilePictureElement.src = "https://placehold.co/128?text=Profiel";
                 }
             }
         } catch (error) {

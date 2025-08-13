@@ -1,3 +1,245 @@
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lessenplanner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+            color: #e5e7eb; /* text-gray-200 */
+        }
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            background-color: #1f2937; /* bg-gray-800 */
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        @media (min-width: 768px) {
+            .app-container {
+                flex-direction: row;
+                min-height: 80vh;
+            }
+        }
+        .sidebar {
+            width: 100%;
+            padding: 1.5rem;
+            background-color: #111827; /* bg-gray-900 */
+            border-bottom: 1px solid #374151; /* border-gray-700 */
+        }
+        @media (min-width: 768px) {
+            .sidebar {
+                width: 320px; /* A little wider for lesson details */
+                flex-shrink: 0;
+                border-right: 1px solid #374151;
+                border-bottom: none;
+            }
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+        .tab-button {
+            padding: 0.75rem 1.25rem;
+            font-weight: 600;
+            color: #9ca3af;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            color: #60a5fa; /* text-blue-400 */
+            border-color: #60a5fa;
+        }
+        .tab-content {
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.5s;
+        }
+        .tab-content.active {
+            display: block; /* Shown when active */
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #d1d5db; /* text-gray-300 */
+        }
+        .drag-item, .lesson-item {
+            background-color: #374151; /* bg-gray-700 */
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.2s ease;
+        }
+        .drag-item:active {
+            cursor: grabbing;
+            transform: scale(1.02);
+        }
+        .drop-zone {
+            min-height: 150px;
+            border: 2px dashed #4b5563; /* border-gray-600 */
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .drop-zone.drag-over {
+            background-color: #2d3748;
+            border-color: #60a5fa;
+        }
+        .day-timeline-container {
+            display: grid;
+            grid-template-columns: 60px 1fr;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            border: 1px solid #374151;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            min-height: 400px;
+            position: relative;
+        }
+        .time-labels {
+            height: 1440px; /* 24 hours * 60 minutes */
+        }
+        .time-slot-label {
+            text-align: right;
+            padding-right: 0.5rem;
+            color: #9ca3af;
+            font-size: 0.75rem;
+            height: 60px; /* 1 hour slot */
+            border-top: 1px solid #374151;
+        }
+        .day-drop-zone-content {
+            position: relative;
+            height: 1440px;
+            background-image: linear-gradient(to bottom, #374151 1px, transparent 1px);
+            background-size: 100% 30px; /* 30 minute lines */
+        }
+        .timeline-item {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            background-color: #4b5563;
+            border-left: 4px solid #60a5fa;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            color: #e5e7eb;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            z-index: 10;
+            cursor: pointer;
+        }
+        .calendar-grid-lesson {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .calendar-header-day {
+            text-align: center;
+            font-weight: bold;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #374151;
+        }
+        .calendar-day-cell-lesson {
+            background-color: #2c2c34;
+            border-radius: 0.5rem;
+            min-height: 150px;
+            padding: 0.5rem;
+            border: 2px dashed transparent;
+        }
+        .calendar-day-cell-lesson.drag-over {
+            border-color: #60a5fa;
+        }
+        .message-box {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .message-box.show {
+            opacity: 1;
+        }
+        .collapsible-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid #374151;
+            cursor: pointer;
+            background-color: #2c2c34;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+        .collapsible-header i {
+            transition: transform 0.2s ease-in-out;
+        }
+        .collapsible-header.collapsed i {
+            transform: rotate(-90deg);
+        }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+            background-color: #1f2937;
+            border-radius: 0 0 0.5rem 0.5rem;
+            padding: 0 1rem;
+        }
+        .collapsible-content.expanded {
+            max-height: 500px; /* Adjust as needed */
+            padding: 1rem;
+        }
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background-color: #1f2937;
+            border-bottom: 1px solid #374151;
+        }
+        .top-nav span {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        .icon-button {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="p-4">
+
 <div class="top-nav">
     <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
     <span>Lessenplanner</span>
@@ -9,7 +251,7 @@
 
         <div id="available-lesson-modules">
             <h3 class="text-lg font-bold mt-6 mb-2 text-gray-100">Individuele Lessen</h3>
-            <div id="available-lessons-list" class="flex flex-col gap-3 mb-4">
+            <div id="available-lessons-list" class="flex flex-col gap-3 mb-4" style="max-height: 300px; overflow-y: auto;">
                 <p class="text-gray-400">Laden...</p>
             </div>
             <button id="create-new-lesson-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
@@ -17,11 +259,11 @@
             </button>
 
             <div class="collapsible-header" data-collapsible-target="saved-lesson-items-collapsible-content">
-                <h3 class="text-lg font-bold text-gray-100">Opgeslagen Les Schema's</h3>
+                <h3 class="text-lg font-bold text-gray-100">Opgeslagen Schema's</h3>
                 <i class="fas fa-chevron-down"></i>
             </div>
-            <div id="saved-lesson-items-collapsible-content" class="collapsible-content expanded">
-                <div id="all-saved-lesson-items-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
+            <div id="saved-lesson-items-collapsible-content" class="collapsible-content">
+                <div id="all-saved-lesson-items-list" class="grid grid-cols-1 gap-4 py-4" style="max-height: 400px; overflow-y: auto;">
                     <p class="text-gray-400 col-span-full">Nog geen les schema's opgeslagen.</p>
                 </div>
             </div>
@@ -39,8 +281,6 @@
     </div>
     
     <div class="main-content">
-        <h1 class="text-2xl font-bold mb-4 text-gray-100">Lesrooster Bouwer</h1>
-        
         <div class="flex border-b border-gray-700 mb-4">
             <button class="tab-button active" data-tab="lesson-builder">Nieuwe Les</button>
             <button class="tab-button" data-tab="lesson-day-builder">Les Dag</button>
@@ -74,12 +314,11 @@
             </form>
         </div>
         
-        <div id="tab-lesson-day-builder" class="tab-content hidden">
+        <div id="tab-lesson-day-builder" class="tab-content">
             <h2 class="text-xl font-bold mb-2 text-gray-100">Configureer Les Dag</h2>
             <input type="text" id="current-lesson-day-name" placeholder="Naam van deze dag (bijv. Maandag Avondlessen)" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full mb-4">
             <div class="day-timeline-container">
-                <div class="time-labels" id="lesson-day-time-labels">
-                    </div>
+                <div class="time-labels" id="lesson-day-time-labels"></div>
                 <div id="lesson-day-drop-zone" class="day-drop-zone-content drop-zone">
                     <p class="text-gray-400 text-center">Sleep lessen hierheen om de dag te configureren.</p>
                 </div>
@@ -89,7 +328,7 @@
             </button>
         </div>
 
-        <div id="tab-lesson-week-builder" class="tab-content hidden">
+        <div id="tab-lesson-week-builder" class="tab-content">
             <h2 class="text-xl font-bold mb-2 text-gray-100">Configureer Les Week</h2>
             <input type="text" id="current-schedule-name" placeholder="Naam voor dit rooster (bijv. Week 1)" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full mb-4">
             <div class="calendar-grid-lesson">
@@ -114,7 +353,7 @@
             </button>
         </div>
 
-        <div id="tab-lesson-block-builder" class="tab-content hidden">
+        <div id="tab-lesson-block-builder" class="tab-content">
             <h2 class="text-xl font-bold mb-2 text-gray-100">Configureer Les Blok</h2>
             <input type="text" id="current-lesson-block-name" placeholder="Naam van dit blok (bijv. Zomerrooster)" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full mb-4">
             <textarea id="current-lesson-block-notes" placeholder="Notities voor dit blok (bijv. Belangrijke wijzigingen, focuspunten)" rows="3" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full mb-4"></textarea>
@@ -130,4 +369,10 @@
 
 <div id="message-box" class="message-box"></div>
 
-<script type="module" src="../js/lessonPlannerView.js"></script>
+<script type="module">
+    import { initLessonPlannerView } from '../js/lessonPlannerView.js';
+    document.addEventListener('DOMContentLoaded', initLessonPlannerView);
+</script>
+
+</body>
+</html>

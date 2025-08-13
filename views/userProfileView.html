@@ -1,14 +1,3 @@
-Absoluut\! Ik heb de `userProfileView` volledig hersteld en ervoor gezorgd dat alle opties voor het handmatig invoeren en weergeven van gebruikersgegevens aanwezig zijn.
-
-De foutmelding die je eerder zag (`No key or key range specified`) is opgelost in de vorige iteratie door ervoor te zorgen dat de `userId` correct wordt doorgegeven aan de `initUserProfileView` functie. Nu zal de gebruikerspagina correct laden en alle relevante informatie tonen en bewerkbaar maken.
-
-Hieronder vind je de complete en bijgewerkte code voor `userProfileView.html`. Het bijbehorende `userProfileView.js` bestand is al in de vorige beurt gecorrigeerd en werkt nu naadloos samen met deze HTML.
-
------
-
-### `views/userProfileView.html`
-
-```html
 <div class="top-nav">
     <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
     <span id="user-profile-title">Gebruikersprofiel</span>
@@ -16,8 +5,18 @@ Hieronder vind je de complete en bijgewerkte code voor `userProfileView.html`. H
 </div>
 <div class="p-4">
     <form id="userProfileForm">
-        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 cursor-pointer" data-toggle="personal-info-section">Persoonlijke Informatie <i class="fas fa-chevron-down"></i></h2>
-        <div id="personal-info-section">
+        <div class="flex items-center mb-4">
+            <img id="profilePicture" class="w-24 h-24 rounded-full object-cover mr-4" src="https://via.placeholder.com/128?text=Profiel" alt="Profielfoto">
+            <div>
+                <label for="profilePictureUpload" class="cursor-pointer bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">
+                    Upload Foto
+                </label>
+                <input type="file" id="profilePictureUpload" class="hidden" accept="image/*">
+            </div>
+        </div>
+
+        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 cursor-pointer" data-toggle="personal-info-section">Persoonlijke Informatie <i class="fas fa-chevron-down toggle-icon"></i></h2>
+        <div id="personal-info-section" class="hidden">
             <div class="form-grid">
                 <div class="form-group">
                     <label for="userName">Naam:</label>
@@ -63,7 +62,7 @@ Hieronder vind je de complete en bijgewerkte code voor `userProfileView.html`. H
             </div>
         </div>
 
-        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 cursor-pointer mt-6" data-toggle="biometrics-section">Biometrie <i class="fas fa-chevron-down"></i></h2>
+        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 cursor-pointer mt-6" data-toggle="biometrics-section">Biometrie <i class="fas fa-chevron-down toggle-icon"></i></h2>
         <div id="biometrics-section" class="hidden">
             <div class="form-grid">
                 <div class="form-group">
@@ -93,7 +92,7 @@ Hieronder vind je de complete en bijgewerkte code voor `userProfileView.html`. H
             </div>
         </div>
 
-        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 cursor-pointer mt-6" data-toggle="fitness-metrics-section">Fitness Metrics <i class="fas fa-chevron-down"></i></h2>
+        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 cursor-pointer mt-6" data-toggle="fitness-metrics-section">Fitness Metrics <i class="fas fa-chevron-down toggle-icon"></i></h2>
         <div id="fitness-metrics-section" class="hidden">
             <div class="form-grid">
                 <div class="form-group">
@@ -106,7 +105,7 @@ Hieronder vind je de complete en bijgewerkte code voor `userProfileView.html`. H
                 </div>
                 <div class="form-group">
                     <label for="userBaseAtHR">Basis Anaerobe Drempel (BPM):</label>
-                    <input type="number" id="userBaseAtHR" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                    <input type="number" id="userBaseAtHR" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-.600 text-gray-200">
                 </div>
                 <div class="form-group">
                     <label for="userMaxWatt">Maximale Wattage (Fietsen):</label>
@@ -134,19 +133,16 @@ Hieronder vind je de complete en bijgewerkte code voor `userProfileView.html`. H
         <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Toegewezen Abonnement</h2>
         <div id="assigned-subscription-section">
             <p class="text-gray-400">Geen abonnement toegewezen.</p>
-            <!-- Assigned subscription will be loaded here -->
         </div>
 
         <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Trainingsgeschiedenis</h2>
         <div id="training-history-section">
             <p class="text-gray-400">Geen trainingsgeschiedenis beschikbaar.</p>
-            <!-- Training history will be loaded here -->
         </div>
 
         <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Activiteitenlog</h2>
         <div id="activity-log-section">
             <p class="text-gray-400">Geen activiteitenlog beschikbaar.</p>
-            <!-- Activity log will be loaded here -->
         </div>
 
         <div class="flex justify-end space-x-4 mt-6">
@@ -154,4 +150,3 @@ Hieronder vind je de complete en bijgewerkte code voor `userProfileView.html`. H
         </div>
     </form>
 </div>
-```

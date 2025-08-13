@@ -129,7 +129,6 @@ export async function initMemberMembershipView() {
         memberMembershipForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const membershipData = {
-                id: memberMembershipIdInput.value ? parseInt(memberMembershipIdInput.value) : undefined, // AutoIncrement voor nieuwe koppelingen
                 memberId: parseInt(memberSelect.value),
                 subscriptionId: parseInt(subscriptionSelect.value),
                 startDate: membershipStartDateInput.value,
@@ -138,9 +137,33 @@ export async function initMemberMembershipView() {
                 notes: membershipNotesInput.value
             };
 
+            if (memberMembershipIdInput.value) {
+                const parsedId = parseInt(memberMembershipIdInput.value, 10);
+                if (!isNaN(parsedId)) {
+                    membershipData.id = parsedId;
+                }
+            }
+
             try {
                 await putData('memberMemberships', membershipData);
-                showNotification('Koppeling opgeslagen!', 'success');
+
+                // Create a corresponding finance record for the income
+                const subscription = await getData('subscriptions', membershipData.subscriptionId);
+                const member = await getData('registry', membershipData.memberId);
+
+                if (subscription && member) {
+                    const financeRecord = {
+                        type: 'income',
+                        amount: subscription.price,
+                        description: `Subscription: ${subscription.name} for ${member.name}`,
+                        productService: subscription.name,
+                        memberEmployee: member.name,
+                        date: new Date().toISOString()
+                    };
+                    await putData('finance', financeRecord);
+                }
+
+                showNotification('Koppeling opgeslagen en inkomen vastgelegd!', 'success');
                 memberMembershipForm.reset();
                 memberMembershipIdInput.value = ''; // Maak verborgen ID leeg
                 loadMemberMemberships(); // Herlaad de lijst

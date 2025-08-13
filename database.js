@@ -1,5 +1,5 @@
 const DB_NAME = 'SportsCRMDB';
-const DB_VERSION = 18; // VERSIE VERHOOGD NAAR 18 voor nieuwe stores
+const DB_VERSION = 19; // VERSIE VERHOOGD NAAR 19 voor gymSecties store
 
 const USER_PROFILE_STORE = 'userProfile';
 const TRAINING_SESSIONS_STORE = 'trainingSessions';
@@ -32,6 +32,7 @@ const USER_ROLE_STORE = 'userRoles';
 const SLEEP_DATA_STORE = 'sleepData';
 const LESSONS_STORE = 'lessons';
 const TEST_PROTOCOLS_STORE = 'testProtocols';
+const GYM_SECTIONS_STORE = 'gymSections'; // NIEUW
 
 // New stores for schedule builder content
 const TRAINING_DAYS_STORE = 'trainingDays';
@@ -77,7 +78,8 @@ export async function openDatabase() {
                 ROLES_STORE,
                 LINKED_DOCUMENTS_STORE,
                 LESSON_DAYS_STORE, // NIEUW
-                LESSON_BLOCKS_STORE // NIEUW
+                LESSON_BLOCKS_STORE, // NIEUW
+                GYM_SECTIONS_STORE // NIEUW
             ];
 
             stores.forEach(storeName => {
