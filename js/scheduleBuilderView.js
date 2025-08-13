@@ -155,7 +155,6 @@ export function initScheduleBuilderView() {
                 if (activeTabId === 'tab-dag') {
                     setTimeout(() => generateTimeLabels('day-time-labels'), 0); // Generate for day tab
                 }
-                // Removed generateTimeLabels for session-builder as it's no longer a timeline
             }, 10);
             
             // Update de zichtbaarheid van de zijbalk
@@ -204,8 +203,7 @@ export function initScheduleBuilderView() {
             if (draggableItem.dataset.customMeasurementDefinition && draggableItem.dataset.customMeasurementDefinition !== "undefined" && draggableItem.dataset.customMeasurementDefinition !== "") {
                 try {
                     draggedItemData.customMeasurementDefinition = JSON.parse(draggableItem.dataset.customMeasurementDefinition);
-                }
-                catch (error) {
+                } catch (error) {
                     console.error("Fout bij het parsen van draggedItemData.customMeasurementDefinition:", error);
                     draggedItemData.customMeasurementDefinition = null;
                 }
@@ -316,22 +314,26 @@ export function initScheduleBuilderView() {
             const relativeY = e.clientY - rect.top;
 
             // Aangepaste logica voor het renderen van gedropte items
-            if (dropZoneId === 'session-drop-zone') {
-                createStackedItemForDropZone(zone, data); // Always stacked for session builder
-            } else if (dropZoneId === 'custom-training-zones-drop-zone') {
-                createTimelineItemForDropZone(relativeY, zone, data); // Still timeline for custom training zones
-            } else if (dropZoneId === 'day-drop-zone') {
-                createDayDroppedItem(zone, data); // Stacked for day tab
+            if (dropZoneId === 'session-drop-zone' || dropZoneId === 'custom-training-zones-drop-zone') { // Handles individual elements for session builder and form builder
+                // For session builder, items are now stacked, not absolutely positioned on a timeline.
+                // For custom-training-zones-drop-zone, they are still timeline-like.
+                if (dropZoneId === 'session-drop-zone') {
+                    createStackedSessionItem(zone, data); // NEW function for stacked items in session builder
+                } else {
+                    createTimelineDroppedItem(relativeY, zone, data); // Keep timeline for custom training zones
+                }
+            } else if (dropZoneId === 'day-drop-zone') { // Handles configured sessions or days for the Day tab
+                createDayDroppedItem(zone, data); // NEW function for Day tab (no absolute positioning)
             } else { // Handles days for week and weeks for block
-                createStackedItemForDropZone(zone, data);
+                createStackedDroppedItem(zone, data); // Renamed from createWeekOrBlockDroppedItem
             }
             isDraggingExistingItem = false; // Reset de vlag na de drop
             originalParent = null; // Reset de oorspronkelijke ouder
         });
     });
 
-    // Function to create items for Session Builder and other stacked drop zones (no absolute positioning)
-    function createStackedItemForDropZone(zone, data) {
+    // NEW: Function to create stacked items for Session Builder (no absolute positioning)
+    function createStackedSessionItem(zone, data) {
         const droppedItem = document.createElement('div');
         droppedItem.dataset.id = data.id || generateUniqueId();
         droppedItem.dataset.type = data.type;
@@ -380,6 +382,13 @@ export function initScheduleBuilderView() {
                     <input type="text" placeholder="Notities" class="w-24 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-notes-input value="${data.notes || ''}">
                 </div>
             `;
+        } else if (data.type === 'document-link') {
+            if (!data.documentName) { 
+                const docName = prompt('Voer de naam/ID van het document in:');
+                data.documentName = docName || 'Onbekend Document';
+            }
+            droppedItem.dataset.documentName = data.documentName;
+            innerHtmlContent += `<span class="ml-2 text-gray-400">(${data.documentName})</span>`;
         } else if (['strength-exercise', 'recovery-activity', 'coordination-activity', 'flexibility-activity', 'speed-activity', 'nutrition-activity'].includes(data.type)) {
             const timeDisplay = data.inputType === 'reps_sets' ? 'display:none;' : 'display:flex;';
             const repsSetsDisplay = data.inputType === 'time' || !data.inputType ? 'display:none;' : 'display:flex;';
@@ -413,8 +422,6 @@ export function initScheduleBuilderView() {
         } else if (data.type === 'custom-training-measurement' || data.type === 'custom-rest-measurement') {
             // No specific settings for these when dropped, as their definition is already encapsulated
             // The nested items will be rendered by renderCustomMeasurementInDay
-        } else if (data.type === 'document-link') {
-            // No specific settings for document link when dropped
         } else if (data.type === 'rest-day' || data.type === 'training-measurement' || data.type === 'rest-measurement-free' || data.type === 'rest-measurement-base') {
             // No specific settings for these when dropped
         }
@@ -437,7 +444,8 @@ export function initScheduleBuilderView() {
     }
 
     // Function to create items for Custom Training Zones (still timeline items with absolute positioning)
-    function createTimelineItemForDropZone(yPosition, zone, data) {
+    // This is the original createTimelineDroppedItem logic, now specifically for custom-training-zones-drop-zone
+    function createTimelineDroppedItem(yPosition, zone, data) {
         const droppedItem = document.createElement('div');
         droppedItem.dataset.id = data.id || generateUniqueId();
         droppedItem.dataset.type = data.type;
@@ -592,7 +600,7 @@ export function initScheduleBuilderView() {
 
 
     // Renamed from createWeekOrBlockDroppedItem to be more semantically correct for stacked items
-    function createStackedItemForDropZone(zone, data) { // Removed yPosition param
+    function createStackedDroppedItem(zone, data) { // Removed yPosition param
         const droppedItem = document.createElement('div');
         droppedItem.className = 'dropped-item flex flex-col p-2 mb-2 rounded-md bg-gray-700';
         droppedItem.dataset.id = data.id;
@@ -616,9 +624,6 @@ export function initScheduleBuilderView() {
                 <div class="flex items-center space-x-2 w-full">
                     <span class="text-sm text-gray-300">Herhalingen:</span>
                     <input type="number" value="${data.repetitions || 1}" min="1" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-repetitions-input>
-                    <span class="text-sm text-gray-300 ml-2">Herhaal elke:</span>
-                    <input type="number" value="${data.repetitionStep || 1}" min="1" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-repetition-step-input>
-                    <span class="text-sm text-gray-300 ml-1">weken</span>
                 </div>
             `;
         } else if (data.type === 'day' && zone.classList.contains('day-slot')) { // Check zone.classList for specific logic
@@ -891,10 +896,12 @@ export function initScheduleBuilderView() {
                 if (item.type === 'custom-training-measurement' || item.type === 'custom-rest-measurement') {
                      renderCustomMeasurementInDay(item.topPosition || 0, dropZoneElement, item);
                 } else {
+                    // For session builder, items are now stacked, not absolutely positioned
+                    // For custom-training-zones-drop-zone, they are still timeline-like.
                     if (dropZoneElement.id === 'session-drop-zone') {
-                        createStackedItemForDropZone(dropZoneElement, item);
+                        createStackedSessionItem(dropZoneElement, item);
                     } else { // This handles custom-training-zones-drop-zone
-                        createTimelineItemForDropZone(item.topPosition || 0, dropZoneElement, item);
+                        createTimelineDroppedItem(item.topPosition || 0, dropZoneElement, item);
                     }
                 }
             });
@@ -960,7 +967,6 @@ export function initScheduleBuilderView() {
                 droppedItem.dataset.icon = item.icon;
                 droppedItem.dataset.content = (item.content && (typeof item.content === 'object' || Array.isArray(item.content))) ? JSON.stringify(item.content) : '';
                 droppedItem.dataset.repetitions = item.repetitions || 1;
-                droppedItem.dataset.repetitionStep = item.repetitionStep || 1; // NEW: repetitionStep
 
                 droppedItem.setAttribute('draggable', 'true'); // Maak geplaatste items draggable
 
@@ -973,9 +979,6 @@ export function initScheduleBuilderView() {
                          <div class="flex items-center space-x-2 w-full">
                             <span class="text-sm text-gray-300">Herhalingen:</span>
                             <input type="number" value="${item.repetitions || 1}" min="1" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-repetitions-input>
-                            <span class="text-sm text-gray-300 ml-2">Herhaal elke:</span>
-                            <input type="number" value="${item.repetitionStep || 1}" min="1" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-repetition-step-input>
-                            <span class="text-sm text-gray-300 ml-1">weken</span>
                         </div>
                         <div class="text-xs text-gray-300 mt-2">
                             ${Object.keys(item.content).filter(day => item.content[day]).map(day => `<span class="inline-block bg-gray-800 rounded-full px-2 py-1 text-xs font-semibold text-gray-300 mr-1 mb-1">${item.content[day].name}</span>`).join('')}
@@ -1075,7 +1078,6 @@ export function initScheduleBuilderView() {
             itemCard.dataset.customMeasurementDefinition = (item.customMeasurementDefinition && (typeof item.customMeasurementDefinition === 'object' || Array.isArray(item.customMeasurementDefinition))) ? JSON.stringify(item.customMeasurementDefinition) : '';
             if (item.customMeasurementDescription) itemCard.dataset.customMeasurementDescription = item.customMeasurementDescription;
             if (item.customMeasurementGoals) itemCard.dataset.customMeasurementGoals = item.customMeasurementGoals;
-            if (item.repetitionStep) itemCard.dataset.repetitionStep = item.repetitionStep; // NEW: repetitionStep for display
 
 
             let summaryText = '';
@@ -1088,16 +1090,8 @@ export function initScheduleBuilderView() {
             } else if (item.type === 'week' && item.days && typeof item.days === 'object') {
                 const configuredDays = Object.values(item.days).filter(day => day !== null).map(day => day.name);
                 summaryText = `<div class="text-xs text-gray-400 mt-1">Dagen: ${configuredDays.length > 0 ? configuredDays.join(', ') : 'Geen dagen'}</div>`;
-                if (item.repetitionStep && item.repetitionStep > 1) {
-                    summaryText += `<div class="text-xs text-gray-400 mt-1">Herhaal elke ${item.repetitionStep} weken</div>`;
-                }
             } else if (item.type === 'blok' && item.weeks && Array.isArray(item.weeks)) {
-                const configuredWeeks = item.weeks.map(week => {
-                    let weekSummary = week.name;
-                    if (week.repetitions && week.repetitions > 1) weekSummary += ` (${week.repetitions}x)`;
-                    if (week.repetitionStep && week.repetitionStep > 1) weekSummary += ` elke ${week.repetitionStep}w`;
-                    return weekSummary;
-                }).join(', ');
+                const configuredWeeks = item.weeks.map(week => `${week.name} (${week.repetitions}x)`).join(', ');
                 summaryText = `<div class="text-xs text-gray-400 mt-1">Weken: ${configuredWeeks.length > 0 ? configuredWeeks : 'Geen weken'}</div>`;
             } else if (item.type === 'custom-training-measurement' && item.customMeasurementDefinition) {
                 const totalDuration = item.customMeasurementDefinition.reduce((sum, subItem) => sum + (subItem.duration || 0), 0);
@@ -1424,13 +1418,9 @@ export function initScheduleBuilderView() {
             weekCard.dataset.name = week.name;
             weekCard.dataset.icon = 'fas fa-calendar-week';
             weekCard.dataset.content = (week.days && typeof week.days === 'object') ? JSON.stringify(week.days) : '';
-            if (week.repetitionStep) weekCard.dataset.repetitionStep = week.repetitionStep; // NEW: repetitionStep for display
 
             const configuredDays = Object.values(week.days).filter(day => day !== null).map(day => day.name);
-            let summaryText = configuredDays.length > 0 ? configuredDays.join(', ') : 'Geen dagen geconfigureerd';
-            if (week.repetitionStep && week.repetitionStep > 1) {
-                summaryText += ` (elke ${week.repetitionStep} weken)`;
-            }
+            const summaryText = configuredDays.length > 0 ? configuredDays.join(', ') : 'Geen dagen geconfigureerd';
 
             weekCard.innerHTML = `
                 <div class="flex items-center justify-between w-full">
@@ -1466,18 +1456,10 @@ export function initScheduleBuilderView() {
         let hasError = false;
         blokDropZone.querySelectorAll('.dropped-item').forEach(item => {
             const repetitionsInput = item.querySelector('[data-repetitions-input]');
-            const repetitionStepInput = item.querySelector('[data-repetition-step-input]'); // NEW
             const repetitions = parseInt(repetitionsInput.value);
-            const repetitionStep = parseInt(repetitionStepInput.value); // NEW
-
             if (isNaN(repetitions) || repetitions <= 0) {
                 hasError = true;
                 showMessage('Vul een geldig aantal herhalingen in voor elke week.', 'error');
-                return;
-            }
-            if (isNaN(repetitionStep) || repetitionStep <= 0) { // NEW validation
-                hasError = true;
-                showMessage('Vul een geldige herhaalstap in (minimaal 1).', 'error');
                 return;
             }
 
@@ -1486,8 +1468,7 @@ export function initScheduleBuilderView() {
                 name: item.dataset.name,
                 icon: item.dataset.icon,
                 content: (item.dataset.content && typeof item.dataset.content === 'string' && item.dataset.content !== "undefined" && item.dataset.content !== "") ? JSON.parse(item.dataset.content) : null,
-                repetitions: repetitions,
-                repetitionStep: repetitionStep // NEW
+                repetitions: repetitions
             });
         });
 
@@ -1537,16 +1518,9 @@ export function initScheduleBuilderView() {
             blokCard.dataset.name = blok.name;
             blokCard.dataset.type = 'blok';
             blokCard.dataset.content = (blok.weeks && Array.isArray(blok.weeks)) ? JSON.stringify(blok.weeks) : '';
-            blokCard.dataset.repetitions = blok.repetitions || 1; // This might be redundant if repetitions are per week in the block
-            if (blok.repetitionStep) blokCard.dataset.repetitionStep = blok.repetitionStep; // NEW: repetitionStep for display
+            blokCard.dataset.repetitions = blok.repetitions || 1;
 
-            const configuredWeeksSummary = blok.weeks.map(week => {
-                let weekText = `${week.name} (${week.repetitions}x)`;
-                if (week.repetitionStep && week.repetitionStep > 1) {
-                    weekText += ` elke ${week.repetitionStep}w`;
-                }
-                return weekText;
-            }).join(', ');
+            const configuredWeeksSummary = blok.weeks.map(week => `${week.name} (${week.repetitions}x)`).join(', ');
             const summaryText = configuredWeeksSummary || 'Geen weken geconfigureerd';
             const notesText = blok.notes ? `<div class="text-xs text-gray-400 mt-1">Notities: ${blok.notes.substring(0, 50)}${blok.notes.length > 50 ? '...' : ''}</div>` : '';
 
@@ -1560,9 +1534,6 @@ export function initScheduleBuilderView() {
                      <div class="flex items-center space-x-2 w-full">
                         <span class="text-sm text-gray-300">Herhalingen:</span>
                         <input type="number" value="${blok.repetitions || 1}" min="1" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-repetitions-input>
-                        <span class="text-sm text-gray-300 ml-2">Herhaal elke:</span>
-                        <input type="number" value="${blok.repetitionStep || 1}" min="1" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-repetition-step-input>
-                        <span class="text-sm text-gray-300 ml-1">weken</span>
                     </div>
                     <div class="text-xs text-gray-300 mt-2">
                         ${summaryText}
@@ -1607,7 +1578,6 @@ export function initScheduleBuilderView() {
         const copyOption = confirm(`Wil je kopiëren van een bestaande ${type}?`);
         let itemName = '';
         let contentToCopy = null;
-        let repetitionStepToCopy = null; // NEW
 
         if (copyOption) {
             const itemIdToCopy = prompt(`Voer de ID in van de ${type} die je wilt kopiëren:`);
@@ -1620,7 +1590,6 @@ export function initScheduleBuilderView() {
                             contentToCopy = itemToCopy.activities ? JSON.parse(JSON.stringify(itemToCopy.activities)) : null;
                         } else if (type === 'week') {
                             contentToCopy = itemToCopy.days ? JSON.parse(JSON.stringify(itemToCopy.days)) : null;
-                            repetitionStepToCopy = itemToCopy.repetitionStep || 1; // NEW
                         } else if (type === 'blok') {
                             contentToCopy = itemToCopy.weeks ? JSON.parse(JSON.stringify(itemToCopy.weeks)) : null;
                         } else if (type === 'configured-session') { // NEW: Copy configured session content
@@ -1658,8 +1627,9 @@ export function initScheduleBuilderView() {
             newItemElement.dataset.name = itemName;
             newItemElement.dataset.icon = icon;
             
+            // FIX: Zorg ervoor dat content en customMeasurementDefinition alleen worden gestringified als ze geldige objecten/arrays zijn
+            // contentToToArray is not a defined function, changed to direct check
             newItemElement.dataset.content = (contentToCopy && (typeof contentToCopy === 'object' || Array.isArray(contentToCopy))) ? JSON.stringify(contentToCopy) : '';
-            if (repetitionStepToCopy) newItemElement.dataset.repetitionStep = repetitionStepToCopy; // NEW
 
             if (type === 'custom-training-measurement') {
                 newItemElement.dataset.customMeasurementType = 'training';
@@ -1769,7 +1739,7 @@ export function initScheduleBuilderView() {
                      subItem.minReps = parseInt(item.querySelector('[data-min-reps-input]').value);
                      subItem.maxReps = parseInt(item.querySelector('[data-max-reps-input]').value);
                      subItem.minSets = parseInt(item.querySelector('[data-min-sets-input]').value);
-                     subItem.maxSets = parseInt(item.querySelector('[data-max-sets-input]').value);
+                     subActivity.maxSets = parseInt(item.querySelector('[data-max-sets-input]').value);
                  }
                 subItem.progressionValue = subItem.progressionEnabled ? parseInt(item.querySelector('[data-progression-value-input]').value) : null;
             }
