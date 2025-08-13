@@ -1,0 +1,105 @@
+[Project Plan] **Volledige Applicatie Uitbouw**
+
+Dit document beschrijft het plan om de applicatie uit te bouwen tot een (demo) productieversie. Het doel is om alle geïmpliceerde en deels geïmplementeerde functionaliteiten te voltooien met de huidige tooling: JavaScript, IndexedDB, Chart.js en Tailwind CSS.
+
+**I. Algemene Filosofie**
+
+*   **Modulaire Aanpak:** Elke feature wordt ontwikkeld als een onafhankelijke "view" met een eigen HTML-template (`/views`) en JavaScript-logica (`/js`).
+*   **Single-Page Application (SPA):** De navigatie wordt centraal beheerd door `app.js`, die de views dynamisch laadt zonder de pagina te herladen.
+*   **Data-Centric:** Alle data wordt lokaal opgeslagen in IndexedDB, beheerd door `database.js`. Views zijn verantwoordelijk voor het ophalen, weergeven en bijwerken van hun eigen data via de database-module.
+*   **Consistente UI/UX:** Alle views moeten een consistente en responsieve gebruikerservaring bieden, gebruikmakend van de Tailwind CSS-stijlen die in het project zijn gedefinieerd.
+
+**II. Uit te bouwen Modules & Functionaliteiten (Checklist)**
+
+**Module 1: Gebruikersbeheer & CRM**
+- [x] **User Profile (`userProfileView`):**
+    - [x] Maak alle velden (naam, contactgegevens, etc.) bewerkbaar.
+    - [ ] Voeg een functie toe om een profielfoto te uploaden/instellen.
+    - [x] Toon een samenvatting van de lidmaatschapsstatus en recente activiteit.
+- [x] **Ledenregister (`registryView`):**
+    - [x] Implementeer een formulier om nieuwe leden te registreren.
+    - [x] Voeg een zoek- en filterfunctie toe om leden te vinden.
+    - [x] Maak van elk lid in de lijst een klikbare link naar hun `memberSpecificprogressView`.
+- [x] **Ledenvoortgang (`memberSpecificprogressView`):**
+    - [x] Toon een dashboard met de belangrijkste statistieken en grafieken voor een specifiek lid.
+    - [x] Integreer data uit trainingsrapporten, rustmetingen en andere modules.
+- [x] **Ledenactiviteit (`memberActivityView`):**
+    - [x] Toon een chronologische log van alle activiteiten van een lid (trainingen, metingen, geboekte lessen).
+- [x] **Ledeninstellingen (`memberSettingsView`):**
+    - [x] Geef beheerders de mogelijkheid om specifieke instellingen voor een lid aan te passen (bijv. trainingsdrempels, permissies).
+- [x] **Lidmaatschap (`memberMembershipView`):**
+    - [x] Beheer de lidmaatschapsdetails van een lid (startdatum, einddatum, type abonnement).
+- [x] **Permissies (`permissionsView`):**
+    - [x] Bouw een interface om rollen (admin, member) toe te wijzen aan gebruikers.
+    - [x] Koppel dit aan de `getUserRole` en `setUserRole` functies in `database.js`.
+
+**Module 2: Kernfunctionaliteiten (Training & Metingen)**
+- [x] **Live Training (`liveTrainingView`):**
+    - [x] Verbind met de Bluetooth-controller voor live hartslagdata.
+    - [x] Toon live HR-zones, tijd en andere relevante data.
+    - [x] Implementeer een functie om de live sessie op te slaan als een `trainingSession` in de database.
+- [x] **Trainingsschema's (`trainingView` / `scheduleBuilderView`):**
+    - [x] Toon de opgeslagen trainingsblokken en -weken uit de `scheduleBuilderView`.
+    - [x] Maak het mogelijk om een training voor de huidige dag te starten.
+- [x] **Voeding (`nutritionView`):**
+    - [x] Bouw een module om voedingsschema's (`nutritionPrograms`) te maken en toe te wijzen aan leden.
+    - [x] Voeg een logboekfunctie toe voor leden om hun voeding bij te houden.
+- [x] **Slaap (`sleepView`):**
+    - [x] Implementeer een formulier om slaapdata (duur, kwaliteit) handmatig in te voeren.
+    - [x] Visualiseer slaappatronen over tijd met Chart.js.
+- [x] **Testen (`testingView`):**
+    - [x] Ontwikkel protocollen voor specifieke fitnesstests (bijv. VO2max-schatting, omslagpunt-test).
+    - [x] Sla de testresultaten op en koppel ze aan het gebruikersprofiel.
+
+**Module 3: Planning & Roosters**
+- [x] **Lesrooster (`lessonSchedulerView` / `scheduleBuilderView`):**
+    - [x] Toon een weekkalender met alle geplande lessen uit de `lessonSchedules` store.
+    - [x] Maak het voor leden mogelijk om zich in te schrijven voor lessen.
+    - [x] Geef beheerders de mogelijkheid om lessen toe te voegen, te wijzigen of te annuleren.
+- [x] **Vergaderplanner (`meetingPlannerView`):**
+    - [x] Implementeer een kalenderinterface voor het plannen van 1-op-1 afspraken (intakes, evaluaties).
+    - [x] Sla afspraken op in de `meetings` store.
+
+**Module 4: Rapportage & Analyse**
+- [x] **Trainingsrapporten (`trainingReportsView`):**
+    - [x] Genereer gedetailleerde grafieken en statistieken van voltooide trainingssessies.
+    - [x] Analyseer tijd in hartslagzones, progressie over tijd, etc.
+- [x] **Rustmeting Rapporten (`restReportsView`):**
+    - [x] Visualiseer de resultaten van rustmetingen (HRV, RMSSD, ademhalingsfrequentie).
+    - [x] Toon trends om overtraining of herstel te monitoren.
+- [x] **Populariteit (`popularityView`):**
+    - [x] Analyseer welke lessen en activiteiten het populairst zijn.
+    - [x] Toon data over bezettingsgraad en inschrijvingen.
+
+**Module 5: Administratie & Communicatie**
+- [x] **Berichten (`messagesView`):**
+    - [x] Bouw een eenvoudig intern berichtensysteem tussen beheerders en leden.
+- [x] **Actiecentrum (`actionCenterView`):**
+    - [x] Creëer een centraal overzicht van openstaande taken, notificaties en belangrijke meldingen voor de ingelogde gebruiker.
+- [x] **Notities (`notesView`):**
+    - [x] Implementeer een simpele notitiemodule voor beheerders om notities over leden of algemene zaken bij te houden.
+- [x] **Documenten (`docsView`):**
+    - [x] Bouw een interface om documenten (PDF, Word, etc.) te uploaden of te koppelen aan leden of lessen.
+- [x] **Financiën (`financeView`):**
+    - [x] Ontwikkel een basismodule voor het bijhouden van inkomsten uit abonnementen.
+- [x] **Abonnementen (`subscriptionsView`):**
+    - [x] Beheer de verschillende soorten abonnementen die de sportschool aanbiedt.
+- [x] **Logs (`logsView`):**
+    - [x] Toon een log van belangrijke gebeurtenissen in de applicatie voor debugging en audit-doeleinden.
+
+**III. Uitvoeringsplan (voor Gemini)**
+
+De implementatie zal module voor module worden uitgevoerd in de volgende volgorde:
+
+1.  **Fundament leggen:** Voltooi de **Gebruikersbeheer & CRM** module. Dit is de basis voor de rest van de applicatie.
+2.  **Kernfunctionaliteit bouwen:** Implementeer de **Kernfunctionaliteiten (Training & Metingen)**.
+3.  **Planningstools ontwikkelen:** Bouw de **Planning & Roosters** module.
+4.  **Inzichten creëren:** Ontwikkel de **Rapportage & Analyse** module.
+5.  **Beheer en communicatie afronden:** Voltooi de **Administratie & Communicatie** module.
+6.  **Finale Polish:** Loop alle views na op UI/UX-consistentie, responsiviteit en bugfixing.
+
+Voor elke feature in de checklist zal de volgende sub-procedure worden gevolgd:
+    a.  **Analyseer:** Bekijk de bestaande HTML- en JS-bestanden voor de desbetreffende view.
+    b.  **Implementeer UI:** Bouw de benodigde UI-elementen in het HTML-bestand.
+    c.  **Implementeer Logica:** Schrijf de JavaScript-logica in het bijbehorende JS-bestand, inclusief event listeners en data-interactie met `database.js`.
+    d.  **Test:** Verifieer de functionaliteit grondig.

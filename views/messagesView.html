@@ -1,0 +1,39 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>Berichtenscherm</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="p-4">
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Nieuw Bericht</h2>
+    <form id="messageForm" class="flex flex-col gap-3 mb-6">
+        <input type="hidden" id="messageId">
+        <div class="flex flex-col">
+            <label for="messageRecipient" class="text-sm font-medium text-gray-400 mb-1">Aan:</label>
+            <select id="messageRecipient" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <option value="">Selecteer ontvanger</option>
+                <option value="all">Alle gebruikers</option>
+                <!-- Users will be loaded here -->
+            </select>
+        </div>
+        <div class="flex flex-col">
+            <label for="messageSubject" class="text-sm font-medium text-gray-400 mb-1">Onderwerp:</label>
+            <input type="text" id="messageSubject" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="messageContent" class="text-sm font-medium text-gray-400 mb-1">Inhoud:</label>
+            <textarea id="messageContent" rows="5" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200"></textarea>
+        </div>
+        <button type="submit" id="sendMessageBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Verstuur Bericht</button>
+        <button type="button" id="clearMessageFormBtn" class="bg-gray-600 hover:bg-gray-700 text-gray-200 font-bold py-2 px-4 rounded-md transition-colors duration-200">Formulier Leegmaken</button>
+    </form>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Ontvangen Berichten</h2>
+    <div id="receivedMessagesList" class="flex flex-col gap-3 mb-4">
+        <p class="text-gray-400">Geen ontvangen berichten.</p>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Verzonden Berichten</h2>
+    <div id="sentMessagesList" class="flex flex-col gap-3 mb-4">
+        <p class="text-gray-400">Geen verzonden berichten.</p>
+    </div>
+</div>

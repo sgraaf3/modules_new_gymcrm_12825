@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym & CRM Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="main-content-area" class="app-section active">
+            </div>
+
+        <div id="chartModalOverlay" class="modal-overlay">
+            <div id="chartModalContent" class="modal-content">
+                <button id="chartModalCloseBtn" class="modal-close-btn">X</button>
+            </div>
+        </div>
+
+        <div id="notificationContainer" class="fixed top-4 right-4 z-[9999] flex flex-col items-end space-y-2">
+            </div>
+
+        <div id="bluetoothWidget" class="bluetooth-widget hidden">
+            <div class="bluetooth-widget-header">
+                <span>Bluetooth Meting</span>
+                <button id="toggleBluetoothWidget" class="toggle-button"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="bluetooth-widget-content">
+                <div id="connectionStatusDisplay" class="text-center text-sm text-gray-400">IDLE</div>
+
+                <div class="data-card-small">
+                    <div class="card-header"><h3>Hartslag</h3></div>
+                    <div class="main-value" id="liveHrDisplay">-- BPM</div>
+                    <div class="sub-value" id="liveHrZoneDisplay">-- Zone</div>
+                </div>
+
+                <div class="data-card-small">
+                    <div class="card-header"><h3>Gemiddelde RR</h3></div>
+                    <div class="main-value" id="liveAvgRrDisplay">-- MS</div>
+                    <div class="sub-value" id="liveRmssdDisplay">RMSSD: -- MS</div>
+                </div>
+
+                <div class="data-card-small">
+                    <div class="card-header"><h3>Ademh.Freq.</h3></div>
+                    <div class="main-value" id="liveBreathRateDisplay">-- BPM</div>
+                </div>
+
+                <div class="data-card-small">
+                    <div class="card-header"><h3>Tijd</h3></div>
+                    <div class="main-value" id="liveTimerDisplay">00:00</div>
+                </div>
+
+                <div class="control-buttons-small">
+                    <button id="startMeasurementBtnLive">Start</button>
+                    <button id="stopMeasurementBtnLive" style="display:none;">Stop</button>
+                </div>
+            </div>
+        </div>
+        <button id="openBluetoothWidget" class="floating-bluetooth-button"><i class="fas fa-bluetooth-b"></i></button>
+
+        <div class="bottom-nav">
+            <div class="bottom-nav-item active" data-target-view="dashboardView">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </div>
+            <div class="bottom-nav-item" data-target-view="trainingView">
+                <i class="fas fa-dumbbell"></i>
+                <span>Training</span>
+            </div>
+            <div class="bottom-nav-item" data-target-view="memberSpecificprogressView">
+                <i class="fas fa-chart-line"></i>
+                <span>User Progressie</span>
+            </div>
+            <div class="bottom-nav-item" data-target-view="restMeasurementLiveView">
+                <i class="fas fa-circle"></i>
+                <span>Meting</span>
+            </div>
+            <div class="bottom-nav-item" data-target-view="restMeasurementLiveView_2">
+                <i class="fas fa-circle"></i>
+                <span>Meting 2</span>
+            </div>
+            <div class="bottom-nav-item" data-target-view="userProfileView">
+                <i class="fas fa-user"></i>
+                <span>Profiel</span>
+            </div>
+            <div class="bottom-nav-item" data-target-view="toggleFunctionalityView">
+                <i class="fas fa-cog"></i>
+                <span>Instellingen</span>
+            </div>
+            <div class="bottom-nav-item" data-target-view="messagesView">
+                <i class="fas fa-envelope"></i>
+                <span>Berichten</span>
+            </div>
+            <div class="bottom-nav-item" data-target-view="dashboardReportsView">
+                <i class="fas fa-chart-bar"></i>
+                <span>Dashboard Rapporten</span>
+            </div>
+            <div class="bottom-nav-item" data-target-view="trainingReportsView">
+                <i class="fas fa-chart-line"></i>
+                <span>Training Rapporten</span>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</body>
+</html>

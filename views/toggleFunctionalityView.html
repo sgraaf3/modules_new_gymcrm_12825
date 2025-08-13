@@ -1,0 +1,24 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>Functionaliteit Schakelen</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="p-4">
+    <p class="text-lg text-gray-300 mb-4">Beheer de zichtbaarheid en functionaliteit van verschillende modules en functies binnen de applicatie.</p>
+    <p class="text-lg text-gray-300 mb-4">Schakel functies in of uit op basis van uw behoeften.</p>
+    <div class="flex flex-col gap-3 mt-4">
+        <div class="flex justify-between items-center bg-gray-700 p-4 rounded-lg">
+            <label for="enableTrainingModule" class="text-lg font-medium text-gray-300">Enable Training Module</label>
+            <input type="checkbox" id="enableTrainingModule" class="h-6 w-6 text-blue-600 rounded border-gray-600 focus:ring-blue-500">
+        </div>
+        <div class="flex justify-between items-center bg-gray-700 p-4 rounded-lg">
+            <label for="enableNutritionModule" class="text-lg font-medium text-gray-300">Enable Nutrition Module</label>
+            <input type="checkbox" id="enableNutritionModule" class="h-6 w-6 text-blue-600 rounded border-gray-600 focus:ring-blue-500">
+        </div>
+        <div class="flex justify-between items-center bg-gray-700 p-4 rounded-lg">
+            <label for="enableReportsModule" class="text-lg font-medium text-gray-300">Enable Reports Module</label>
+            <input type="checkbox" id="enableReportsModule" class="h-6 w-6 text-blue-600 rounded border-gray-600 focus:ring-blue-500">
+        </div>
+    </div>
+    <button id="saveToggleSettingsBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 mt-6">Save Settings</button>
+</div>

@@ -1,0 +1,89 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>Documenten</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="p-4">
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Document Uploaden</h2>
+    <form id="documentUploadForm" class="flex flex-col gap-3 mb-6">
+        <input type="hidden" id="documentId">
+        <div class="flex flex-col">
+            <label for="documentName" class="text-sm font-medium text-gray-400 mb-1">Document Naam:</label>
+            <input type="text" id="documentName" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="documentDescription" class="text-sm font-medium text-gray-400 mb-1">Beschrijving:</label>
+            <textarea id="documentDescription" rows="3" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200"></textarea>
+        </div>
+        <div class="flex flex-col">
+            <label for="documentFile" class="text-sm font-medium text-gray-400 mb-1">Bestand:</label>
+            <input type="file" id="documentFile" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <button type="submit" id="saveDocumentBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Document Opslaan</button>
+        <button type="button" id="clearDocumentFormBtn" class="bg-gray-600 hover:bg-gray-700 text-gray-200 font-bold py-2 px-4 rounded-md transition-colors duration-200">Leeg Formulier</button>
+    </form>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Bestaande Documenten</h2>
+    <div id="existingDocumentsList" class="flex flex-col gap-3 mb-4">
+        <p class="text-gray-400">Geen documenten gevonden.</p>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Document Koppelen</h2>
+    <form id="linkDocumentForm" class="flex flex-col gap-3">
+        <div class="flex flex-col">
+            <label for="linkDocumentSelect" class="text-sm font-medium text-gray-400 mb-1">Selecteer Document:</label>
+            <select id="linkDocumentSelect" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <!-- Documents will be loaded here -->
+            </select>
+        </div>
+        <div class="flex flex-col">
+            <label for="linkTargetType" class="text-sm font-medium text-gray-400 mb-1">Koppel aan:</label>
+            <select id="linkTargetType" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <option value="member">Lid</option>
+                <option value="lesson">Les</option>
+            </select>
+        </div>
+        <div class="flex flex-col" id="linkMemberContainer">
+            <label for="linkMemberSelect" class="text-sm font-medium text-gray-400 mb-1">Selecteer Lid:</label>
+            <select id="linkMemberSelect" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <!-- Members will be loaded here -->
+            </select>
+        </div>
+        <div class="flex flex-col hidden" id="linkLessonContainer">
+            <label for="linkLessonSelect" class="text-sm font-medium text-gray-400 mb-1">Selecteer Les:</label>
+            <select id="linkLessonSelect" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <!-- Lessons will be loaded here -->
+            </select>
+        </div>
+        <button type="submit" id="linkDocumentBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Koppel Document</button>
+    </form>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Gekoppelde Documenten</h2>
+    <div id="linkedDocumentsList" class="flex flex-col gap-3 mb-4">
+        <p class="text-gray-400">Geen gekoppelde documenten gevonden.</p>
+    </div>
+</div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Nieuw/Bewerk Document</h2>
+    <form id="documentForm" class="flex flex-col gap-3">
+        <input type="hidden" id="documentId">
+        <div class="flex flex-col">
+            <label for="documentTitle" class="text-sm font-medium text-gray-400 mb-1">Titel Document:</label>
+            <input type="text" id="documentTitle" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="documentDescription" class="text-sm font-medium text-gray-400 mb-1">Beschrijving:</label>
+            <textarea id="documentDescription" rows="3" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200"></textarea>
+        </div>
+        <div class="flex flex-col">
+            <label for="documentFileName" class="text-sm font-medium text-gray-400 mb-1">Bestandsnaam (of URL):</label>
+            <input type="text" id="documentFileName" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200" placeholder="bijv. contract_jan_jansen.pdf of https://example.com/doc.pdf">
+        </div>
+        <div class="flex flex-col">
+            <label for="documentCategory" class="text-sm font-medium text-gray-400 mb-1">Categorie:</label>
+            <input type="text" id="documentCategory" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200" placeholder="bijv. Contracten, Formulieren, Handleidingen">
+        </div>
+        <button type="submit" id="saveDocumentBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Opslaan</button>
+        <button type="button" id="clearDocumentFormBtn" class="bg-gray-600 hover:bg-gray-700 text-gray-200 font-bold py-2 px-4 rounded-md transition-colors duration-200">Formulier Leegmaken</button>
+    </form>
+</div>

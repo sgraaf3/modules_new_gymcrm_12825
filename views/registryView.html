@@ -1,0 +1,60 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>User Registry</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="p-4">
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">User Overview</h2>
+    <div class="mb-4">
+        <input type="text" id="memberSearchInput" placeholder="Search by name or email..." class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full mb-2">
+        <select id="memberFilterStatus" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full">
+            <option value="">All Statuses</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+            <option value="Pending">Pending</option>
+        </select>
+    </div>
+    <div id="membersList" class="flex flex-col gap-3 mb-4">
+        <!-- Users will be dynamically loaded here -->
+        <p class="text-gray-400">No users found.</p>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Add/Edit User</h2>
+    <form id="memberForm" class="flex flex-col gap-3">
+        <input type="hidden" id="memberId">
+        <div class="flex flex-col">
+            <label for="memberName" class="text-sm font-medium text-gray-400 mb-1">User Name:</label>
+            <input type="text" id="memberName" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="memberEmail" class="text-sm font-medium text-gray-400 mb-1">Email:</label>
+            <input type="email" id="memberEmail" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="memberPhone" class="text-sm font-medium text-gray-400 mb-1">Phone Number:</label>
+            <input type="tel" id="memberPhone" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="memberJoinDate" class="text-sm font-medium text-gray-400 mb-1">Join Date (YYYY-MM-DD):</label>
+            <input type="date" id="memberJoinDate" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="memberStatus" class="text-sm font-medium text-gray-400 mb-1">Status:</label>
+            <select id="memberStatus" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Pending">Pending</option>
+            </select>
+        </div>
+        <div class="flex flex-col">
+            <label for="memberRole" class="text-sm font-medium text-gray-400 mb-1">Role:</label>
+            <select id="memberRole" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <option value="member">Member</option>
+                <option value="trainer">Trainer</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+        <button type="submit" id="saveMemberBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Save</button>
+        <button type="button" id="clearMemberFormBtn" class="bg-gray-600 hover:bg-gray-700 text-gray-200 font-bold py-2 px-4 rounded-md transition-colors duration-200">Clear Form</button>
+    </form>
+</div>

@@ -1,0 +1,57 @@
+<div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4">Dashboard Rapporten</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <div class="data-card">
+            <h3 class="card-header">Algemeen Overzicht</h3>
+            <p>Gemiddelde Training Duur: <span id="avgTrainingDuration">--</span></p>
+            <p>Gemiddelde Rust HR: <span id="avgRestHr">--</span></p>
+            <p>Totaal Calorieën Verbrand: <span id="totalCaloriesBurned">--</span></p>
+        </div>
+
+        <div class="data-card">
+            <h3 class="card-header">Biometrische Gegevens</h3>
+            <p>Gewicht: <span id="reportWeight">--</span></p>
+            <p>Vetpercentage: <span id="reportFat">--</span></p>
+            <p>Spiermassa: <span id="reportMuscle">--</span></p>
+            <p>BMI: <span id="reportBMI">--</span></p>
+            <p>VO2 Max: <span id="reportVo2Max">--</span></p>
+            <p>3k Tijd: <span id="report3k">--</span></p>
+            <p>5k Tijd: <span id="report5k">--</span></p>
+            <p>10k Tijd: <span id="report10k">--</span></p>
+            <p id="biometricsInterpretation" class="text-sm text-gray-400 mt-2"></p>
+            <p id="vo2Interpretation" class="text-sm text-gray-400 mt-2"></p>
+        </div>
+
+        <div class="data-card">
+            <h3 class="card-header">Slaap & Herstel</h3>
+            <p id="sleepExplanation" class="text-sm text-gray-400"></p>
+            <canvas id="sleepTrendChart"></canvas>
+        </div>
+
+        <div class="data-card">
+            <h3 class="card-header">Sportactiviteiten</h3>
+            <p id="sportActivitiesExplanation" class="text-sm text-gray-400"></p>
+            <canvas id="sportActivitiesTrendChart"></canvas>
+        </div>
+
+        <div class="data-card">
+            <h3 class="card-header">Hartslag & HRV</h3>
+            <p id="hrExplanation" class="text-sm text-gray-400"></p>
+            <p id="hrvExplanation" class="text-sm text-gray-400"></p>
+            <canvas id="individualHrChart"></canvas>
+            <canvas id="individualHrvChart"></canvas>
+        </div>
+
+        <div class="data-card">
+            <h3 class="card-header">Ademhaling & Intensiteit</h3>
+            <p id="breathExplanation" class="text-sm text-gray-400"></p>
+            <p id="intensityExplanation" class="text-sm text-gray-400"></p>
+            <canvas id="breathRateChart"></canvas>
+        </div>
+    </div>
+
+    <button id="downloadDashboardPdfBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full transition-colors duration-200 text-lg shadow-lg">
+        <i class="fas fa-file-pdf mr-3"></i>Dashboard Rapport Downloaden als PDF
+    </button>
+</div>

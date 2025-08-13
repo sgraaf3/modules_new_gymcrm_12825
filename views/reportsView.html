@@ -1,0 +1,108 @@
+<div class="a4-container bg-gray-800 shadow-lg rounded-lg p-6 mb-8">
+    <div class="report-header text-center mb-8">
+        <h1 class="text-4xl font-extrabold text-white mb-2">Prestatierapport</h1>
+        <p class="text-xl text-gray-300">Voortgangs- en meetoverzicht van de afgelopen maand.</p>
+    </div>
+
+    <div class="report-section mb-8">
+        <h2 class="text-2xl font-bold text-gray-100 border-b-2 border-purple-500 pb-3 mb-6">Sessierapporten</h2>
+        <div id="sessionReportsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Sessierapporten worden hier dynamisch geladen -->
+        </div>
+    </div>
+
+    <div class="report-section mb-8">
+        <h2 class="text-2xl font-bold text-gray-100 border-b-2 border-purple-500 pb-3 mb-6">HR & HRV Trends</h2>
+        <div class="report-content-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+                <div class="chart-container-full bg-gray-700 rounded-lg p-4 shadow-md" style="height: 300px;">
+                    <canvas id="individualHrChart"></canvas>
+                </div>
+                <div class="chart-container-full bg-gray-700 rounded-lg p-4 shadow-md mt-6" style="height: 300px;">
+                    <canvas id="individualHrvChart"></canvas>
+                </div>
+            </div>
+            <div class="flex flex-col gap-6">
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>HR Uitleg</h3></div>
+                    <div class="sub-value text-gray-300 text-base leading-relaxed" id="hrExplanation"></div>
+                </div>
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>HRV Uitleg</h3></div>
+                    <div class="sub-value text-gray-300 text-base leading-relaxed" id="hrvExplanation"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="report-section mb-8">
+        <h2 class="text-2xl font-bold text-gray-100 border-b-2 border-purple-500 pb-3 mb-6">Ademhaling & Intensiteit</h2>
+        <div class="report-content-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+                 <div class="chart-container-full bg-gray-700 rounded-lg p-4 shadow-md" style="height: 300px;">
+                    <canvas id="breathRateChart"></canvas>
+                </div>
+            </div>
+            <div class="flex flex-col gap-6">
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>Ademhaling Uitleg</h3></div>
+                    <div class="sub-value text-gray-300 text-base leading-relaxed" id="breathExplanation"></div>
+                </div>
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>Intensiteit Uitleg</h3></div>
+                    <div class="sub-value text-gray-300 text-base leading-relaxed" id="intensityExplanation"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="report-section mb-8">
+        <h2 class="text-2xl font-bold text-gray-100 border-b-2 border-purple-500 pb-3 mb-6">Overige Metingen</h2>
+        <div class="report-content-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>Biometrische Data</h3></div>
+                    <div class="grid grid-cols-2 gap-4 text-base text-gray-300">
+                        <div>Gewicht: <span id="reportWeight" class="font-semibold">--</span> kg</div>
+                        <div>Vetpercentage: <span id="reportFat" class="font-semibold">--</span> %</div>
+                        <div>Spiermassa: <span id="reportMuscle" class="font-semibold">--</span> kg</div>
+                        <div>BMI: <span id="reportBMI" class="font-semibold">--</span></div>
+                    </div>
+                </div>
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md mt-6">
+                    <div class="card-header mb-2"><h3>Vo2 Max & Geschatte Hardlooptijden</h3></div>
+                    <div class="grid grid-cols-2 gap-4 text-base text-gray-300">
+                        <div>Vo2 Max: <span id="reportVo2Max" class="font-semibold">--</span></div>
+                        <div>3k: <span id="report3k" class="font-semibold">--</span></div>
+                        <div>5k: <span id="report5k" class="font-semibold">--</span></div>
+                        <div>10k: <span id="report10k" class="font-semibold">--</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col gap-6">
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>Biometrie Interpretatie</h3></div>
+                    <div class="sub-value text-gray-300 text-base leading-relaxed" id="biometricsInterpretation"></div>
+                </div>
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>Vo2 Max Interpretatie</h3></div>
+                    <div class="sub-value text-gray-300 text-base leading-relaxed" id="vo2Interpretation"></div>
+                </div>
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>Slaap Interpretatie</h3></div>
+                    <div class="sub-value text-gray-300 text-base leading-relaxed" id="sleepExplanation"></div>
+                </div>
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>Sportactiviteiten Interpretatie</h3></div>
+                    <div class="sub-value text-gray-300 text-base leading-relaxed" id="sportActivitiesExplanation"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="flex justify-center mt-10">
+        <button id="downloadPdfBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full transition-colors duration-200 text-lg shadow-lg">
+            <i class="fas fa-file-pdf mr-3"></i>Rapport Downloaden als PDF
+        </button>
+    </div>
+</div>

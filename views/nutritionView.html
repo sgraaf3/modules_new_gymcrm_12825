@@ -1,0 +1,69 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>Voeding</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="p-4">
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Voedingsprogramma's</h2>
+    <div id="nutritionProgramsList" class="flex flex-col gap-3 mb-4">
+        <!-- Voedingsprogramma's worden hier dynamisch geladen door js/views/nutritionView.js -->
+        <p class="text-gray-400">Geen voedingsprogrammas gevonden.</p>
+    </div>
+    
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Nieuw Programma</h2>
+    <form id="nutritionProgramForm" class="flex flex-col gap-3">
+        <input type="hidden" id="programId">
+        <div class="flex flex-col"><label for="programName" class="text-sm font-medium text-gray-400 mb-1">Naam Programma:</label><input type="text" id="programName" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200"></div>
+        <div class="flex flex-col"><label for="programDescription" class="text-sm font-medium text-gray-400 mb-1">Beschrijving:</label><textarea id="programDescription" rows="3" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200"></textarea></div>
+        <button type="submit" id="saveProgramBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Opslaan</button>
+        <button type="button" id="clearNutritionFormBtn" class="bg-gray-600 hover:bg-gray-700 text-gray-200 font-bold py-2 px-4 rounded-md transition-colors duration-200">Leeg Formulier</button>
+    </form>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Programma Toewijzen aan Lid</h2>
+    <form id="assignProgramForm" class="flex flex-col gap-3">
+        <div class="flex flex-col">
+            <label for="assignMemberSelect" class="text-sm font-medium text-gray-400 mb-1">Selecteer Lid:</label>
+            <select id="assignMemberSelect" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <!-- Members will be loaded here -->
+            </select>
+        </div>
+        <div class="flex flex-col">
+            <label for="assignProgramSelect" class="text-sm font-medium text-gray-400 mb-1">Selecteer Programma:</label>
+            <select id="assignProgramSelect" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <!-- Programs will be loaded here -->
+            </select>
+        </div>
+        <button type="submit" id="assignProgramBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Wijs Programma Toe</button>
+    </form>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Toegewezen Programma's</h2>
+    <div id="assignedProgramsList" class="flex flex-col gap-3 mb-4">
+        <!-- Toegewezen programma's worden hier dynamisch geladen -->
+        <p class="text-gray-400">Geen toegewezen programma's gevonden.</p>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Voedingslogboek</h2>
+    <form id="foodLogForm" class="flex flex-col gap-3">
+        <div class="flex flex-col">
+            <label for="logMemberSelect" class="text-sm font-medium text-gray-400 mb-1">Selecteer Lid:</label>
+            <select id="logMemberSelect" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <!-- Members will be loaded here -->
+            </select>
+        </div>
+        <div class="flex flex-col">
+            <label for="logDate" class="text-sm font-medium text-gray-400 mb-1">Datum:</label>
+            <input type="date" id="logDate" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="foodEntry" class="text-sm font-medium text-gray-400 mb-1">Voedingsinvoer:</label>
+            <textarea id="foodEntry" rows="3" placeholder="Bijv. Ontbijt: 2 eieren, 100g havermout. Lunch: Salade met kip." class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200"></textarea>
+        </div>
+        <button type="submit" id="saveFoodLogBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Log Voeding</button>
+    </form>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Recente Voedingslogs</h2>
+    <div id="foodLogsList" class="flex flex-col gap-3 mb-4">
+        <!-- Recente voedingslogs worden hier dynamisch geladen -->
+        <p class="text-gray-400">Geen voedingslogs gevonden.</p>
+    </div>
+</div>

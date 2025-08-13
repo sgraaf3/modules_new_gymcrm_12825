@@ -1,0 +1,88 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>Dashboard Overzicht</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="p-4">
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Algemeen Overzicht</h2>
+    <p class="text-lg text-gray-300 mb-4">Dit is een algemeen dashboardoverzicht dat belangrijke gegevens en functionaliteiten samenvat.</p>
+    
+    <div class="dashboard-grid mt-6">
+        <div class="data-card">
+            <div class="card-header"><h3>Totaal Leden</h3></div>
+            <div class="main-value" id="overviewTotalMembers">--</div>
+            <div class="sub-value">Geregistreerd</div>
+        </div>
+        <div class="data-card">
+            <div class="card-header"><h3>Actieve Abonnementen</h3></div>
+            <div class="main-value" id="overviewActiveSubscriptions">--</div>
+            <div class="sub-value">Actief</div>
+        </div>
+        <div class="data-card">
+            <div class="card-header"><h3>Totaal Inkomen (Deze Maand)</h3></div>
+            <div class="main-value text-green-400" id="overviewMonthlyIncome">€ 0.00</div>
+            <div class="sub-value">Financiën</div>
+        </div>
+        <div class="data-card">
+            <div class="card-header"><h3>Recente Activiteiten</h3></div>
+            <div class="main-value" id="overviewRecentActivities">--</div>
+            <div class="sub-value">Afgelopen 24 uur</div>
+        </div>
+        <div class="data-card">
+            <div class="card-header"><h3>Openstaande Notities</h3></div>
+            <div class="main-value" id="overviewOpenNotes">--</div>
+            <div class="sub-value">Niet afgehandeld</div>
+        </div>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Belangrijke Prestatie-indicatoren (KPI's)</h2>
+    <div class="dashboard-grid">
+        <div class="data-card">
+            <div class="card-header"><h3>Gemiddelde HR Leden</h3></div>
+            <div class="main-value" id="overviewAvgHrMembers">-- BPM</div>
+            <div class="sub-value">Gebaseerd op profielen</div>
+        </div>
+        <div class="data-card">
+            <div class="card-header"><h3>Totaal Trainingssessies (Week)</h3></div>
+            <div class="main-value" id="overviewWeeklyTrainingSessions">--</div>
+            <div class="sub-value">Afgelopen 7 dagen</div>
+        </div>
+        <div class="data-card">
+            <div class="card-header"><h3>Nieuwe Leden (Deze Maand)</h3></div>
+            <div class="main-value" id="overviewNewMembersMonth">--</div>
+            <div class="sub-value">Registraties</div>
+        </div>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Recente Logboekvermeldingen</h2>
+    <div id="overviewRecentLogs" class="flex flex-col gap-2 mb-4">
+        <p class="text-gray-400">Geen recente logboekvermeldingen.</p>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Aankomende Geplande Items</h2>
+    <div id="overviewUpcomingSchedules" class="flex flex-col gap-2 mb-4">
+        <p class="text-gray-400">Geen aankomende geplande items.</p>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Snelle Links</h2>
+    <div class="dashboard-grid">
+        <div class="dashboard-widget-card" data-target-view="financeView">
+            <div class="dashboard-widget-content">
+                <i class="fas fa-money-bill-wave icon-lime"></i>
+                <h3>Bekijk Financiën</h3>
+            </div>
+        </div>
+        <div class="dashboard-widget-card" data-target-view="registryView">
+            <div class="dashboard-widget-content">
+                <i class="fas fa-box icon-amber"></i>
+                <h3>Beheer Leden</h3>
+            </div>
+        </div>
+        <div class="dashboard-widget-card" data-target-view="reportsView">
+            <div class="dashboard-widget-content">
+                <i class="fas fa-chart-line icon-cyan"></i>
+                <h3>Bekijk Rapporten</h3>
+            </div>
+        </div>
+    </div>
+</div>

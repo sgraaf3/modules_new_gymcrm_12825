@@ -1,0 +1,1116 @@
+/* All styling is now direct CSS properties or Tailwind utility classes in the HTML. */
+/* No @apply directives here, as they require a build step. */
+
+body {
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    background-color: #111827; /* bg-gray-900 */
+    color: #e5e7eb; /* text-gray-200 */
+    padding: 1rem; /* p-4 */
+}
+@media (min-width: 640px) { /* sm:p-8 */
+    body {
+        padding: 2rem;
+    }
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #1f2937; /* bg-gray-800 */
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    position: relative;
+}
+
+.app-section {
+    display: none;
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-bottom: 80px; /* Space for bottom nav */
+}
+
+.app-section.active {
+    display: block;
+}
+
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #111827; /* bg-gray-900 */
+    color: #e5e7eb;
+    border-bottom: 1px solid #374151; /* border-gray-700 */
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.top-nav span {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease;
+}
+
+.icon-button:hover {
+    background-color: #374151;
+}
+
+.dashboard-header {
+    margin-bottom: 2rem; /* mb-8 */
+    text-align: center;
+}
+@media (min-width: 768px) { /* md:mb-12 */
+    .dashboard-header {
+        margin-bottom: 3rem;
+    }
+}
+
+.dashboard-header h1 {
+    font-size: 1.875rem; /* text-3xl */
+    line-height: 2.25rem; /* leading-9 */
+    font-weight: 800; /* font-extrabold */
+    color: #60a5fa; /* text-blue-400 */
+    margin-bottom: 1.5rem; /* mb-6 */
+}
+@media (min-width: 640px) { /* sm:text-4xl */
+    .dashboard-header h1 {
+        font-size: 2.25rem;
+        line-height: 2.5rem;
+    }
+}
+
+.dashboard-header p {
+    color: #9ca3af; /* text-gray-400 */
+    margin-top: 0.5rem; /* mt-2 */
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr)); /* grid-cols-1 */
+    gap: 1.5rem; /* gap-6 */
+    max-width: 90rem; /* max-w-8xl */
+    margin-left: auto;
+    margin-right: auto;
+}
+@media (min-width: 640px) { /* sm:grid-cols-2 */
+    .dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (min-width: 1024px) { /* lg:grid-cols-3 */
+    .dashboard-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+@media (min-width: 1280px) { /* xl:grid-cols-4 */
+    .dashboard-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+/* For 6 columns on very large screens */
+@media (min-width: 1536px) { /* 2xl:grid-cols-6 - assuming 2xl breakpoint for 6 columns */
+    .dashboard-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+}
+
+.dashboard-section-header {
+    font-size: 1.25rem; /* text-xl */
+    font-weight: 700; /* font-bold */
+    color: #f9fafb; /* text-gray-100 */
+    border-bottom: 1px solid #374151; /* border-b border-gray-700 */
+    padding-bottom: 0.5rem; /* pb-2 */
+    margin-bottom: 1rem; /* mb-4 */
+    margin-top: 2rem; /* mt-8 */
+}
+
+.dashboard-widget-card {
+    min-height: 10rem; /* Adjusted for dashboard widgets */
+    position: relative;
+    background: linear-gradient(135deg, rgba(55,65,81,1) 0%, rgba(17,24,39,1) 100%);
+    padding: 2px;
+    border-radius: 1rem; /* rounded-2xl */
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* shadow-xl */
+    transition: transform 0.3s ease; /* transition duration-300 ease */
+    cursor: pointer;
+}
+.dashboard-widget-card:hover {
+    transform: scale(1.03); /* Slightly less aggressive hover */
+}
+
+.dashboard-widget-content {
+    background-color: #111827; /* bg-gray-900 */
+    padding: 1.5rem; /* p-6 */
+    border-radius: 1rem; /* rounded-2xl */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.dashboard-widget-content i {
+    font-size: 3rem; /* Adjusted icon size for dashboard */
+    margin-bottom: 0.75rem;
+}
+
+.dashboard-widget-content h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e5e7eb;
+}
+
+/* Specific Font Awesome icon sizing and color */
+.fa-5xl {
+    font-size: 5rem; /* 80px */
+    line-height: 1;
+}
+.icon-blue { color: #60a5fa; }
+.icon-green { color: #4ade80; }
+.icon-red { color: #f87171; }
+.icon-purple { color: #c084fc; }
+.icon-yellow { color: #facc15; }
+.icon-cyan { color: #22d3ee; }
+.icon-indigo { color: #818cf8; }
+.icon-pink { color: #f472b6; }
+.icon-teal { color: #2dd4bf; }
+.icon-emerald { color: #34d399; }
+.icon-gray { color: #9ca3af; }
+.icon-orange { color: #f97316; }
+
+/* Animation for heartbeat icon */
+@keyframes heartbeat {
+    0% { transform: scale(1); }
+    15% { transform: scale(1.1); }
+    30% { transform: scale(1); }
+    45% { transform: scale(1.1); }
+    60% { transform: scale(1); }
+    100% { transform: scale(1); }
+}
+.heartbeat-icon {
+    animation: heartbeat 1.5s infinite;
+}
+
+/* Modal Overlay for Pop-ups */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Dim the background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000; /* Above other content */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background-color: #2c2c34; /* Match card background */
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.8);
+    width: 90%;
+    max-width: 380px; /* Max width for modal to fit phone design */
+    max-height: 90vh; /* Max height for scrollable content */
+    overflow-y: auto; /* Enable scrolling for modal content */
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.9);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    position: relative; /* For close button */
+}
+
+.modal-overlay.active .modal-content {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #e74c3c; /* Danger color */
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2001;
+    transition: background-color 0.2s ease;
+}
+.modal-close-btn:hover {
+    background-color: #c0392b;
+}
+
+.modal-title {
+    font-size: 1.5rem; /* text-2xl */
+    font-weight: bold;
+    color: #60a5fa; /* text-blue-400 */
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.modal-body-text {
+    font-size: 1rem; /* text-base */
+    color: #e0e0e0;
+    margin-bottom: 1rem;
+}
+
+.modal-button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+.modal-button-group button {
+    background-color: #2563eb; /* bg-blue-600 */
+    color: #ffffff; /* text-white */
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    transition: background-color 0.2s ease;
+    flex: 1;
+    max-width: 150px;
+}
+.modal-button-group button:hover {
+    background-color: #1d4ed8; /* hover:bg-blue-700 */
+}
+.modal-button-group .btn-secondary {
+    background-color: #4b5563; /* bg-gray-600 */
+}
+.modal-button-group .btn-secondary:hover {
+    background-color: #374151; /* hover:bg-gray-700 */
+}
+
+/* Styling for forms within modals/sections */
+.form-section-header {
+    font-size: 1.125rem;
+    font-weight: bold;
+    color: #f9fafb;
+    border-bottom: 1px solid #374151;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    margin-top: 1.5rem;
+}
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1rem;
+}
+@media (min-width: 768px) {
+    .form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+.form-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #9ca3af;
+    margin-bottom: 0.25rem;
+}
+.form-group input, .form-group select, .form-group textarea {
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    background-color: #374151;
+    border: 1px solid #4b5563;
+    color: #e5e7eb;
+    font-size: 1rem;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 1px #60a5fa;
+}
+.section-note {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Styling for data cards in live measurement */
+.data-card { /* Renamed from .live-measurement-content .data-card for broader use */
+    background-color: #2c2c34;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+}
+.data-card .card-header h3 {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    margin: 0;
+    font-weight: normal;
+}
+.data-card .main-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #e0e0e0;
+    margin-bottom: 0.5rem;
+}
+.data-card .sub-value {
+    font-size: 0.875rem;
+    color: #9ca3af;
+}
+.data-card .mini-chart-container {
+    width: 100%;
+    height: 80px;
+    margin-top: 0.5rem;
+    position: relative;
+}
+.data-card .mini-chart-container canvas {
+    position: absolute;
+    width: 100% !important;
+    height: 100% !important;
+    left: 0;
+    top: 0;
+}
+.data-card .circle-chart-container {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+    position: relative;
+}
+.data-card .circle-chart-container canvas {
+    position: absolute;
+    width: 100% !important;
+    height: 100% !important;
+    left: 0;
+    top: 0;
+}
+.data-card .control-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem;
+    margin-top: auto;
+}
+.data-card .control-buttons button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s ease;
+    flex: 1;
+    max-width: 150px;
+}
+#startMeasurementBtnLive { background-color: #2ecc71; }
+#startMeasurementBtnLive:hover { background-color: #27ae60; }
+#stopMeasurementBtnLive { background-color: #e74c3c; }
+#stopMeasurementBtnLive:hover { background-color: #c0392b; }
+
+/* Styling for HR Data View */
+.hr-data-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+.hr-data-grid .chart-container-full {
+    grid-column: 1 / -1;
+    background-color: #2c2c34;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    height: 300px; /* Fixed height for full charts */
+    position: relative;
+}
+.hr-data-grid .chart-container-full canvas {
+    position: absolute;
+    width: 100% !important;
+    height: 100% !important;
+    left: 0;
+    top: 0;
+}
+.hr-data-grid .status-box {
+    background-color: #2c2c34;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+.hr-data-grid .status-box h4 {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    margin-bottom: 0.25rem;
+}
+.hr-data-grid .status-box p {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #e0e0e0;
+}
+
+/* Styling for Testing View */
+.test-results-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+.test-result-card {
+    background-color: #2c2c34;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+.test-result-card h4 {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    margin-bottom: 0.25rem;
+}
+.test-result-card p {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #e0e0e0;
+}
+
+/* Styling for Nutrition View */
+.nutrition-program-card {
+    background-color: #2c2c34;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.nutrition-program-card h3 {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #e0e0e0;
+    margin-bottom: 0.5rem;
+}
+.nutrition-program-card .sub-value {
+    font-size: 0.875rem;
+    color: #9ca3af;
+}
+.nutrition-program-card .flex button {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+/* Floating Bluetooth Widget */
+.bluetooth-widget {
+    position: fixed;
+    bottom: 80px; /* Above bottom navigation */
+    right: 20px;
+    width: 250px;
+    background-color: #2c2c34;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+.bluetooth-widget.active {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.bluetooth-widget.hidden {
+    display: none;
+}
+
+.bluetooth-widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: #1a202c; /* Darker header */
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    color: #e5e7eb;
+    font-weight: bold;
+}
+
+.bluetooth-widget-content {
+    padding: 15px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.data-card-small {
+    background-color: #111827;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.data-card-small .card-header h3 {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-bottom: 5px;
+}
+
+.data-card-small .main-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #e0e0e0;
+}
+
+.data-card-small .sub-value {
+    font-size: 0.7rem;
+    color: #9ca3af;
+}
+
+.control-buttons-small {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.control-buttons-small button {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s ease;
+    flex-grow: 1;
+}
+
+.control-buttons-small #startMeasurementBtnLive {
+    background-color: #2ecc71;
+}
+
+.control-buttons-small #startMeasurementBtnLive:hover {
+    background-color: #27ae60;
+}
+
+.control-buttons-small #stopMeasurementBtnLive {
+    background-color: #e74c3c;
+}
+
+.control-buttons-small #stopMeasurementBtnLive:hover {
+    background-color: #c0392b;
+}
+
+.floating-bluetooth-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #60a5fa; /* Blue color */
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 1001;
+    transition: background-color 0.2s ease;
+}
+
+.floating-bluetooth-button:hover {
+    background-color: #3b82f6;
+}
+
+.toggle-button {
+    background: none;
+    border: none;
+    color: #e5e7eb;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.toggle-button:hover {
+    color: #9ca3af;
+}
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: #111827; /* bg-gray-900 */
+    border-top: 1px solid #374151; /* border-gray-700 */
+    padding: 1rem 0;
+    z-index: 100;
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.bottom-nav-item:hover {
+    color: #e5e7eb;
+    background-color: #374151;
+}
+
+.bottom-nav-item.active {
+    color: #60a5fa; /* text-blue-400 */
+}
+
+.bottom-nav-item i {
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+}
+/* Nieuwe stijlen voor de schemabouwer */
+.day-timeline-container {
+    display: grid;
+    grid-template-columns: 50px 1fr; /* Tijdlabel kolom en inhoudskolom */
+    gap: 0.5rem;
+    margin-top: 1rem;
+    border: 2px dashed #4b5563;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    min-height: 300px; /* Voldoende hoogte voor de tijdlijn */
+    position: relative; /* Voor absolute positionering van items */
+}
+.time-labels {
+    display: flex;
+    flex-direction: column;
+    height: 1200px; /* Vaste hoogte voor tijdlabels (24 uur * 2 slots/uur * 25px/slot) */
+}
+.time-slot-label {
+    text-align: right;
+    padding-right: 0.5rem;
+    color: #9ca3af;
+    font-size: 0.8rem;
+    height: 25px; /* 30 minuten per 25px */
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+.day-drop-zone-content { /* Dit is de werkelijke dropzone */
+    position: relative; /* Cruciaal voor absolute positioning van children */
+    min-height: 1200px; /* Zorg dat het dropgebied groot genoeg is voor 24 uur */
+    overflow-y: auto; /* Allow scrolling if items go beyond view */
+    padding: 0; /* Remove padding here, items will position themselves */
+    border: none; /* Remove border from here, it's on the container */
+}
+.timeline-item {
+    position: absolute; /* Position absolutely within day-drop-zone-content */
+    left: 0;
+    width: 100%; /* Take full width of the content area */
+    background-color: #2c2c34;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem; /* Added for consistency, though absolute positioning might override */
+    font-size: 0.9rem;
+    color: #e5e7eb;
+    min-height: 40px; /* Minimum height for items */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease; /* Add transition for visual feedback */
+    z-index: 10; /* Ensure items are above drop zone border */
+}
+.timeline-item.hr-zone-bar {
+    height: auto; /* Allow content to dictate height */
+    min-height: 40px; /* Base height for readability */
+    justify-content: flex-start;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.timeline-item .remove-btn {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1; /* Zorg dat de knop klikbaar is */
+}
+
+/* Week & Maand Weergave Kalender Stijlen */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Responsive columns */
+    gap: 0.5rem; /* gap-2 */
+    margin-top: 1rem;
+}
+.calendar-day-cell, .calendar-week-cell {
+    background-color: #2c2c34;
+    border-radius: 0.5rem;
+    min-height: 120px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; /* Align items to top */
+    text-align: center;
+    border: 2px dashed #4b5563; /* Drop zone style */
+}
+.calendar-day-cell.drag-over, .calendar-week-cell.drag-over {
+    background-color: #2d3748;
+    border-color: #60a5fa;
+}
+.calendar-day-cell h3, .calendar-week-cell h3 {
+    font-weight: bold;
+    color: #e5e7eb;
+    margin-bottom: 0.5rem;
+}
+.calendar-day-cell .dropped-item, .calendar-week-cell .dropped-item {
+    width: 100%;
+    margin-bottom: 0.25rem;
+    font-size: 0.8rem;
+    padding: 0.4rem;
+}
+
+/* Settings Icon */
+.settings-icon-btn {
+    position: absolute;
+    top: 1.5rem; /* Aangepast om rechtsboven te staan */
+    right: 1.5rem;
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease;
+    z-index: 20; /* Zorg dat het boven andere content ligt */
+}
+.settings-icon-btn:hover {
+    background-color: #374151;
+}
+
+/* Categorie selectie */
+.category-select-container {
+    margin-bottom: 1rem;
+}
+.category-content {
+    display: none;
+}
+.category-content.active {
+    display: block;
+}
+/* Animatie voor tabbladen */
+.tab-content {
+    opacity: 0;
+    transform: translateY(20px); /* Begin iets lager */
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    position: absolute; /* Zorgt dat ze over elkaar heen kunnen liggen */
+    width: 100%;
+    top: 0;
+    left: 0;
+    padding: 1.5rem; /* Zorg voor padding zoals in main-content */
+}
+
+.tab-content.active {
+    opacity: 1;
+    transform: translateY(0);
+    position: relative; /* Zorgt dat het ruimte inneemt als het actief is */
+}
+
+/* Zorg dat de main-content de hoogte van de actieve tab bepaalt */
+.main-content {
+    flex-grow: 1;
+    padding: 0; /* Verwijder padding hier, de tab-content heeft het nu */
+    overflow-y: auto;
+    position: relative; /* Voor absolute positionering van tab-content */
+}
+/* Voeg deze CSS toe aan je style.css bestand */
+
+/* Algemene app-container en content stijlen (bestaand, hier ter referentie) */
+body {
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    background-color: #111827; /* bg-gray-900 */
+    color: #e5e7eb; /* text-gray-200 */
+    padding: 1rem; /* p-4 */
+}
+@media (min-width: 640px) { /* sm:p-8 */
+    body {
+        padding: 2rem;
+    }
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #1f2937; /* bg-gray-800 */
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    position: relative;
+}
+
+/* Animatie voor tabbladen */
+.tab-content {
+    opacity: 0;
+    transform: translateY(20px); /* Begin iets lager */
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    position: absolute; /* Zorgt dat ze over elkaar heen kunnen liggen */
+    width: 100%;
+    top: 0;
+    left: 0;
+    padding: 1.5rem; /* Zorg voor padding zoals in main-content */
+}
+
+.tab-content.active {
+    opacity: 1;
+    transform: translateY(0);
+    position: relative; /* Zorgt dat het ruimte inneemt als het actief is */
+}
+
+/* Zorg dat de main-content de hoogte van de actieve tab bepaalt */
+.main-content {
+    flex-grow: 1;
+    padding: 0; /* Verwijder padding hier, de tab-content heeft het nu */
+    overflow-y: auto;
+    position: relative; /* Voor absolute positionering van tab-content */
+}
+
+/* Nieuwe stijlen voor de lesroosterbouwer kalender */
+.calendar-grid-lesson {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(120px, 1fr)); /* 7 kolommen, min 120px, flexibel */
+    gap: 0.5rem;
+    overflow-x: auto; /* Horizontaal scrollen indien nodig */
+    padding-bottom: 1rem; /* Voorkom dat scrollbar content overlapt */
+}
+.calendar-header-day {
+    text-align: center;
+    font-weight: bold;
+    padding: 0.5rem;
+    background-color: #1f2937; /* bg-gray-800 */
+    border-radius: 0.375rem;
+    flex-shrink: 0; /* Voorkom dat headers krimpen */
+}
+.calendar-day-cell-lesson {
+    background-color: #2c2c34;
+    border-radius: 0.5rem;
+    min-height: 250px; /* Voldoende ruimte voor lessen, verhoogd */
+    padding: 0.5rem;
+    border: 2px dashed #4b5563; /* Drop zone style */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex-shrink: 0; /* Voorkom dat cellen krimpen */
+    width: 100%; /* Zorg dat ze de volledige grid-kolom breedte innemen */
+}
+.lesson-drop-zone.drag-over {
+    background-color: #2d3748;
+    border-color: #60a5fa;
+}
+.lesson-item {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    cursor: grab;
+    margin-bottom: 0.5rem; /* Ruimte tussen lessen */
+}
+.lesson-item .lesson-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    color: #e5e7eb;
+    margin-bottom: 0.5rem;
+}
+.lesson-item .lesson-details {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    margin-bottom: 0.5rem;
+}
+.lesson-item .lesson-settings {
+    display: none; /* Standaard verborgen */
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+.lesson-item .lesson-settings.active {
+    display: flex;
+}
+.lesson-item input, .lesson-item select, .lesson-item textarea {
+    background-color: #1f2937;
+    border: 1px solid #374151;
+    color: #e5e7eb;
+    padding: 0.4rem;
+    border-radius: 0.3rem;
+    font-size: 0.875rem;
+}
+.lesson-item .remove-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    color: #f87171;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+/* Kleurcodering voor sportsecties */
+.bg-fitness { background-color: #ef4444; } /* Red */
+.bg-budo { background-color: #e5e7eb; color: #1f2937; } /* White with dark text */
+.bg-dance { background-color: #facc15; } /* Yellow */
+.bg-swim { background-color: #3b82f6; } /* Blue */
+.bg-group { background-color: #22c55e; } /* Green */
+/* Default is al gedefinieerd in JS als bg-gray-600 */
+
+/* Modale overlay stijlen (indien nodig, zorg dat deze niet conflicteren met bestaande) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background-color: #2c2c34;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.8);
+    width: 90%;
+    max-width: 380px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.9);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    position: relative;
+}
+
+.modal-overlay.active .modal-content {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2001;
+    transition: background-color 0.2s ease;
+}
+.modal-close-btn:hover {
+    background-color: #c0392b;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #60a5fa;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.modal-body-text {
+    font-size: 1rem;
+    color: #e0e0e0;
+    margin-bottom: 1rem;
+}
+
+.modal-button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+.modal-button-group button {
+    background-color: #2563eb;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    transition: background-color 0.2s ease;
+    flex: 1;
+    max-width: 150px;
+}
+.modal-button-group button:hover {
+    background-color: #1d4ed8;
+}
+.modal-button-group .btn-secondary {
+    background-color: #4b5563;
+}
+.modal-button-group .btn-secondary:hover {
+    background-color: #374151;
+}

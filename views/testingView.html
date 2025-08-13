@@ -1,0 +1,55 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>Testen</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="p-4">
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Test Uitvoering</h2>
+    <div class="bg-gray-700 p-4 rounded-lg shadow-md mb-4">
+        <p class="text-lg text-gray-300 mb-4">Selecteer een testprotocol en start de meting.</p>
+        <div class="flex flex-col gap-4">
+            <select id="testProtocolSelect" class="p-2 rounded-md bg-gray-800 border border-gray-600 text-gray-200">
+                <!-- Test protocols will be loaded here -->
+                <option value="">Selecteer een protocol</option>
+            </select>
+            <button id="startTestBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Start Test</button>
+            <button id="stopTestBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200" style="display:none;">Stop Test</button>
+        </div>
+        <div class="mt-4 p-2 bg-gray-800 rounded-md text-gray-200" id="testStatusDisplay">Status: Idle</div>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Test Resultaten</h2>
+    <div class="bg-gray-700 p-4 rounded-lg shadow-md mb-4" id="testResultsDisplay">
+        <p class="text-lg text-gray-300">Geen resultaten beschikbaar.</p>
+    </div>
+    <button id="generateReportBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200" style="display:none;">Genereer Rapport</button>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Test Protocol Beheer</h2>
+    <form id="protocolForm" class="flex flex-col gap-3 mb-6">
+        <input type="hidden" id="protocolId">
+        <div class="flex flex-col">
+            <label for="protocolName" class="text-sm font-medium text-gray-400 mb-1">Protocol Naam:</label>
+            <input type="text" id="protocolName" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="protocolDescription" class="text-sm font-medium text-gray-400 mb-1">Beschrijving:</label>
+            <textarea id="protocolDescription" rows="3" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200"></textarea>
+        </div>
+        <div class="flex flex-col">
+            <label for="protocolType" class="text-sm font-medium text-gray-400 mb-1">Type Test:</label>
+            <select id="protocolType" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <option value="vo2max">VO2max Schatting</option>
+                <option value="lactate_threshold">Omslagpunt Test</option>
+                <option value="strength">Kracht Test</option>
+                <option value="flexibility">Flexibiliteit Test</option>
+            </select>
+        </div>
+        <button type="submit" id="saveProtocolBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Opslaan Protocol</button>
+        <button type="button" id="clearProtocolFormBtn" class="bg-gray-600 hover:bg-gray-700 text-gray-200 font-bold py-2 px-4 rounded-md transition-colors duration-200">Leeg Formulier</button>
+    </form>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Bestaande Protocollen</h2>
+    <div id="existingProtocolsList" class="flex flex-col gap-3 mb-4">
+        <p class="text-gray-400">Geen protocollen gevonden.</p>
+    </div>
+</div>

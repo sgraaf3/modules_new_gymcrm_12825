@@ -1,0 +1,25 @@
+<div class="a4-container">
+    <div class="report-header text-center mb-8">
+        <h1 class="text-4xl font-extrabold text-white mb-2">Training Rapporten</h1>
+        <p class="text-xl text-gray-300">Gedetailleerd overzicht van al je trainingssessies.</p>
+    </div>
+
+    <div class="report-section mb-8">
+        <h2 class="text-2xl font-bold text-gray-100 border-b-2 border-purple-500 pb-3 mb-6">Overzicht Sessies</h2>
+        <div id="sessionReportsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Training sessierapporten worden hier dynamisch geladen -->
+            <p class="text-gray-400">Geen training sessies gevonden.</p>
+        </div>
+    </div>
+
+    <!-- Container voor het gedetailleerde rapport van één sessie -->
+    <div id="detailedReportContainer" style="display:none;" class="report-section mb-8 mt-8 a4-page">
+        <!-- De gedetailleerde rapportpagina wordt hier dynamisch ingeladen -->
+    </div>
+
+    <div class="flex justify-center mt-10">
+        <button id="downloadTrainingPdfBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full transition-colors duration-200 text-lg shadow-lg">
+            <i class="fas fa-file-pdf mr-3"></i>Download Rapport als PDF
+        </button>
+    </div>
+</div>

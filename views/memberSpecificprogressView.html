@@ -1,0 +1,75 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span id="member-progress-title">User Progressie</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="p-4" id="memberSpecificprogressView">
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Key Metrics</h2>
+    <div id="keyMetrics" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <!-- Key metrics will be dynamically loaded here -->
+    </div>
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Algemene Progressie</h2>
+    <div class="bg-gray-700 p-4 rounded-lg shadow-md h-96 mb-4">
+        <canvas id="userProgressMainChart"></canvas>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Gedetailleerde Statistieken</h2>
+    <div class="dashboard-grid">
+        <div class="dashboard-widget-card" data-target-view="webGraphsView" data-graph-type="hr">
+            <div class="dashboard-widget-content">
+                <i class="fas fa-heartbeat icon-green"></i>
+                <h3>Hartslag (HR)</h3>
+                <p class="text-gray-400">Waarde: --</p>
+            </div>
+        </div>
+        <div class="dashboard-widget-card" data-target-view="webGraphsView" data-graph-type="hrv">
+            <div class="dashboard-widget-content">
+                <i class="fas fa-wave-square icon-blue"></i>
+                <h3>HRV</h3>
+                <p class="text-gray-400">Waarde: --</p>
+            </div>
+        </div>
+        <div class="dashboard-widget-card" data-target-view="webGraphsView" data-graph-type="biometrics">
+            <div class="dashboard-widget-content">
+                <i class="fas fa-ruler-combined icon-purple"></i>
+                <h3>Biometrie</h3>
+                <p class="text-gray-400">Waarde: --</p>
+            </div>
+        </div>
+        <div class="dashboard-widget-card" data-target-view="webGraphsView" data-graph-type="ratios">
+            <div class="dashboard-widget-content">
+                <i class="fas fa-balance-scale icon-yellow"></i>
+                <h3>Verhoudingen</h3>
+                <p class="text-gray-400">Waarde: --</p>
+            </div>
+        </div>
+        <div class="dashboard-widget-card" data-target-view="webGraphsView" data-graph-type="cardiovascular">
+            <div class="dashboard-widget-content">
+                <i class="fas fa-lungs icon-red"></i>
+                <h3>Cardiovasculair</h3>
+                <p class="text-gray-400">Waarde: --</p>
+            </div>
+        </div>
+        <div class="dashboard-widget-card" data-target-view="webGraphsView" data-graph-type="strength">
+            <div class="dashboard-widget-content">
+                <i class="fas fa-dumbbell icon-orange"></i>
+                <h3>Kracht</h3>
+                <p class="text-gray-400">Waarde: --</p>
+            </div>
+        </div>
+        <div class="dashboard-widget-card" data-target-view="webGraphsView" data-graph-type="coordination">
+            <div class="dashboard-widget-content">
+                <i class="fas fa-running icon-cyan"></i>
+                <h3>Coördinatie</h3>
+                <p class="text-gray-400">Waarde: --</p>
+            </div>
+        </div>
+        <div class="dashboard-widget-card" data-target-view="webGraphsView" data-graph-type="flexibility">
+            <div class="dashboard-widget-content">
+                <i class="fas fa-child icon-pink"></i>
+                <h3>Flexibiliteit</h3>
+                <p class="text-gray-400">Waarde: --</p>
+            </div>
+        </div>
+    </div>
+</div>

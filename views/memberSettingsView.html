@@ -1,0 +1,55 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span id="member-settings-title">Lid Instellingen</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="p-4">
+    <form id="memberSettingsForm" class="flex flex-col gap-4">
+        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Algemene Instellingen</h2>
+        <div class="form-group">
+            <label for="receiveNotifications">Ontvang Notificaties:</label>
+            <input type="checkbox" id="receiveNotifications" class="form-checkbox h-5 w-5 text-blue-600">
+        </div>
+        <div class="form-group">
+            <label for="preferredLanguage">Voorkeurstaal:</label>
+            <select id="preferredLanguage" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <option value="nl">Nederlands</option>
+                <option value="en">English</option>
+            </select>
+        </div>
+
+        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Privacy Instellingen</h2>
+        <div class="form-group">
+            <label for="shareData">Deel Trainingsdata:</label>
+            <input type="checkbox" id="shareData" class="form-checkbox h-5 w-5 text-blue-600">
+        </div>
+        <div class="form-group">
+            <label for="profileVisibility">Profiel Zichtbaarheid:</label>
+            <select id="profileVisibility" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <option value="public">Openbaar</option>
+                <option value="private">Privé</option>
+                <option value="members-only">Alleen Leden</option>
+            </select>
+        </div>
+
+        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Training Instellingen</h2>
+        <div class="form-group">
+            <label for="maxHr">Maximale Hartslag (bpm):</label>
+            <input type="number" id="maxHr" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="form-group">
+            <label for="thresholdHr">Drempel Hartslag (bpm):</label>
+            <input type="number" id="thresholdHr" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+
+        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Permissie Instellingen</h2>
+        <div class="form-group">
+            <label for="memberRole">Rol:</label>
+            <select id="memberRole" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <option value="member">Member</option>
+                <option value="trainer">Trainer</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+    </form>
+</div>

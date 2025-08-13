@@ -1,0 +1,107 @@
+<div class="a4-container bg-gray-800 shadow-lg rounded-lg p-6 mb-8">
+    <div class="report-header text-center mb-8">
+        <h1 class="text-4xl font-extrabold text-white mb-2">Rustmeting Rapport</h1>
+        <p class="text-xl text-gray-300">Gedetailleerd overzicht van uw rustmetingen.</p>
+    </div>
+
+    <div class="report-section mb-8">
+        <h2 class="text-2xl font-bold text-gray-100 border-b-2 border-purple-500 pb-3 mb-6">Overzicht Sessies</h2>
+        <div id="restSessionReportsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Rustmeting sessierapporten worden hier dynamisch geladen -->
+        </div>
+    </div>
+
+    <div class="report-section mb-8">
+        <h2 class="text-2xl font-bold text-gray-100 border-b-2 border-purple-500 pb-3 mb-6">HRV & Ademhaling Trends</h2>
+        <div class="report-content-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+                <div class="chart-container-full bg-gray-700 rounded-lg p-4 shadow-md" style="height: 300px;">
+                    <canvas id="restHrChart"></canvas>
+                </div>
+                <div class="chart-container-full bg-gray-700 rounded-lg p-4 shadow-md mt-6" style="height: 300px;">
+                    <canvas id="restRrHistogramChart"></canvas>
+                </div>
+            </div>
+            <div class="flex flex-col gap-6">
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>RMSSD Uitleg</h3></div>
+                    <div class="sub-value text-gray-300 text-base leading-relaxed" id="rmssdExplanation"></div>
+                </div>
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>SDNN Uitleg</h3></div>
+                    <div class="sub-value text-gray-300 text-base leading-relaxed" id="sdnnExplanation"></div>
+                </div>
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>Ademhaling Uitleg</h3></div>
+                    <div class="sub-value text-gray-300 text-base leading-relaxed" id="breathExplanation"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="report-section mb-8">
+        <h2 class="text-2xl font-bold text-gray-100 border-b-2 border-purple-500 pb-3 mb-6">Geavanceerde HRV Analyse</h2>
+        <div class="report-content-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+                 <div class="chart-container-full bg-gray-700 rounded-lg p-4 shadow-md" style="height: 300px;">
+                    <canvas id="restPoincarePlotChart"></canvas>
+                </div>
+                <div class="chart-container-full bg-gray-700 rounded-lg p-4 shadow-md mt-6" style="height: 300px;">
+                    <canvas id="restPowerSpectrumChart"></canvas>
+                </div>
+            </div>
+            <div class="flex flex-col gap-6">
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>Poincaré Plot Uitleg</h3></div>
+                    <div class="sub-value text-gray-300 text-base leading-relaxed" id="poincareExplanation"></div>
+                </div>
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>Frequentie Analyse Uitleg</h3></div>
+                    <div class="sub-value text-gray-300 text-base leading-relaxed" id="frequencyExplanation"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="report-section mb-8">
+        <h2 class="text-2xl font-bold text-gray-100 border-b-2 border-purple-500 pb-3 mb-6">Lichaamssamenstelling & VO2 Max</h2>
+        <div class="report-content-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>Biometrische Data</h3></div>
+                    <div class="grid grid-cols-2 gap-4 text-base text-gray-300">
+                        <div>Gewicht: <span id="restReportWeight" class="font-semibold">--</span> kg</div>
+                        <div>Vetpercentage: <span id="restReportFat" class="font-semibold">--</span> %</div>
+                        <div>Spiermassa: <span id="restReportMuscle" class="font-semibold">--</span> kg</div>
+                        <div>BMI: <span id="restReportBMI" class="font-semibold">--</span></div>
+                    </div>
+                </div>
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md mt-6">
+                    <div class="card-header mb-2"><h3>Vo2 Max & Geschatte Hardlooptijden</h3></div>
+                    <div class="grid grid-cols-2 gap-4 text-base text-gray-300">
+                        <div>Vo2 Max: <span id="restReportVo2Max" class="font-semibold">--</span></div>
+                        <div>3k: <span id="restReport3k" class="font-semibold">--</span></div>
+                        <div>5k: <span id="restReport5k" class="font-semibold">--</span></div>
+                        <div>10k: <span id="restReport10k" class="font-semibold">--</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col gap-6">
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>Biometrie Interpretatie</h3></div>
+                    <div class="sub-value text-gray-300 text-base leading-relaxed" id="restBiometricsInterpretation"></div>
+                </div>
+                <div class="data-card bg-gray-700 rounded-lg p-4 shadow-md">
+                    <div class="card-header mb-2"><h3>Vo2 Max Interpretatie</h3></div>
+                    <div class="sub-value text-gray-300 text-base leading-relaxed" id="restVo2Interpretation"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="flex justify-center mt-10">
+        <button id="downloadRestPdfBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full transition-colors duration-200 text-lg shadow-lg">
+            <i class="fas fa-file-pdf mr-3"></i>Rustrapport Downloaden als PDF
+        </button>
+    </div>
+</div>

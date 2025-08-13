@@ -1,0 +1,133 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>Live Training</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="p-4">
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Meting Uitvoeren</h2>
+
+    <div class="flex flex-col gap-3 mb-4">
+        <div class="flex flex-col">
+            <label for="measurementTypeSelect" class="text-sm font-medium text-gray-400 mb-1">Kies Metingstype:</label>
+            <select id="measurementTypeSelect" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <option value="resting">Rustmeting (Daily training base)</option>
+                <option value="free">Vrije Meting (Free)</option>
+                <option value="live_workout">Training (Exercise)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="dashboard-grid mb-4">
+        <div class="data-card">
+            <div class="card-header"><h3>Hartslag</h3></div>
+            <div class="main-value" id="liveHrDisplay">-- BPM</div>
+            <div class="sub-value" id="liveHrZoneDisplay">-- Zone</div>
+        </div>
+        <div class="data-card">
+            <div class="card-header"><h3>Gemiddelde RR</h3></div>
+            <div class="main-value" id="liveAvgRrDisplay">-- MS</div>
+            <div class="sub-value" id="liveRmssdDisplay">RMSSD: -- MS</div>
+        </div>
+        <div class="data-card">
+            <div class="card-header"><h3>Ademh.Freq.</h3></div>
+            <div class="main-value" id="liveBreathRateDisplay">-- BPM</div>
+        </div>
+        <div class="data-card">
+            <div class="card-header"><h3>Tijd</h3></div>
+            <div class="main-value" id="liveTimerDisplay">00:00</div>
+        </div>
+    </div>
+
+    <div class="flex flex-col gap-3 mb-4">
+        <button id="startMeasurementBtnLive" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Start Meting</button>
+        <button id="stopMeasurementBtnLive" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200" style="display:none;">Stop Meting</button>
+        <button id="saveMeasurementBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200" style="display:none;">Meting Opslaan</button>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Samenvatting Meetgegevens</h2>
+
+    <!-- Samenvattingen gecombineerd in één responsieve grid -->
+    <div class="dashboard-grid mb-4">
+        <!-- HR Samenvatting -->
+        <div class="data-card">
+            <div class="card-header"><h3>Hartslag Samenvatting</h3></div>
+            <div class="grid grid-cols-2 gap-2 text-sm text-gray-300 mb-2">
+                <div>Gemiddelde HR: <span id="summaryAvgHr">--</span> BPM</div>
+                <div>Maximale HR: <span id="summaryMaxHr">--</span> BPM</div>
+                <div>Minimale HR: <span id="summaryMinHr">--</span> BPM</div>
+                <div>Huidige HR: <span id="summaryCurrentHr">--</span> BPM</div>
+            </div>
+            <div class="card-header mt-2"><h3>Tijd in HR Zones (min)</h3></div>
+            <div id="hrZoneTimes" class="flex flex-col gap-1 text-sm text-gray-300">
+                <div>Rust: <span id="zoneTimeResting">00:00</span></div>
+                <div>Opwarming: <span id="zoneTimeWarmup">00:00</span></div>
+                <div>Duurzaamheid 1: <span id="zoneTimeEndurance1">00:00</span></div>
+                <div>Duurzaamheid 2: <span id="zoneTimeEndurance2">00:00</span></div>
+                <div>Duurzaamheid 3: <span id="zoneTimeEndurance3">00:00</span></div>
+                <div>Intensief 1: <span id="zoneTimeIntensive1">00:00</span></div>
+                <div>Intensief 2: <span id="zoneTimeIntensive2">00:00</span></div>
+                <div>Afkoeling: <span id="zoneTimeCooldown">00:00</span></div>
+            </div>
+        </div>
+
+        <!-- HRV & Ademhalingsdata gecombineerd -->
+        <div class="data-card">
+            <div class="card-header"><h3>HRV Samenvatting</h3></div>
+            <div class="grid grid-cols-2 gap-2 text-sm text-gray-300 mb-2">
+                <div>RMSSD: <span id="summaryRmssd">--</span> MS</div>
+                <div>SDNN: <span id="summarySdnn">--</span> MS</div>
+                <div>pNN50: <span id="summaryPnn50">--</span> %</div>
+                <div>LF/HF Ratio: <span id="summaryLfHf">--</span></div>
+            </div>
+            <div class="card-header mt-2"><h3>HRV Herstel Status</h3></div>
+            <div class="text-sm text-gray-300 mb-4" id="hrvRecoveryStatus">--</div>
+
+            <div class="card-header"><h3>Ademhalingsdata</h3></div>
+            <div class="grid grid-cols-2 gap-2 text-sm text-gray-300">
+                <div>Laatste Cyclus BF: <span id="breathLastCycle">--</span> BPM</div>
+                <div>Gem. Totaal Cycli: <span id="breathAvgTotalCycles">--</span></div>
+                <div>Huidige BF (6 cycli): <span id="breathCurrentBf">--</span> BPM</div>
+            </div>
+        </div>
+
+        <!-- Wellness & Intensiteit Scores gecombineerd (blijft hetzelfde) -->
+        <div class="data-card">
+            <div class="card-header"><h3>Wellness Scores</h3></div>
+            <div class="grid grid-cols-2 gap-2 text-sm text-gray-300 mb-2">
+                <div>Herstel: <span id="scoreRecovery">--</span></div>
+                <div>Belasting: <span id="scoreStrain">--</span></div>
+                <div>Slaapkwaliteit: <span id="scoreSleep">--</span></div>
+                <div>Conditie: <span id="scoreConditioning">--</span></div>
+            </div>
+            <div class="card-header mt-2"><h3>Intensiteit Scores</h3></div>
+            <div class="grid grid-cols-2 gap-2 text-sm text-gray-300">
+                <div>RPE: <input type="number" id="inputRpe" min="0" max="10" placeholder="0-10" class="p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 w-20"></div>
+                <div>Intensiteit Score: <span id="scoreIntensity">--</span></div>
+                <div>HR t.o.v. AT: <span id="hrToAt">--</span> %</div>
+                <div>HR t.o.v. Rust HR: <span id="hrToRestHr">--</span> %</div>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Live Grafieken</h2>
+    <!-- Grafieken nu in een grid die altijd 2 kolommen toont -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Gecombineerde HR, RR, Ademhaling grafiek -->
+        <div class="chart-container-full" style="min-height: 250px;">
+            <canvas id="hrChart"></canvas>
+        </div>
+        <!-- RR Interval grafiek (nu de oorspronkelijke RR, niet geschaald) -->
+        <div class="chart-container-full" style="min-height: 250px;">
+            <canvas id="rrChart"></canvas>
+        </div>
+        <div class="chart-container-full" style="min-height: 250px;">
+            <canvas id="rrHistogramChart"></canvas>
+        </div>
+        <div class="chart-container-full" style="min-height: 250px;">
+            <canvas id="poincarePlotChart"></canvas>
+        </div>
+        <div class="chart-container-full" style="min-height: 250px;">
+            <canvas id="powerSpectrumChart"></canvas>
+        </div>
+    </div>
+</div>

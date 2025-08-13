@@ -1,0 +1,51 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>Vergaderplanner</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="p-4">
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Nieuwe/Bewerk Vergadering</h2>
+    <form id="meetingForm" class="flex flex-col gap-3">
+        <input type="hidden" id="meetingId">
+        <div class="flex flex-col">
+            <label for="meetingDate" class="text-sm font-medium text-gray-400 mb-1">Datum:</label>
+            <input type="date" id="meetingDate" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="meetingTime" class="text-sm font-medium text-gray-400 mb-1">Tijd:</label>
+            <input type="time" id="meetingTime" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="meetingSubject" class="text-sm font-medium text-gray-400 mb-1">Onderwerp:</label>
+            <input type="text" id="meetingSubject" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="meetingAttendees" class="text-sm font-medium text-gray-400 mb-1">Deelnemers (komma-gescheiden):</label>
+            <input type="text" id="meetingAttendees" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <button type="submit" id="saveMeetingBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Opslaan</button>
+        <button type="button" id="clearMeetingFormBtn" class="bg-gray-600 hover:bg-gray-700 text-gray-200 font-bold py-2 px-4 rounded-md transition-colors duration-200">Formulier Leegmaken</button>
+    </form>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Kalender Overzicht</h2>
+    <div class="flex justify-between items-center mb-4">
+        <button id="prevMonthBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-1 px-3 rounded-md"><i class="fas fa-chevron-left"></i></button>
+        <h3 id="currentMonthYear" class="text-lg font-bold text-gray-100"></h3>
+        <button id="nextMonthBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-1 px-3 rounded-md"><i class="fas fa-chevron-right"></i></button>
+    </div>
+    <div id="calendarGrid" class="grid grid-cols-7 gap-2 text-center text-gray-300">
+        <div class="font-bold">Zo</div>
+        <div class="font-bold">Ma</div>
+        <div class="font-bold">Di</div>
+        <div class="font-bold">Wo</div>
+        <div class="font-bold">Do</div>
+        <div class="font-bold">Vr</div>
+        <div class="font-bold">Za</div>
+        <!-- Calendar days will be dynamically loaded here -->
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Geplande Vergaderingen</h2>
+    <div id="meetingsList" class="flex flex-col gap-3 mb-4">
+        <p class="text-gray-400">Geen vergaderingen gepland.</p>
+    </div>
+</div>

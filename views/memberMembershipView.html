@@ -1,0 +1,51 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>Member-Subscription Link</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="p-4">
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Link Member to Subscription</h2>
+    <form id="memberMembershipForm" class="flex flex-col gap-3">
+        <input type="hidden" id="memberMembershipId">
+        <div class="flex flex-col">
+            <label for="memberSelect" class="text-sm font-medium text-gray-400 mb-1">Select Member:</label>
+            <select id="memberSelect" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <!-- Members will be loaded here -->
+            </select>
+        </div>
+        <div class="flex flex-col">
+            <label for="subscriptionSelect" class="text-sm font-medium text-gray-400 mb-1">Select Subscription:</label>
+            <select id="subscriptionSelect" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <!-- Subscriptions will be loaded here -->
+            </select>
+        </div>
+        <div class="flex flex-col">
+            <label for="membershipStartDate" class="text-sm font-medium text-gray-400 mb-1">Start Date:</label>
+            <input type="date" id="membershipStartDate" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="membershipEndDate" class="text-sm font-medium text-gray-400 mb-1">End Date:</label>
+            <input type="date" id="membershipEndDate" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="membershipStatus" class="text-sm font-medium text-gray-400 mb-1">Membership Status:</label>
+            <select id="membershipStatus" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <option value="Active">Active</option>
+                <option value="Expired">Expired</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+        </div>
+        <div class="flex flex-col">
+            <label for="membershipNotes" class="text-sm font-medium text-gray-400 mb-1">Notes:</label>
+            <textarea id="membershipNotes" rows="3" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200"></textarea>
+        </div>
+        <button type="submit" id="saveMemberMembershipBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Save Link</button>
+        <button type="button" id="clearMemberMembershipFormBtn" class="bg-gray-600 hover:bg-gray-700 text-gray-200 font-bold py-2 px-4 rounded-md transition-colors duration-200">Clear Form</button>
+        <button type="button" id="clearMemberMembershipFormBtn" class="bg-gray-600 hover:bg-gray-700 text-gray-200 font-bold py-2 px-4 rounded-md transition-colors duration-200">Clear Form</button>
+    </form>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Existing Links</h2>
+    <div id="membershipDetailsContainer" class="flex flex-col gap-3 mb-4">
+        <!-- Existing links will be loaded here -->
+    </div>
+</div>

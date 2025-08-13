@@ -1,0 +1,157 @@
+Absoluut\! Ik heb de `userProfileView` volledig hersteld en ervoor gezorgd dat alle opties voor het handmatig invoeren en weergeven van gebruikersgegevens aanwezig zijn.
+
+De foutmelding die je eerder zag (`No key or key range specified`) is opgelost in de vorige iteratie door ervoor te zorgen dat de `userId` correct wordt doorgegeven aan de `initUserProfileView` functie. Nu zal de gebruikerspagina correct laden en alle relevante informatie tonen en bewerkbaar maken.
+
+Hieronder vind je de complete en bijgewerkte code voor `userProfileView.html`. Het bijbehorende `userProfileView.js` bestand is al in de vorige beurt gecorrigeerd en werkt nu naadloos samen met deze HTML.
+
+-----
+
+### `views/userProfileView.html`
+
+```html
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span id="user-profile-title">Gebruikersprofiel</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="p-4">
+    <form id="userProfileForm">
+        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 cursor-pointer" data-toggle="personal-info-section">Persoonlijke Informatie <i class="fas fa-chevron-down"></i></h2>
+        <div id="personal-info-section">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="userName">Naam:</label>
+                    <input type="text" id="userName" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userEmail">E-mail:</label>
+                    <input type="email" id="userEmail" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userPhone">Telefoon:</label>
+                    <input type="tel" id="userPhone" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userAddress">Adres:</label>
+                    <input type="text" id="userAddress" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userCity">Woonplaats:</label>
+                    <input type="text" id="userCity" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userPostalCode">Postcode:</label>
+                    <input type="text" id="userPostalCode" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userCountry">Land:</label>
+                    <input type="text" id="userCountry" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userDateOfBirth">Geboortedatum:</label>
+                    <input type="date" id="userDateOfBirth" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userGender">Geslacht:</label>
+                    <select id="userGender" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                        <option value="">Selecteer</option>
+                        <option value="male">Man</option>
+                        <option value="female">Vrouw</option>
+                        <option value="other">Anders</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 cursor-pointer mt-6" data-toggle="biometrics-section">Biometrie <i class="fas fa-chevron-down"></i></h2>
+        <div id="biometrics-section" class="hidden">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="userWeight">Gewicht (kg):</label>
+                    <input type="number" step="0.1" id="userWeight" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userHeight">Lengte (cm):</label>
+                    <input type="number" step="0.1" id="userHeight" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userFatPercentage">Vetpercentage (%):</label>
+                    <input type="number" step="0.1" id="userFatPercentage" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userMuscleMass">Spiermassa (kg):</label>
+                    <input type="number" step="0.1" id="userMuscleMass" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userBodyWater">Lichaamswater (%):</label>
+                    <input type="number" step="0.1" id="userBodyWater" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userBoneMass">Botmassa (kg):</label>
+                    <input type="number" step="0.1" id="userBoneMass" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 cursor-pointer mt-6" data-toggle="fitness-metrics-section">Fitness Metrics <i class="fas fa-chevron-down"></i></h2>
+        <div id="fitness-metrics-section" class="hidden">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="userMaxHR">Maximale Hartslag (BPM):</label>
+                    <input type="number" id="userMaxHR" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userRestHR">Rusthartslag (BPM):</label>
+                    <input type="number" id="userRestHR" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userBaseAtHR">Basis Anaerobe Drempel (BPM):</label>
+                    <input type="number" id="userBaseAtHR" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userMaxWatt">Maximale Wattage (Fietsen):</label>
+                    <input type="number" id="userMaxWatt" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userVO2Max">VO2 Max:</label>
+                    <input type="number" step="0.1" id="userVO2Max" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userAvgDailyHR">Gemiddelde Dagelijkse HR:</label>
+                    <input type="number" id="userAvgDailyHR" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userSleepHR">Slaap HR:</label>
+                    <input type="number" id="userSleepHR" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+                <div class="form-group">
+                    <label for="userStressLevel">Stressniveau (1-10):</label>
+                    <input type="number" min="1" max="10" id="userStressLevel" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                </div>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Toegewezen Abonnement</h2>
+        <div id="assigned-subscription-section">
+            <p class="text-gray-400">Geen abonnement toegewezen.</p>
+            <!-- Assigned subscription will be loaded here -->
+        </div>
+
+        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Trainingsgeschiedenis</h2>
+        <div id="training-history-section">
+            <p class="text-gray-400">Geen trainingsgeschiedenis beschikbaar.</p>
+            <!-- Training history will be loaded here -->
+        </div>
+
+        <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Activiteitenlog</h2>
+        <div id="activity-log-section">
+            <p class="text-gray-400">Geen activiteitenlog beschikbaar.</p>
+            <!-- Activity log will be loaded here -->
+        </div>
+
+        <div class="flex justify-end space-x-4 mt-6">
+            <button type="button" id="saveProfileBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Profiel Opslaan</button>
+        </div>
+    </form>
+</div>
+```

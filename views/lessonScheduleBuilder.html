@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardio Schemabouwer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+            color: #e5e7eb; /* text-gray-200 */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 1rem;
+        }
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1200px;
+            background-color: #1f2937; /* bg-gray-800 */
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        @media (min-width: 768px) {
+            .app-container {
+                flex-direction: row;
+                min-height: 80vh;
+            }
+        }
+        .sidebar {
+            width: 100%;
+            padding: 1.5rem;
+            background-color: #111827; /* bg-gray-900 */
+            border-bottom: 1px solid #374151; /* border-gray-700 */
+        }
+        @media (min-width: 768px) {
+            .sidebar {
+                width: 280px;
+                flex-shrink: 0;
+                border-right: 1px solid #374151;
+                border-bottom: none;
+            }
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 0; /* Verwijder padding hier, de tab-content heeft het nu */
+            overflow-y: auto;
+            position: relative; /* Voor de settings knop */
+        }
+        .tab-button {
+            padding: 0.75rem 1.25rem;
+            font-weight: 600;
+            color: #9ca3af;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            color: #60a5fa; /* text-blue-400 */
+            border-color: #60a5fa;
+        }
+        .tab-content {
+            opacity: 0;
+            transform: translateY(20px); /* Begin iets lager */
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+            position: absolute; /* Zorgt dat ze over elkaar heen kunnen liggen */
+            width: 100%;
+            top: 0;
+            left: 0;
+            padding: 1.5rem; /* Zorg voor padding zoals in main-content */
+        }
+        .tab-content.active {
+            opacity: 1;
+            transform: translateY(0);
+            position: relative; /* Zorgt dat het ruimte inneemt als het actief is */
+        }
+        .tab-content.hidden {
+            display: none; /* Zorg dat verborgen tabbladen echt niet zichtbaar zijn */
+        }
+
+        .drag-item {
+            background-color: #374151; /* bg-gray-700 */
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.2s ease;
+        }
+        .drag-item:active {
+            cursor: grabbing;
+            transform: scale(1.02);
+        }
+        .drop-zone {
+            min-height: 100px;
+            border: 2px dashed #4b5563; /* border-gray-600 */
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .drop-zone.drag-over {
+            background-color: #2d3748; /* bg-gray-700 */
+            border-color: #60a5fa; /* border-blue-400 */
+        }
+        .dropped-item {
+            background-color: #2c2c34; /* bg-gray-800 */
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.375rem;
+            display: flex;
+            flex-wrap: wrap; /* Allow content to wrap */
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #e5e7eb;
+        }
+        .dropped-item .remove-btn {
+            background: none;
+            border: none;
+            color: #f87171; /* text-red-400 */
+            cursor: pointer;
+            font-size: 1rem;
+            margin-left: 0.5rem;
+        }
+        .message-box {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .message-box.show {
+            opacity: 1;
+        }
+
+        /* Dag Weergave Specifieke Stijlen */
+        .day-timeline-container {
+            display: grid;
+            grid-template-columns: 50px 1fr; /* Tijdlabel kolom en inhoudskolom */
+            gap: 0.5rem;
+            margin-top: 1rem;
+            border: 2px dashed #4b5563;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            min-height: 300px; /* Voldoende hoogte voor de tijdlijn */
+            position: relative; /* Voor absolute positionering van items */
+        }
+        .time-labels {
+            display: flex;
+            flex-direction: column;
+            /* Hoogte van 24 uur * 2 slots/uur * 25px/slot = 1200px */
+            height: 1200px; /* Vaste hoogte voor tijdlabels */
+        }
+        .time-slot-label {
+            text-align: right;
+            padding-right: 0.5rem;
+            color: #9ca3af;
+            font-size: 0.8rem;
+            height: 25px; /* 30 minuten per 25px */
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .day-drop-zone-content { /* Dit is de werkelijke dropzone */
+            position: relative; /* Cruciaal voor absolute positioning van children */
+            min-height: 1200px; /* Zorg dat het dropgebied groot genoeg is voor 24 uur */
+            overflow-y: auto; /* Allow scrolling if items go beyond view */
+            padding: 0; /* Remove padding here, items will position themselves */
+            border: none; /* Remove border from here, it's on the container */
+        }
+        .timeline-item {
+            position: absolute; /* Position absolutely within day-drop-zone-content */
+            left: 0;
+            width: 100%; /* Take full width of the content area */
+            background-color: #2c2c34;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+            font-size: 0.9rem;
+            color: #e5e7eb;
+            min-height: 40px; /* Minimum height for items */
+            display: flex;
+            flex-direction: column; /* Allow header and settings to stack */
+            align-items: flex-start; /* Align content to start */
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.2s ease; /* Add transition for visual feedback */
+            z-index: 10; /* Ensure items are above drop zone border */
+            cursor: pointer; /* Indicate clickable */
+        }
+        .timeline-item .element-header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .timeline-item .element-settings {
+            width: 100%;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 0.5rem;
+        }
+        .timeline-item.hr-zone-bar {
+            height: auto; /* Allow content to dictate height */
+            min-height: 40px; /* Base height for readability */
+            justify-content: flex-start;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .timeline-item .remove-btn {
+            background: none;
+            border: none;
+            color: #f87171; /* text-red-400 */
+            cursor: pointer;
+            font-size: 1rem;
+            margin-left: 0.5rem;
+        }
+
+        /* Week & Maand Weergave Kalender Stijlen */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Responsive columns */
+            gap: 0.5rem; /* gap-2 */
+            margin-top: 1rem;
+        }
+        .calendar-day-cell, .calendar-week-cell {
+            background-color: #2c2c34;
+            border-radius: 0.5rem;
+            min-height: 120px;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Align items to top */
+            text-align: center;
+            border: 2px dashed #4b5563; /* Drop zone style */
+        }
+        .calendar-day-cell.drag-over, .calendar-week-cell.drag-over {
+            background-color: #2d3748;
+            border-color: #60a5fa;
+        }
+        .calendar-day-cell h3, .calendar-week-cell h3 {
+            font-weight: bold;
+            color: #e5e7eb;
+            margin-bottom: 0.5rem;
+        }
+        .calendar-day-cell .dropped-item, .calendar-week-cell .dropped-item {
+            width: 100%;
+            margin-bottom: 0.25rem;
+            font-size: 0.8rem;
+            padding: 0.4rem;
+        }
+        /* Styling for dropped items in week/block view */
+        .dropped-item {
+            cursor: grab; /* Indicate draggable */
+        }
+
+
+        /* Settings Icon */
+        .settings-icon-btn {
+            position: absolute;
+            top: 1.5rem; /* Aangepast om rechtsboven te staan */
+            right: 1.5rem;
+            background: none;
+            border: none;
+            color: #9ca3af;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease;
+            z-index: 20; /* Zorg dat het boven andere content ligt */
+        }
+        .settings-icon-btn:hover {
+            background-color: #374151;
+        }
+
+        /* Categorie selectie */
+        .category-select-container {
+            margin-bottom: 1rem;
+        }
+        .category-content {
+            display: none;
+        }
+        .category-content.active {
+            display: block;
+        }
+        /* Nieuwe CSS voor gecombineerde lijst */
+        #all-saved-items-list {
+            display: none; /* Standaard verborgen, wordt door JS getoond indien nodig */
+            flex-direction: column;
+            gap: 0.75rem; /* gap-3 */
+            margin-top: 1rem;
+        }
+        #all-saved-items-list .drag-item {
+            background-color: #2c2c34; /* Donkerder dan de algemene drag-items */
+            border: 1px solid #4b5563;
+        }
+
+        /* Collapsible section styling */
+        .collapsible-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #374151;
+            cursor: pointer;
+            color: #e5e7eb;
+            font-weight: bold;
+            font-size: 1.125rem;
+            margin-top: 1rem;
+        }
+        .collapsible-header i {
+            transition: transform 0.2s ease-in-out;
+        }
+        .collapsible-header.collapsed i {
+            transform: rotate(-90deg);
+        }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        .collapsible-content.expanded {
+            max-height: 500px; /* Max height to allow smooth transition, adjust as needed */
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="lesson-schedule-builder-container">
+        <div class="sidebar">
+            <h2 class="text-xl font-bold mb-4 text-gray-100">Beschikbare Elementen</h2>
+
+            <div class="category-select-container">
+                <label for="category-select" class="block text-sm font-medium text-gray-400 mb-1">Kies Categorie:</label>
+                <select id="category-select" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full">
+                    <option value="cardio">Cardio</option>
+                    <option value="strength">Kracht</option>
+                    <option value="recovery">Herstel</option>
+                    <option value="coordination">Coördinatie</option>
+                    <option value="flexibility">Flexibiliteit</option>
+                    <option value="speed">Snelheid</option>
+                    <option value="nutrition">Voeding</option>
+                    <option value="general">Algemeen</option>
+                    <option value="standard-schemas">Standaard Schema's</option>
+                </select>
+            </div>
+
+            <div id="available-modules">
+                <div id="category-cardio" class="category-content active">
+                    <div class="drag-item" draggable="true" data-type="hr-zone" data-name="Rustzone" data-icon="fas fa-bed" data-zone-color="text-gray-400">
+                        <span><i class="fas fa-bed mr-2 text-gray-400"></i>Rustzone</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="hr-zone" data-name="Herstelzone (Relaxed)" data-icon="fas fa-leaf" data-zone-color="text-green-400">
+                        <span><i class="fas fa-leaf mr-2 text-green-400"></i>Herstelzone (Relaxed)</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="hr-zone" data-name="Actief Laag (HRV)" data-icon="fas fa-walking" data-zone-color="text-lime-400">
+                        <span><i class="fas fa-walking mr-2 text-lime-400"></i>Actief Laag (HRV)</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="hr-zone" data-name="Opwarming" data-icon="fas fa-fire" data-zone-color="text-yellow-400">
+                        <span><i class="fas fa-fire mr-2 text-yellow-400"></i>Opwarming</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="hr-zone" data-name="Duurzaamheid 1" data-icon="fas fa-heartbeat" data-zone-color="text-blue-400">
+                        <span><i class="fas fa-heartbeat mr-2 text-blue-400"></i>Duurzaamheid 1</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="hr-zone" data-name="Duurzaamheid 2" data-icon="fas fa-heartbeat" data-zone-color="text-indigo-400">
+                        <span><i class="fas fa-heartbeat mr-2 text-indigo-400"></i>Duurzaamheid 2</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="hr-zone" data-name="Duurzaamheid 3" data-icon="fas fa-heartbeat" data-zone-color="text-purple-400">
+                        <span><i class="fas fa-heartbeat mr-2 text-purple-400"></i>Duurzaamheid 3</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="hr-zone" data-name="Intensief 1" data-icon="fas fa-bolt" data-zone-color="text-orange-400">
+                        <span><i class="fas fa-bolt mr-2 text-orange-400"></i>Intensief 1</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="hr-zone" data-name="Intensief 2" data-icon="fas fa-bolt" data-zone-color="text-red-400">
+                        <span><i class="fas fa-bolt mr-2 text-red-400"></i>Intensief 2</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="hr-zone" data-name="Afkoeling" data-icon="fas fa-snowflake" data-zone-color="text-cyan-400">
+                        <span><i class="fas fa-snowflake mr-2 text-cyan-400"></i>Afkoeling</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                </div>
+
+                <div id="category-strength" class="category-content">
+                    <div class="drag-item" draggable="true" data-type="strength-exercise" data-name="Full Body Training" data-icon="fas fa-dumbbell" data-zone-color="text-red-400">
+                        <span><i class="fas fa-dumbbell mr-2 text-red-400"></i>Full Body Training</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="strength-exercise" data-name="Geïsoleerde Training" data-icon="fas fa-hand-fist" data-zone-color="text-orange-400">
+                        <span><i class="fas fa-hand-fist mr-2 text-orange-400"></i>Geïsoleerde Training</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="strength-exercise" data-name="Partiële Herhalingen" data-icon="fas fa-arrows-alt-h" data-zone-color="text-yellow-400">
+                        <span><i class="fas fa-arrows-alt-h mr-2 text-yellow-400"></i>Partiële Herhalingen</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="strength-exercise" data-name="Plyometrisch" data-icon="fas fa-bounce" data-zone-color="text-lime-400">
+                        <span><i class="fas fa-bounce mr-2 text-lime-400"></i>Plyometrisch</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="strength-exercise" data-name="Isometrisch" data-icon="fas fa-grip-lines" data-zone-color="text-green-400">
+                        <span><i class="fas fa-grip-lines mr-2 text-green-400"></i>Isometrisch</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                </div>
+
+                <div id="category-recovery" class="category-content">
+                    <div class="drag-item" draggable="true" data-type="recovery-activity" data-name="Actief Herstel" data-icon="fas fa-walking" data-zone-color="text-blue-400">
+                        <span><i class="fas fa-walking mr-2 text-blue-400"></i>Actief Herstel</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="recovery-activity" data-name="Passief Herstel" data-icon="fas fa-couch" data-zone-color="text-indigo-400">
+                        <span><i class="fas fa-couch mr-2 text-indigo-400"></i>Passief Herstel</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="recovery-activity" data-name="Foam Rolling" data-icon="fas fa-rolling-ball" data-zone-color="text-purple-400">
+                        <span><i class="fas fa-rolling-ball mr-2 text-purple-400"></i>Foam Rolling</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="recovery-activity" data-name="Stretching Sessie" data-icon="fas fa-stretch" data-zone-color="text-pink-400">
+                        <span><i class="fas fa-stretch mr-2 text-pink-400"></i>Stretching Sessie</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                </div>
+
+                <div id="category-coordination" class="category-content">
+                    <div class="drag-item" draggable="true" data-type="coordination-activity" data-name="Balansoefeningen" data-icon="fas fa-balance-scale" data-zone-color="text-teal-400">
+                        <span><i class="fas fa-balance-scale mr-2 text-teal-400"></i>Balansoefeningen</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="coordination-activity" data-name="Wendbaarheidstraining" data-icon="fas fa-shoe-prints" data-zone-color="text-emerald-400">
+                        <span><i class="fas fa-shoe-prints mr-2 text-emerald-400"></i>Wendbaarheidstraining</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="coordination-activity" data-name="Reactietraining" data-icon="fas fa-lightbulb" data-zone-color="text-cyan-400">
+                        <span><i class="fas fa-lightbulb mr-2 text-cyan-400"></i>Reactietraining</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                </div>
+
+                <div id="category-flexibility" class="category-content">
+                    <div class="drag-item" draggable="true" data-type="flexibility-activity" data-name="Statisch Rekken" data-icon="fas fa-person-praying" data-zone-color="text-fuchsia-400">
+                        <span><i class="fas fa-person-praying mr-2 text-fuchsia-400"></i>Statisch Rekken</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="flexibility-activity" data-name="Dynamisch Rekken" data-icon="fas fa-child-reaching" data-zone-color="text-rose-400">
+                        <span><i class="fas fa-child-reaching mr-2 text-rose-400"></i>Dynamisch Rekken</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="flexibility-activity" data-name="Yoga Sessie" data-icon="fas fa-om" data-zone-color="text-amber-400">
+                        <span><i class="fas fa-om mr-2 text-amber-400"></i>Yoga Sessie</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                </div>
+
+                <div id="category-speed" class="category-content">
+                    <div class="drag-item" draggable="true" data-type="speed-activity" data-name="Sprinttraining" data-icon="fas fa-running" data-zone-color="text-red-500">
+                        <span><i class="fas fa-running mr-2 text-red-500"></i>Sprinttraining</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="speed-activity" data-name="Interval Snelheid" data-icon="fas fa-tachometer-alt" data-zone-color="text-orange-500">
+                        <span><i class="fas fa-tachometer-alt mr-2 text-orange-500"></i>Interval Snelheid</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="speed-activity" data-name="Reactiesnelheid Drill" data-icon="fas fa-stopwatch-20" data-zone-color="text-yellow-500">
+                        <span><i class="fas fa-stopwatch-20 mr-2 text-yellow-500"></i>Reactiesnelheid Drill</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                </div>
+
+                <div id="category-nutrition" class="category-content">
+                    <div class="drag-item" draggable="true" data-type="nutrition-activity" data-name="Maaltijdplan" data-icon="fas fa-utensils" data-zone-color="text-lime-300">
+                        <span><i class="fas fa-utensils mr-2 text-lime-300"></i>Maaltijdplan</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="nutrition-activity" data-name="Hydratatie Doel" data-icon="fas fa-water" data-zone-color="text-blue-300">
+                        <span><i class="fas fa-water mr-2 text-blue-300"></i>Hydratatie Doel</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="nutrition-activity" data-name="Supplement Inname" data-icon="fas fa-pills" data-zone-color="text-purple-300">
+                        <span><i class="fas fa-pills mr-2 text-purple-300"></i>Supplement Inname</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                </div>
+
+                <div id="category-general" class="category-content">
+                    <div class="drag-item" draggable="true" data-type="rest-day" data-name="Rustdag" data-icon="fas fa-bed" data-zone-color="text-gray-500">
+                        <span><i class="fas fa-bed mr-2 text-gray-500"></i>Rustdag</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="training-measurement" data-name="Trainingsmeting" data-icon="fas fa-chart-line" data-zone-color="text-purple-400">
+                        <span><i class="fas fa-chart-line mr-2 text-purple-400"></i>Trainingsmeting</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="rest-measurement-free" data-name="Rustmeting (Vrij)" data-icon="fas fa-heart-pulse" data-zone-color="text-pink-400">
+                        <span><i class="fas fa-heart-pulse mr-2 text-pink-400"></i>Rustmeting (Vrij)</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="rest-measurement-base" data-name="Rustmeting (Basis)" data-icon="fas fa-heart-circle-bolt" data-zone-color="text-emerald-400">
+                        <span><i class="fas fa-heart-circle-bolt mr-2 text-emerald-400"></i>Rustmeting (Basis)</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="document-link" data-name="Document Koppeling" data-icon="fas fa-file-alt" data-zone-color="text-teal-400">
+                        <span><i class="fas fa-file-alt mr-2 text-teal-400"></i>Document Koppeling</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                </div>
+
+                <div id="category-standard-schemas" class="category-content">
+                    <h4 class="text-md font-semibold mb-2 text-gray-300">Cardio Schema's</h4>
+                    <div class="drag-item" draggable="true" data-type="day" data-name="Basis Cardio Dag" data-icon="fas fa-running" data-content='[{"type":"hr-zone","name":"Opwarming","icon":"fas fa-fire","zoneColor":"text-yellow-400","duration":10,"progressionEnabled":false,"progressionValue":null,"topPosition":0},{"type":"hr-zone","name":"Duurzaamheid 1","icon":"fas fa-heartbeat","zoneColor":"text-blue-400","duration":30,"progressionEnabled":true,"progressionValue":2,"topPosition":50},{"type":"hr-zone","name":"Afkoeling","icon":"fas fa-snowflake","zoneColor":"text-cyan-400","duration":5,"progressionEnabled":false,"progressionValue":null,"topPosition":100}]'>
+                        <span><i class="fas fa-running mr-2 text-blue-300"></i>Basis Cardio Dag</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="day" data-name="Gemiddelde Cardio Dag" data-icon="fas fa-running" data-content='[{"type":"hr-zone","name":"Opwarming","icon":"fas fa-fire","zoneColor":"text-yellow-400","duration":10,"progressionEnabled":false,"progressionValue":null,"topPosition":0},{"type":"hr-zone","name":"Duurzaamheid 2","icon":"fas fa-heartbeat","zoneColor":"text-indigo-400","duration":40,"progressionEnabled":true,"progressionValue":3,"topPosition":50},{"type":"hr-zone","name":"Intensief 1","icon":"fas fa-bolt","zoneColor":"text-orange-400","duration":15,"progressionEnabled":false,"progressionValue":null,"topPosition":100},{"type":"hr-zone","name":"Afkoeling","icon":"fas fa-snowflake","zoneColor":"text-cyan-400","duration":5,"progressionEnabled":false,"progressionValue":null,"topPosition":150}]'>
+                        <span><i class="fas fa-running mr-2 text-purple-300"></i>Gemiddelde Cardio Dag</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="day" data-name="Gevorderde Cardio Dag" data-icon="fas fa-running" data-content='[{"type":"hr-zone","name":"Opwarming","icon":"fas fa-fire","zoneColor":"text-yellow-400","duration":15,"progressionEnabled":false,"progressionValue":null,"topPosition":0},{"type":"hr-zone","name":"Intensief 2","icon":"fas fa-bolt","zoneColor":"text-red-400","duration":30,"progressionEnabled":true,"progressionValue":5,"topPosition":50},{"type":"hr-zone","name":"Duurzaamheid 3","icon":"fas fa-heartbeat","zoneColor":"text-purple-400","duration":20,"progressionEnabled":false,"progressionValue":null,"topPosition":100},{"type":"hr-zone","name":"Afkoeling","icon":"fas fa-snowflake","zoneColor":"text-cyan-400","duration":10,"progressionEnabled":false,"progressionValue":null,"topPosition":150}]'>
+                        <span><i class="fas fa-running mr-2 text-red-300"></i>Gevorderde Cardio Dag</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+
+                    <h4 class="text-md font-semibold mt-4 mb-2 text-gray-300">Kracht Schema's</h4>
+                    <div class="drag-item" draggable="true" data-type="day" data-name="Basis Kracht Dag" data-icon="fas fa-dumbbell" data-content='[{"type":"strength-exercise","name":"Full Body Training","icon":"fas fa-dumbbell","zoneColor":"text-red-400","inputType":"reps_sets","reps":10,"sets":3,"minReps":8,"maxReps":12,"minSets":3,"maxSets":4,"progressionEnabled":true,"progressionValue":1,"notes":"Focus op techniek","topPosition":0}]'>
+                        <span><i class="fas fa-dumbbell mr-2 text-red-300"></i>Basis Kracht Dag</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="day" data-name="Gemiddelde Kracht Dag" data-icon="fas fa-dumbbell" data-content='[{"type":"strength-exercise","name":"Geïsoleerde Training","icon":"fas fa-hand-fist","zoneColor":"text-orange-400","inputType":"reps_sets","reps":8,"sets":4,"minReps":6,"maxReps":10,"minSets":3,"maxSets":5,"progressionEnabled":true,"progressionValue":1,"notes":"Supersets mogelijk","topPosition":0},{"type":"strength-exercise","name":"Plyometrisch","icon":"fas fa-bounce","zoneColor":"text-lime-400","inputType":"time","duration":20,"minTime":15,"maxTime":25,"progressionEnabled":false,"progressionValue":null,"notes":"Explosieve kracht","topPosition":50}]'>
+                        <span><i class="fas fa-dumbbell mr-2 text-orange-300"></i>Gemiddelde Kracht Dag</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+
+                    <h4 class="text-md font-semibold mt-4 mb-2 text-gray-300">Herstel Schema's</h4>
+                    <div class="drag-item" draggable="true" data-type="day" data-name="Actieve Herstel Dag" data-icon="fas fa-walking" data-content='[{"type":"recovery-activity","name":"Actief Herstel","icon":"fas fa-walking","zoneColor":"text-blue-400","inputType":"time","duration":30,"notes":"Lichte wandeling of fietsen","topPosition":0},{"type":"recovery-activity","name":"Stretching Sessie","icon":"fas fa-stretch","zoneColor":"text-pink-400","inputType":"time","duration":15,"notes":"Focus op grote spiergroepen","topPosition":50}]'>
+                        <span><i class="fas fa-walking mr-2 text-blue-300"></i>Actieve Herstel Dag</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                    <div class="drag-item" draggable="true" data-type="day" data-name="Rustdag met Meting" data-icon="fas fa-bed" data-content='[{"type":"rest-day","name":"Rustdag","icon":"fas fa-bed","zoneColor":"text-gray-500","topPosition":0},{"type":"rest-measurement-base","name":"Rustmeting (Basis)","icon":"fas fa-heart-circle-bolt","zoneColor":"text-emerald-400","topPosition":50}]'>
+                        <span><i class="fas fa-bed mr-2 text-gray-300"></i>Rustdag met Meting</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+
+                    <h4 class="text-md font-semibold mt-4 mb-2 text-gray-300">Coördinatie Schema's</h4>
+                    <div class="drag-item" draggable="true" data-type="day" data-name="Basis Coördinatie Dag" data-icon="fas fa-balance-scale" data-content='[{"type":"coordination-activity","name":"Balansoefeningen","icon":"fas fa-balance-scale","zoneColor":"text-teal-400","inputType":"time","duration":20,"notes":"Eenvoudige balansoefeningen","topPosition":0}]'>
+                        <span><i class="fas fa-balance-scale mr-2 text-teal-300"></i>Basis Coördinatie Dag</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+
+                    <h4 class="text-md font-semibold mt-4 mb-2 text-gray-300">Flexibiliteit Schema's</h4>
+                    <div class="drag-item" draggable="true" data-type="day" data-name="Flexibiliteit Sessie" data-icon="fas fa-child-reaching" data-content='[{"type":"flexibility-activity","name":"Dynamisch Rekken","icon":"fas fa-child-reaching","zoneColor":"text-rose-400","inputType":"time","duration":25,"notes":"Voor warming-up","topPosition":0},{"type":"flexibility-activity","name":"Yoga Sessie","icon":"fas fa-om","zoneColor":"text-amber-400","inputType":"time","duration":45,"notes":"Focus op lenigheid","topPosition":50}]'>
+                        <span><i class="fas fa-child-reaching mr-2 text-fuchsia-300"></i>Flexibiliteit Sessie</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+
+                    <h4 class="text-md font-semibold mt-4 mb-2 text-gray-300">Snelheid Schema's</h4>
+                    <div class="drag-item" draggable="true" data-type="day" data-name="Sprint Dag" data-icon="fas fa-running" data-content='[{"type":"speed-activity","name":"Sprinttraining","icon":"fas fa-running","zoneColor":"text-red-500","inputType":"reps_sets","reps":10,"sets":5,"notes":"Korte, maximale sprints","topPosition":0}]'>
+                        <span><i class="fas fa-running mr-2 text-red-300"></i>Sprint Dag</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+
+                    <h4 class="text-md font-semibold mt-4 mb-2 text-gray-300">Voeding Schema's</h4>
+                    <div class="drag-item" draggable="true" data-type="day" data-name="Voedingsplan Dag" data-icon="fas fa-utensils" data-content='[{"type":"nutrition-activity","name":"Maaltijdplan","icon":"fas fa-utensils","zoneColor":"text-lime-300","duration":null,"notes":"Volg gepersonaliseerd maaltijdplan","topPosition":0},{"type":"nutrition-activity","name":"Hydratatie Doel","icon":"fas fa-water","zoneColor":"text-blue-300","duration":null,"notes":"Drink 3 liter water","topPosition":50}]'>
+                        <span><i class="fas fa-utensils mr-2 text-lime-300"></i>Voedingsplan Dag</span>
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                    </div>
+                </div>
+
+                <div id="custom-measurements-list" class="category-content">
+                    <h3 class="text-lg font-bold mt-6 mb-2 text-gray-100">Aangepaste Metingen</h3>
+                    <p class="text-gray-400 text-sm">Geen aangepaste metingen.</p>
+                </div>
+
+                <!-- Nieuwe container voor alle opgeslagen dagen, weken, blokken -->
+                <div id="all-saved-items-list" class="category-content">
+                    <h3 class="text-lg font-bold mt-6 mb-2 text-gray-100">Opgeslagen Schema's</h3>
+                    <p class="text-gray-400 text-sm">Nog geen schema's opgeslagen.</p>
+                </div>
+
+                <button id="create-day-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
+                    <i class="fas fa-plus mr-2"></i>Maak Nieuwe Dag
+                </button>
+                <button id="create-week-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-2">
+                    <i class="fas fa-plus mr-2"></i>Maak Nieuwe Week
+                </button>
+                <button id="create-block-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-2">
+                    <i class="fas fa-plus mr-2"></i>Maak Nieuw Blok
+                </button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <h1 class="text-2xl font-bold mb-4 text-gray-100">Cardio Schemabouwer</h1>
+            <button id="settings-btn" class="settings-icon-btn" title="Instellingen"><i class="fas fa-cog"></i></button>
+
+            <div class="flex border-b border-gray-700 mb-4">
+                <button class="tab-button active" data-tab="dag">Dag</button>
+                <button class="tab-button" data-tab="week">Week</button>
+                <button class="tab-button" data-tab="blok">Blok</button>
+                <button class="tab-button" data-tab="form-builder">Form Builder</button>
+            </div>
+
+            <div id="tab-dag" class="tab-content active">
+                <h2 class="text-xl font-bold mb-2 text-gray-100">Configureer Dag</h2>
+                <input type="text" id="current-day-name" placeholder="Naam van deze dag (bijv. Maandag Intensief)" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full mb-4">
+                <div class="day-timeline-container">
+                    <div class="time-labels" id="day-time-labels">
+                        </div>
+                    <div id="day-drop-zone" class="day-drop-zone-content drop-zone">
+                        <p class="text-gray-400 text-center">Sleep hartslagzones, rust, metingen of documenten hierheen om de dag te configureren.</p>
+                    </div>
+                </div>
+                <button id="save-day-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
+                    <i class="fas fa-save mr-2"></i>Sla Dag op
+                </button>
+                
+                <!-- Collapsible section for Opgeslagen Dagen -->
+                <div class="collapsible-header" data-collapsible-target="saved-days-collapsible-content">
+                    <h3 class="text-lg font-bold text-gray-100">Opgeslagen Dagen</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div id="saved-days-collapsible-content" class="collapsible-content">
+                    <div id="saved-days-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
+                        <p class="text-gray-400 col-span-full">Nog geen dagen opgeslagen.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-week" class="tab-content hidden">
+                <h2 class="text-xl font-bold mb-2 text-gray-100">Configureer Week</h2>
+                <input type="text" id="current-week-name" placeholder="Naam van deze week (bijv. Week 1 Piektraining)" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full mb-4">
+                <div class="calendar-grid">
+                    <div class="calendar-day-cell">
+                        <h3>Maandag</h3>
+                        <div class="drop-zone day-slot" data-day-of-week="Maandag">
+                            <p class="text-gray-400 text-center text-sm">Sleep dag hier</p>
+                        </div>
+                    </div>
+                    <div class="calendar-day-cell">
+                        <h3>Dinsdag</h3>
+                        <div class="drop-zone day-slot" data-day-of-week="Dinsdag">
+                            <p class="text-gray-400 text-center text-sm">Sleep dag hier</p>
+                        </div>
+                    </div>
+                    <div class="calendar-day-cell">
+                        <h3>Woensdag</h3>
+                        <div class="drop-zone day-slot" data-day-of-week="Woensdag">
+                            <p class="text-gray-400 text-center text-sm">Sleep dag hier</p>
+                        </div>
+                    </div>
+                    <div class="calendar-day-cell">
+                        <h3>Donderdag</h3>
+                        <div class="drop-zone day-slot" data-day-of-week="Donderdag">
+                            <p class="text-gray-400 text-center text-sm">Sleep dag hier</p>
+                        </div>
+                    </div>
+                    <div class="calendar-day-cell">
+                        <h3>Vrijdag</h3>
+                        <div class="drop-zone day-slot" data-day-of-week="Vrijdag">
+                            <p class="text-gray-400 text-center text-sm">Sleep dag hier</p>
+                        </div>
+                    </div>
+                    <div class="calendar-day-cell">
+                        <h3>Zaterdag</h3>
+                        <div class="drop-zone day-slot" data-day-of-week="Zaterdag">
+                            <p class="text-gray-400 text-center text-sm">Sleep dag hier</p>
+                        </div>
+                    </div>
+                    <div class="calendar-day-cell">
+                        <h3>Zondag</h3>
+                        <div class="drop-zone day-slot" data-day-of-week="Zondag">
+                            <p class="text-gray-400 text-center text-sm">Sleep dag hier</p>
+                        </div>
+                    </div>
+                </div>
+                <button id="save-week-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
+                    <i class="fas fa-save mr-2"></i>Sla Week op
+                </button>
+                
+                <!-- Collapsible section for Opgeslagen Weken -->
+                <div class="collapsible-header" data-collapsible-target="saved-weeks-collapsible-content">
+                    <h3 class="text-lg font-bold text-gray-100">Opgeslagen Weken</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div id="saved-weeks-collapsible-content" class="collapsible-content">
+                    <div id="saved-weeks-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
+                        <p class="text-gray-400 col-span-full">Nog geen weken opgeslagen.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-blok" class="tab-content hidden">
+                <h2 class="text-xl font-bold mb-2 text-gray-100">Configureer Blok</h2>
+                <input type="text" id="current-blok-name" placeholder="Naam van dit blok (bijv. Voorbereiding Marathon)" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full mb-4">
+                <textarea id="current-blok-notes" placeholder="Notities voor dit blok (bijv. Belangrijke mijlpalen, focuspunten)" rows="3" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full mb-4"></textarea>
+                <div id="blok-drop-zone" class="drop-zone">
+                    <p class="text-gray-400 text-center">Sleep weken hierheen om het blok te configureren.</p>
+                </div>
+                <button id="save-blok-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
+                    <i class="fas fa-save mr-2"></i>Sla Blok op
+                </button>
+                
+                <!-- Collapsible section for Opgeslagen Blokken -->
+                <div class="collapsible-header" data-collapsible-target="saved-bloks-collapsible-content">
+                    <h3 class="text-lg font-bold text-gray-100">Opgeslagen Blokken</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div id="saved-bloks-collapsible-content" class="collapsible-content">
+                    <div id="saved-bloks-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
+                        <p class="text-gray-400 col-span-full">Nog geen blokken opgeslagen.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-form-builder" class="tab-content hidden">
+                <h2 class="text-xl font-bold mb-2 text-gray-100">Form Builder: Aangepaste Metingen</h2>
+
+                <div class="bg-gray-700 p-4 rounded-lg mb-6">
+                    <h3 class="text-lg font-bold mb-2 text-gray-100">Nieuwe Aangepaste Training Meting</h3>
+                    <input type="text" id="custom-training-name" placeholder="Naam training meting (bijv. HIIT 30/30)" class="p-2 rounded-md bg-gray-800 border border-gray-600 text-gray-200 w-full mb-2">
+                    <div id="custom-training-zones-drop-zone" class="drop-zone !min-h-[80px] !mt-2">
+                        <p class="text-gray-400 text-center text-sm">Sleep HR zones of oefeningen hierheen om de training te definiëren.</p>
+                    </div>
+                    <button id="save-custom-training-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
+                        <i class="fas fa-plus mr-2"></i>Sla Aangepaste Training op
+                    </button>
+                </div>
+
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <h3 class="text-lg font-bold mb-2 text-gray-100">Nieuwe Aangepaste Rust Meting</h3>
+                    <input type="text" id="custom-rest-name" placeholder="Naam rust meting (bijv. Ochtend HRV Check)" class="p-2 rounded-md bg-gray-800 border border-gray-600 text-gray-200 w-full mb-2">
+                    <textarea id="custom-rest-description" placeholder="Beschrijving" rows="2" class="p-2 rounded-md bg-gray-800 border border-gray-600 text-gray-200 w-full mb-2"></textarea>
+                    <textarea id="custom-rest-goals" placeholder="Doelen/Formules (bijv. RMSSD > 50, Ti/Te ratio 1.2)" rows="3" class="p-2 rounded-md bg-gray-800 border border-gray-600 text-gray-200 w-full mb-2"></textarea>
+                    <button id="save-custom-rest-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
+                        <i class="fas fa-plus mr-2"></i>Sla Aangepaste Rust op
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="message-box" class="message-box"></div>
+
+    <script type="module" src="../js/scheduleBuilderView.js"></script>
+</body>
+</html>

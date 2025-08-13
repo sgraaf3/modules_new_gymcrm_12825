@@ -1,0 +1,61 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>Financiën</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="p-4">
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Financiële Overzicht</h2>
+    <div class="flex flex-col gap-4">
+        <div class="data-card">
+            <div class="card-header"><h3>Totaal Inkomen</h3></div>
+            <div class="main-value text-green-400" id="totalIncomeDisplay">€ 0.00</div>
+            <div class="sub-value">Deze maand</div>
+        </div>
+        <div class="data-card">
+            <div class="card-header"><h3>Totaal Uitgaven</h3></div>
+            <div class="main-value text-red-400" id="totalExpenseDisplay">€ 0.00</div>
+            <div class="sub-value">Deze maand</div>
+        </div>
+        <div class="data-card">
+            <div class="card-header"><h3>Netto Winst</h3></div>
+            <div class="main-value" id="netProfitDisplay">€ 0.00</div>
+            <div class="sub-value">Deze maand</div>
+        </div>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Transacties</h2>
+    <div id="transactionsList" class="flex flex-col gap-3 mb-4">
+        <p class="text-gray-400">Geen transacties gevonden.</p>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Nieuwe Transactie</h2>
+    <form id="financeTransactionForm" class="flex flex-col gap-3">
+        <input type="hidden" id="transactionId">
+        <div class="flex flex-col">
+            <label for="transactionType" class="text-sm font-medium text-gray-400 mb-1">Type:</label>
+            <select id="transactionType" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                <option value="income">Inkomen</option>
+                <option value="expense">Uitgave</option>
+            </select>
+        </div>
+        <div class="flex flex-col">
+            <label for="transactionAmount" class="text-sm font-medium text-gray-400 mb-1">Bedrag:</label>
+            <input type="number" id="transactionAmount" step="0.01" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="transactionDescription" class="text-sm font-medium text-gray-400 mb-1">Beschrijving:</label>
+            <textarea id="transactionDescription" rows="2" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200"></textarea>
+        </div>
+        <div class="flex flex-col">
+            <label for="transactionProductService" class="text-sm font-medium text-gray-400 mb-1">Product/Dienst:</label>
+            <input type="text" id="transactionProductService" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200" placeholder="Bijv. Maandelijks abonnement, Coaching sessie">
+        </div>
+        <div class="flex flex-col">
+            <label for="transactionMemberEmployee" class="text-sm font-medium text-gray-400 mb-1">Lid/Medewerker (Naam/ID):</label>
+            <input type="text" id="transactionMemberEmployee" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200" placeholder="Bijv. Jan Jansen, Medewerker X">
+        </div>
+        <button type="submit" id="saveTransactionBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Transactie Opslaan</button>
+        <button type="button" id="clearTransactionFormBtn" class="bg-gray-600 hover:bg-gray-700 text-gray-200 font-bold py-2 px-4 rounded-md transition-colors duration-200">Formulier Leegmaken</button>
+    </form>
+</div>
+

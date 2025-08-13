@@ -1,0 +1,31 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>Activiteiten</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="p-4">
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Algemene Activiteiten Overzicht</h2>
+    <div id="generalActivitiesList" class="flex flex-col gap-3 mb-4">
+        <!-- Algemene activiteiten worden hier dynamisch geladen -->
+        <p class="text-gray-400">Geen activiteiten gevonden.</p>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Nieuwe/Bewerk Activiteit</h2>
+    <form id="generalActivityForm" class="flex flex-col gap-3">
+        <input type="hidden" id="generalActivityId">
+        <div class="flex flex-col">
+            <label for="activityName" class="text-sm font-medium text-gray-400 mb-1">Naam Activiteit:</label>
+            <input type="text" id="activityName" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="activityDate" class="text-sm font-medium text-gray-400 mb-1">Datum:</label>
+            <input type="date" id="activityDate" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+        </div>
+        <div class="flex flex-col">
+            <label for="activityDescription" class="text-sm font-medium text-gray-400 mb-1">Beschrijving:</label>
+            <textarea id="activityDescription" rows="3" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200"></textarea>
+        </div>
+        <button type="submit" id="saveGeneralActivityBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Opslaan</button>
+        <button type="button" id="clearGeneralActivityFormBtn" class="bg-gray-600 hover:bg-gray-700 text-gray-200 font-bold py-2 px-4 rounded-md transition-colors duration-200">Formulier Leegmaken</button>
+    </form>
+</div>
