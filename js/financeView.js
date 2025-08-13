@@ -35,7 +35,10 @@ export async function initFinanceView() {
     async function loadTransactions() {
         try {
             const allTransactions = await getAllData('finance');
-            
+            console.log("All Finance Transactions:", allTransactions);
+            const allMemberships = await getAllData('memberMemberships');
+            console.log("All Member Memberships:", allMemberships);
+
             currentMonthDisplay.textContent = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
             const filteredTransactions = allTransactions.filter(t => {
