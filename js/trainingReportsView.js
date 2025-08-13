@@ -3,7 +3,7 @@
 
 import { getAllData, getData } from '../database.js';
 import { showNotification } from './notifications.js';
-import { Bodystandard, VO2, RuntimesVo2, HRVAnalyzer } from '../rr_hr_hrv_engine.js'; // BELANGRIJK: HRVAnalyzer toegevoegd
+import { HRVAnalyzer } from './measurement_utils.js'; // Corrected import path for the feature-rich HRVAnalyzer
 
 import { initIndividualHrChart, initIndividualHrvChart, initBreathRateChart } from './reports/regularReports.js';
 import { initSleepTrendChart, initSportActivitiesTrendChart } from './reports/afterReports.js';

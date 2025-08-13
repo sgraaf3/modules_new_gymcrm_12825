@@ -6,8 +6,8 @@ import { putData, getData, getOrCreateUserId } from '../database.js';
 import { showNotification } from './notifications.js';
 // Import Bodystandard, VO2, RuntimesVo2, HRVAnalyzer, BreathManager, generateMeasurementReport, getHrZone, simulateBreathingFromRr, smooth, getBreathRateColorClass, calculateRpe
 // from the new consolidated measurement_utils.js
-import { Bodystandard, VO2, RuntimesVo2, HRVAnalyzer, BreathManager, generateMeasurementReport, getHrZone, simulateBreathingFromRr, smooth, getBreathRateColorClass, calculateRpe } from '../js/measurement_utils.js';
-
+import { Bodystandard, VO2, RuntimesVo2 } from './body_metrics_utils.js';
+import { HRVAnalyzer, BreathManager, generateMeasurementReport, getHrZone, simulateBreathingFromRr, smooth, getBreathRateColorClass, calculateRpe } from './measurement_utils.js';
 
 // Globale variabelen voor de grafiek en data
 let hrChart;

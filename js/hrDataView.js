@@ -2,7 +2,7 @@
 // Bevat logica voor het weergeven van HR- en HRV-gegevens, inclusief grafieken en drempelwaarden.
 
 import { getData, getAllData } from '../database.js';
-import { HRVAnalyzer } from '../rr_hr_hrv_engine.js';
+import { HRVAnalyzer } from './hrv_analysis_utils.js'; // Corrected import path
 import { showNotification } from './notifications.js';
 
 let hrBreathChart;

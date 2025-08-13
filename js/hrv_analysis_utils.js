@@ -13,8 +13,16 @@ export class HRVAnalyzer {
      * Should contain at least 2 valid intervals for meaningful analysis.
      */
     constructor(rrIntervals) {
-        this.rrIntervals = rrIntervals;
-        
+        this.rrIntervals = rrIntervals || [];
+        this.differences = [];
+
+        // Pre-calculate successive differences for efficiency
+        if (this.rrIntervals.length >= 2) {
+            for (let i = 0; i < this.rrIntervals.length - 1; i++) {
+                this.differences.push(this.rrIntervals[i + 1] - this.rrIntervals[i]);
+            }
+        }
+
         // Calculate time-domain metrics
         this.meanRR = this.calculateMeanRR();
         this.rmssd = this.calculateRmssd();
@@ -22,7 +30,6 @@ export class HRVAnalyzer {
         this.nn50 = this.calculateNNX(50); // Number of successive differences > 50ms
         this.pnn50 = this.calculatePnnX(50); // Percentage of successive differences > 50ms
         this.sdsd = this.calculateSdsd(); // Standard Deviation of Successive Differences
-
         // Placeholder for frequency-domain metrics
         this.frequency = this.calculateFrequencyDomain();
         this.lfPower = this.frequency.lfPower;
@@ -46,13 +53,9 @@ export class HRVAnalyzer {
      * @returns {number} The RMSSD value in milliseconds. Returns 0 if data is insufficient.
      */
     calculateRmssd() {
-        if (this.rrIntervals.length < 2) return 0;
-        let sumOfDifferencesSquared = 0;
-        for (let i = 0; i < this.rrIntervals.length - 1; i++) {
-            const diff = this.rrIntervals[i + 1] - this.rrIntervals[i];
-            sumOfDifferencesSquared += diff * diff;
-        }
-        return Math.sqrt(sumOfDifferencesSquared / (this.rrIntervals.length - 1));
+        if (this.differences.length === 0) return 0;
+        const sumOfDifferencesSquared = this.differences.reduce((sum, diff) => sum + diff * diff, 0);
+        return Math.sqrt(sumOfDifferencesSquared / this.differences.length);
     }
 
     /**
@@ -73,15 +76,8 @@ export class HRVAnalyzer {
      * @returns {number} The count of successive differences exceeding the threshold.
      */
     calculateNNX(threshold) {
-        if (this.rrIntervals.length < 2) return 0;
-        let n = 0;
-        for (let i = 0; i < this.rrIntervals.length - 1; i++) {
-            const diff = Math.abs(this.rrIntervals[i + 1] - this.rrIntervals[i]);
-            if (diff > threshold) {
-                n++;
-            }
-        }
-        return n;
+        if (this.differences.length === 0) return 0;
+        return this.differences.filter(diff => Math.abs(diff) > threshold).length;
     }
 
     /**
@@ -91,9 +87,9 @@ export class HRVAnalyzer {
      * @returns {number} The pNNx value as a percentage. Returns 0 if data is insufficient.
      */
     calculatePnnX(threshold) {
-        if (this.rrIntervals.length < 2) return 0;
+        if (this.differences.length === 0) return 0;
         const n = this.calculateNNX(threshold);
-        return (n / (this.rrIntervals.length - 1)) * 100;
+        return (n / this.differences.length) * 100;
     }
 
     /**
@@ -102,15 +98,11 @@ export class HRVAnalyzer {
      * @returns {number} The SDSD value in milliseconds. Returns 0 if data is insufficient.
      */
     calculateSdsd() {
-        if (this.rrIntervals.length < 2) return 0;
-        const differences = [];
-        for (let i = 0; i < this.rrIntervals.length - 1; i++) {
-            differences.push(this.rrIntervals[i + 1] - this.rrIntervals[i]);
-        }
-        
-        const meanDiff = differences.reduce((sum, val) => sum + val, 0) / differences.length;
-        const sumOfSquaredDiffs = differences.reduce((sum, val) => sum + Math.pow(val - meanDiff, 2), 0);
-        return Math.sqrt(sumOfSquaredDiffs / (differences.length - 1));
+        if (this.differences.length < 2) return 0; // Need at least 2 differences for standard deviation
+        const meanDiff = this.differences.reduce((sum, val) => sum + val, 0) / this.differences.length;
+        const sumOfSquaredDiffs = this.differences.reduce((sum, val) => sum + Math.pow(val - meanDiff, 2), 0);
+        // Use (n-1) for sample standard deviation
+        return Math.sqrt(sumOfSquaredDiffs / (this.differences.length - 1));
     }
 
     /**
@@ -157,52 +149,32 @@ export class HRVAnalyzer {
  * @property {number} avgHR - Average Heart Rate in BPM.
  */
 export function calculateMetrics(data) {
-    if (data.length < 2) return null; // At least 2 RR intervals needed for most calculations
+    if (!data || data.length < 2) return null; // At least 2 RR intervals needed for most calculations
+
+    // Use the optimized HRVAnalyzer for core metrics
+    const analyzer = new HRVAnalyzer(data);
 
     // Basic statistics
     const sortedData = [...data].sort((a, b) => a - b);
     const minRR = sortedData[0];
     const maxRR = sortedData[sortedData.length - 1];
-    const meanRR = data.reduce((sum, val) => sum + val, 0) / data.length;
     const mid = Math.floor(sortedData.length / 2);
     const medianRR = sortedData.length % 2 === 0 ? (sortedData[mid - 1] + sortedData[mid]) / 2 : sortedData[mid];
 
-    // Time-domain HRV metrics
-    let sumSqDiff = 0;
-    let nn50Count = 0;
-    const differences = []; // To calculate SDSD
-    for (let i = 0; i < data.length - 1; i++) {
-        const diff = data[i + 1] - data[i];
-        sumSqDiff += diff * diff;
-        if (Math.abs(diff) > 50) nn50Count++;
-        differences.push(diff);
-    }
-
-    const rmssd = Math.sqrt(sumSqDiff / (data.length - 1));
-    const pNN50 = (nn50Count / (data.length - 1)) * 100;
-    
-    // Calculate SDNN
-    const sumOfSquaredDifferences = data.reduce((sum, val) => sum + Math.pow(val - meanRR, 2), 0);
-    const sdnn = Math.sqrt(sumOfSquaredDifferences / (data.length - 1));
-
-    // Calculate SDSD
-    const meanDiff = differences.reduce((sum, val) => sum + val, 0) / differences.length;
-    const sumOfSquaredDiffs = differences.reduce((sum, val) => sum + Math.pow(val - meanDiff, 2), 0);
-    const sdsd = Math.sqrt(sumOfSquaredDiffs / (differences.length - 1));
-
-    const avgHR = 60000 / meanRR; // Convert mean RR in ms to BPM
+    // Convert mean RR in ms to BPM. Handle division by zero.
+    const avgHR = analyzer.meanRR > 0 ? 60000 / analyzer.meanRR : 0;
 
     return {
         count: data.length,
         minRR: minRR,
         maxRR: maxRR,
-        meanRR: meanRR,
+        meanRR: analyzer.meanRR,
         medianRR: medianRR,
-        rmssd: rmssd,
-        sdnn: sdnn,
-        nn50: nn50Count,
-        pNN50: pNN50,
-        sdsd: sdsd,
+        rmssd: analyzer.rmssd,
+        sdnn: analyzer.sdnn,
+        nn50: analyzer.nn50,
+        pNN50: analyzer.pnn50,
+        sdsd: analyzer.sdsd,
         avgHR: avgHR
     };
 }

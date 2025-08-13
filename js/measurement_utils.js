@@ -1,7 +1,7 @@
 // Bestand: js/measurement_utils.js
 // Bevat gedeelde logica en klassen voor metingen en rapportgeneratie.
 
-import { Bodystandard, VO2, RuntimesVo2 } from './rr_hr_hrv_engine.js'; // Assuming these are still needed and correctly imported
+import { Bodystandard, VO2, RuntimesVo2 } from './body_metrics_utils.js'; // Corrected import path
 
 // HRV-analyse (moved from restMeasurementLiveView_2.js)
 export class HRVAnalyzer {

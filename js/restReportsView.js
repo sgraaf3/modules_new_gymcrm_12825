@@ -3,7 +3,7 @@
 
 import { getAllData, getData } from '../database.js';
 import { showNotification } from './notifications.js';
-import { Bodystandard, VO2, RuntimesVo2, HRVAnalyzer } from '../rr_hr_hrv_engine.js';
+import { HRVAnalyzer } from './measurement_utils.js'; // Corrected import path
 
 // Globale variabelen om Chart.js instanties bij te houden
 let sessionRestHrChart;
