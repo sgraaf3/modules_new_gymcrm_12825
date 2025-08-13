@@ -9,6 +9,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
     <link rel="stylesheet" href="./style.css">
+    <!-- New: Load grid-specific styles -->
+    <link rel="stylesheet" href="./grid_style.css">
 </head>
 <body>
     <div class="app-container">
@@ -75,13 +77,9 @@
                 <i class="fas fa-chart-line"></i>
                 <span>User Progressie</span>
             </div>
-            <div class="bottom-nav-item" data-target-view="restMeasurementLiveView">
+            <div class="bottom-nav-item" data-target-view="unifiedMeasurementView">
                 <i class="fas fa-circle"></i>
                 <span>Meting</span>
-            </div>
-            <div class="bottom-nav-item" data-target-view="restMeasurementLiveView_2">
-                <i class="fas fa-circle"></i>
-                <span>Meting 2</span>
             </div>
             <div class="bottom-nav-item" data-target-view="userProfileView">
                 <i class="fas fa-user"></i>
@@ -103,15 +101,17 @@
                 <i class="fas fa-chart-bar"></i>
                 <span>Dashboard Rapporten</span>
             </div>
-            <div class="bottom-nav-item" data-target-view="trainingReportsView">
+            <div class="bottom-nav-item" data-target-view="reportsView">
                 <i class="fas fa-chart-line"></i>
-                <span>Training Rapporten</span>
+                <span>Rapporten</span>
             </div>
         </div>
     </div>
 
+    <!-- New: Load calculator utility script -->
+    <script src="./calculator_utils.js"></script>
     <script type="module" src="./app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
 </html>

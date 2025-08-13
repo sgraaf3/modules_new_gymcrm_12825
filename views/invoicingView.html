@@ -1,0 +1,162 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>Facturatie & Betalingen</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+
+<div class="main-container bg-gray-800 p-4">
+    <h1 class="text-blue-400 text-center text-3xl font-bold mb-6">Facturatie Overzicht</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Financial Summary Card -->
+        <div class="data-card bg-gray-700 p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-bold text-gray-100 mb-4">Financiële Samenvatting</h3>
+            <div class="grid grid-cols-2 gap-4 text-gray-200">
+                <div>Totale Inkomsten: <span id="totalIncome" class="font-semibold text-green-400">€ 0.00</span></div>
+                <div>Totale Uitgaven: <span id="totalExpenses" class="font-semibold text-red-400">€ 0.00</span></div>
+                <div class="col-span-2">Netto Winst: <span id="netProfit" class="font-semibold text-blue-400">€ 0.00</span></div>
+            </div>
+            <button id="viewFinancialReportsBtn" class="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md transition-colors w-full">
+                Bekijk Financiële Rapporten
+            </button>
+        </div>
+
+        <!-- Generate Invoice Card -->
+        <div class="data-card bg-gray-700 p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-bold text-gray-100 mb-4">Nieuwe Factuur Genereren</h3>
+            <div class="form-group mb-3">
+                <label for="invoiceMemberSelect" class="block text-gray-300 text-sm font-bold mb-1">Kies Lid:</label>
+                <select id="invoiceMemberSelect" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200">
+                    <option value="">-- Selecteer een lid --</option>
+                    <!-- Members will be loaded here -->
+                </select>
+            </div>
+            <div class="form-group mb-3">
+                <label for="invoiceServiceSelect" class="block text-gray-300 text-sm font-bold mb-1">Kies Dienst/Abonnement:</label>
+                <select id="invoiceServiceSelect" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200">
+                    <option value="">-- Selecteer een dienst --</option>
+                    <!-- Services/Subscriptions will be loaded here -->
+                </select>
+            </div>
+            <div class="form-group mb-3">
+                <label for="invoiceAmount" class="block text-gray-300 text-sm font-bold mb-1">Bedrag (€):</label>
+                <input type="number" id="invoiceAmount" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200" placeholder="0.00" step="0.01">
+            </div>
+            <div class="form-group mb-4">
+                <label for="invoiceDescription" class="block text-gray-300 text-sm font-bold mb-1">Omschrijving:</label>
+                <textarea id="invoiceDescription" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200" rows="2" placeholder="Beschrijving van de dienst/abonnement"></textarea>
+            </div>
+            <button id="generateInvoiceBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors w-full">
+                Factuur Genereren
+            </button>
+        </div>
+    </div>
+
+    <!-- Invoice List Section -->
+    <div class="window-section bg-gray-700 p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Alle Facturen</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-gray-900 rounded-lg overflow-hidden">
+                <thead>
+                    <tr class="bg-gray-800 text-gray-300 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Factuur ID</th>
+                        <th class="py-3 px-6 text-left">Lid</th>
+                        <th class="py-3 px-6 text-left">Datum</th>
+                        <th class="py-3 px-6 text-left">Vervaldatum</th>
+                        <th class="py-3 px-6 text-left">Bedrag</th>
+                        <th class="py-3 px-6 text-left">Betaald</th>
+                        <th class="py-3 px-6 text-left">Status</th>
+                        <th class="py-3 px-6 text-center">Acties</th>
+                    </tr>
+                </thead>
+                <tbody id="invoicesTableBody" class="text-gray-200 text-sm font-light">
+                    <!-- Invoices will be loaded here -->
+                    <tr><td colspan="8" class="py-3 px-6 text-center">Geen facturen gevonden.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Payment Modal (Hidden by default) -->
+    <div id="paymentModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button id="paymentModalCloseBtn" class="modal-close-btn">&times;</button>
+            <h3 class="modal-title">Betaling Registreren</h3>
+            <p class="modal-body-text">Factuur ID: <span id="paymentInvoiceId"></span></p>
+            <p class="modal-body-text">Totaal Bedrag: <span id="paymentInvoiceTotal"></span></p>
+            <p class="modal-body-text">Reeds Betaald: <span id="paymentInvoicePaid"></span></p>
+            <div class="form-group mb-4">
+                <label for="paymentAmount" class="block text-gray-300 text-sm font-bold mb-1">Bedrag Nu Betaald (€):</label>
+                <input type="number" id="paymentAmount" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200" step="0.01" placeholder="0.00">
+            </div>
+            <div class="modal-button-group">
+                <button id="confirmPaymentBtn" class="bg-green-600 hover:bg-green-700 text-white">Bevestig Betaling</button>
+                <button id="cancelPaymentBtn" class="btn-secondary">Annuleren</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Specific styles for this view, extending base styles */
+    .data-card {
+        background-color: #1f2937; /* bg-gray-800 */
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        padding: 1.5rem;
+    }
+
+    table th, table td {
+        border-bottom: 1px solid #374151; /* gray-700 */
+    }
+    table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    table tbody tr:hover {
+        background-color: #1f2937; /* gray-800 */
+    }
+
+    .status-paid {
+        color: #4ade80; /* green-400 */
+        font-weight: bold;
+    }
+    .status-overdue {
+        color: #f87171; /* red-400 */
+        font-weight: bold;
+    }
+    .status-pending, .status-sent {
+        color: #facc15; /* yellow-400 */
+        font-weight: bold;
+    }
+    .status-partially-paid {
+        color: #60a5fa; /* blue-400 */
+        font-weight: bold;
+    }
+
+    /* Action buttons in table */
+    .table-action-button {
+        background-color: #4b5563; /* gray-600 */
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 0.375rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        margin-right: 0.5rem;
+    }
+    .table-action-button:hover {
+        background-color: #374151; /* gray-700 */
+    }
+    .table-action-button.pay-button {
+        background-color: #2ecc71; /* emerald-500 */
+    }
+    .table-action-button.pay-button:hover {
+        background-color: #27ae60; /* emerald-600 */
+    }
+    .table-action-button.delete-button {
+        background-color: #ef4444; /* red-500 */
+    }
+    .table-action-button.delete-button:hover {
+        background-color: #dc2626; /* red-600 */
+    }
+</style>

@@ -1,5 +1,5 @@
 const DB_NAME = 'SportsCRMDB';
-const DB_VERSION = 19; // VERSIE VERHOOGD NAAR 19 voor gymSecties store
+const DB_VERSION = 20; // VERSIE VERHOOGD NAAR 20 voor invoices en trainerId
 
 const USER_PROFILE_STORE = 'userProfile';
 const TRAINING_SESSIONS_STORE = 'trainingSessions';
@@ -7,7 +7,6 @@ const ADMIN_SECRET_STORE = 'adminSecretData';
 const SCHEDULES_STORE = 'schedules'; // General schedules
 const LESSON_SCHEDULES_STORE = 'lessonSchedules'; // Lesson specific schedules
 const MEETINGS_STORE = 'meetings';
-const MESSAGES_STORE = 'messages';
 const MEMBER_DATA_STORE = 'memberData';
 const MEMBER_ACTIVITY_STORE = 'memberActivity';
 const POPULARITY_STORE = 'popularityData';
@@ -32,7 +31,7 @@ const USER_ROLE_STORE = 'userRoles';
 const SLEEP_DATA_STORE = 'sleepData';
 const LESSONS_STORE = 'lessons';
 const TEST_PROTOCOLS_STORE = 'testProtocols';
-const GYM_SECTIONS_STORE = 'gymSections'; // NIEUW
+const GYM_SECTIONS_STORE = 'gymSections';
 
 // New stores for schedule builder content
 const TRAINING_DAYS_STORE = 'trainingDays';
@@ -47,6 +46,8 @@ const LINKED_DOCUMENTS_STORE = 'linkedDocuments';
 const LESSON_DAYS_STORE = 'lessonDays'; // Nieuwe store voor opgeslagen lesdagen
 const LESSON_BLOCKS_STORE = 'lessonBlocks'; // Nieuwe store voor opgeslagen lesblokken
 
+// NIEUWE STORES VOOR FACTURATIE
+const INVOICES_STORE = 'invoices'; // Nieuwe store voor facturen
 
 let dbInstance;
 
@@ -61,7 +62,7 @@ export async function openDatabase() {
             const stores = [
                 USER_PROFILE_STORE, TRAINING_SESSIONS_STORE, ADMIN_SECRET_STORE,
                 SCHEDULES_STORE, LESSON_SCHEDULES_STORE, MEETINGS_STORE,
-                MESSAGES_STORE, MEMBER_DATA_STORE, MEMBER_ACTIVITY_STORE,
+                MEMBER_DATA_STORE, MEMBER_ACTIVITY_STORE,
                 POPULARITY_STORE, MEMBER_SETTINGS_STORE, SUBSCRIPTIONS_STORE,
                 LOGS_STORE, REGISTRY_STORE, MEMBER_MEMBERSHIP_STORE,
                 FINANCE_STORE, DOCS_STORE, TOGGLE_SETTINGS_STORE,
@@ -77,9 +78,10 @@ export async function openDatabase() {
                 CONFIGURED_SESSIONS_STORE,
                 ROLES_STORE,
                 LINKED_DOCUMENTS_STORE,
-                LESSON_DAYS_STORE, // NIEUW
-                LESSON_BLOCKS_STORE, // NIEUW
-                GYM_SECTIONS_STORE // NIEUW
+                LESSON_DAYS_STORE,
+                LESSON_BLOCKS_STORE,
+                GYM_SECTIONS_STORE,
+                INVOICES_STORE // NIEUW: Facturen store
             ];
 
             stores.forEach(storeName => {
@@ -95,6 +97,17 @@ export async function openDatabase() {
                     db.createObjectStore(storeName, options);
                 }
             });
+
+            // Add new indexes or modify existing object stores if needed for new features
+            // Example for memberData: add trainerId index
+            if (event.oldVersion < 20) { // If upgrading from a version before 20
+                if (db.objectStoreNames.contains(MEMBER_DATA_STORE)) {
+                    const memberDataObjectStore = request.transaction.objectStore(MEMBER_DATA_STORE);
+                    if (!memberDataObjectStore.indexNames.contains('trainerId')) {
+                        memberDataObjectStore.createIndex('trainerId', 'trainerId', { unique: false });
+                    }
+                }
+            }
         };
 
         request.onsuccess = (event) => {

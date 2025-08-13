@@ -2,30 +2,28 @@
 // Dit bestand fungeert als de centrale applicatie-controller en router.
 // Het beheert de navigatie tussen verschillende views en initialiseert globale functionaliteiten.
 
-import { getData, putData, deleteData, getAllData, getOrCreateUserId, getUserRole, setUserRole } from './database.js';
+import { getData, putData, deleteData, getAllData, getOrCreateUserId, setUserRole } from './database.js'; // Removed getUserRole as it's not used here
 import { BluetoothController } from './bluetooth.js';
-// De Bodystandard, VO2, RuntimesVo2 klassen worden nu geïmporteerd door de specifieke view modules die ze nodig hebben.
-// import { Bodystandard, VO2, RuntimesVo2 } from './modules.js';
+import { getHrZone } from './js/measurement_utils.js';
 
 // Importeer de initialisatiefuncties voor alle afzonderlijke views
 import { initDashboardView } from './js/dashboardView.js';
 import { initUserProfileView } from './js/userProfileView.js';
-import { initRestMeasurementLiveView } from './js/restMeasurementLiveView.js';
-import { initRestMeasurementLiveView_2 } from './js/restMeasurementLiveView_2.js'; // NIEUW: Importeer de nieuwe module
+import { initUnifiedMeasurementView } from './js/unifiedMeasurementView.js';
 import { initLiveTrainingView } from './js/liveTrainingView.js';
 import { initHrDataView } from './js/hrDataView.js';
 import { initTestingView } from './js/testingView.js';
 import { initTrainingView } from './js/trainingView.js';
-// 'restMeasurementView' is vervangen door 'restMeasurementLiveView' en de oude content is verwijderd.
 import { initNutritionView } from './js/nutritionView.js';
 import { initSleepView } from './js/sleepView.js';
 import { initTrainingReportsView } from './js/trainingReportsView.js';
-import { initRestReportsView } from './js/restReportsView.js'; // NIEUW: Importeer de nieuwe rustrapporten view
+import { initRestReportsView } from './js/restReportsView.js';
 import { initDashboardReportsView } from './js/dashboardReportsView.js';
 import { initSchedulesView } from './js/schedulesView.js';
 import { initLessonSchedulerView } from './js/lessonSchedulerView.js';
-import * as LessonScheduleBuilder from './js/lessonScheduleBuilder.js'; // FIX: Importeer als namespace om exportfout te omzeilen
+import * as LessonScheduleBuilder from './js/lessonScheduleBuilder.js';
 import { initMeetingPlannerView } from './js/meetingPlannerView.js';
+import { initLessonPlannerView } from './js/lessonPlannerView.js';
 import { initMessagesView } from './js/messagesView.js';
 import { initMemberSpecificprogressView, showDetailedGraph } from './js/memberSpecificprogressView.js';
 import { initMemberActivityView } from './js/memberActivityView.js';
@@ -39,6 +37,7 @@ import { initFinanceView } from './js/financeView.js';
 import { initDocsView } from './js/docsView.js';
 import { initAdminOnlyView } from './js/adminOnlyView.js';
 import { initToggleFunctionalityView } from './js/toggleFunctionalityView.js';
+import { initGymSectionsView } from './js/gymSectionsView.js';
 import { initDashboardOverviewView } from './js/dashboardOverviewView.js';
 import { initSportView } from './js/sportView.js';
 import { initActivitiesView } from './js/activitiesView.js';
@@ -46,35 +45,14 @@ import { initPermissionsView } from './js/permissionsView.js';
 import { initNotesView } from './js/notesView.js';
 import { initActionCenterView } from './js/actionCenterView.js';
 import { initScheduleBuilderView } from './js/scheduleBuilderView.js';
-import { initLessonPlannerView } from './js/lessonPlannerView.js';
-import { initGymSectionsView } from './js/gymSectionsView.js';
 
-// Importeer het nieuwe notificatiesysteem
-import { showNotification } from './js/notifications.js';
+// Import the new Invoicing View
+import { initInvoicingView } from './js/invoicingView.js';
 
+// Import Trainer Management and Trainer Dashboard Views
+import { initTrainerManagementView } from './js/trainerManagementView.js'; // NIEUW
+import { initTrainerDashboardView } from './js/trainerDashboardView.js'; // NIEUW
 
-// --- Gedeelde hulpprogrammafuncties (blijven hier, tenzij ze specifiek bij een module horen) ---
-function smooth(data, windowSize = 5) {
-    const smoothed = [];
-    for (let i = 0; i < data.length; i++) {
-        const start = Math.max(0, i - windowSize + 1);
-        const window = data.slice(start, i + 1);
-        const avg = window.reduce((sum, val) => sum + val, 0) / window.length;
-        smoothed.push(avg);
-    }
-    return smoothed;
-}
-
-function getHrZone(currentHR, at) {
-    if (currentHR >= at * 1.1) return 'Intensive 2';
-    if (currentHR >= at * 1.05) return 'Intensive 1';
-    if (currentHR >= at * 0.95) return 'Endurance 3';
-    if (currentHR >= at * 0.85) return 'Endurance 2';
-    if (currentHR >= at * 0.75) return 'Endurance 1';
-    if (currentHR >= at * 0.7 + 5) return 'Cooldown';
-    if (currentHR >= at * 0.7) return 'Warmup';
-    return 'Resting';
-}
 
 // Gebruikers-ID beheer (globaal)
 const currentAppUserId = getOrCreateUserId();
@@ -85,8 +63,7 @@ window.getUserId = () => currentAppUserId; // Maak globaal beschikbaar
 const viewConfig = {
     'dashboardView': { html: './views/dashboardView.html', init: initDashboardView },
     'userProfileView': { html: './views/userProfileView.html', init: initUserProfileView },
-    'restMeasurementLiveView': { html: './views/restMeasurementLiveView.html', init: initRestMeasurementLiveView },
-    'restMeasurementLiveView_2': { html: './views/restMeasurementLiveView_2.html', init: initRestMeasurementLiveView_2 },
+    'unifiedMeasurementView': { html: './views/unifiedMeasurementView.html', init: initUnifiedMeasurementView },
     'liveTrainingView': { html: './views/liveTrainingView.html', init: initLiveTrainingView },
     'hrDataView': { html: './views/hrDataView.html', init: initHrDataView },
     'testingView': { html: './views/testingView.html', init: initTestingView },
@@ -123,10 +100,16 @@ const viewConfig = {
     'notesView': { html: './views/notesView.html', init: initNotesView },
     'actionCenterView': { html: './views/actionCenterView.html', init: initActionCenterView },
     'scheduleBuilderView': { html: './views/scheduleBuilderView.html', init: initScheduleBuilderView },
+    'invoicingView': { html: './views/invoicingView.html', init: initInvoicingView },
+    'trainerManagementView': { html: './views/trainerManagementView.html', init: initTrainerManagementView }, // NIEUW
+    'trainerDashboardView': { html: './views/trainerDashboardView.html', init: initTrainerDashboardView }, // NIEUW
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
     const mainContentArea = document.getElementById('main-content-area');
+
+    // Instantiate BluetoothController globally once
+    const bluetoothController = new BluetoothController();
 
     async function showView(viewId, data = null) {
         const config = viewConfig[viewId];
@@ -149,7 +132,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             if (config.init) {
-                await config.init(showView, data); // Geef showView en data door
+                // Pass the global bluetoothController instance to the init function
+                await config.init(showView, data, bluetoothController);
             }
 
             // Algemene terug-naar-dashboard knop
@@ -197,7 +181,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const openBluetoothWidgetBtn = document.getElementById('openBluetoothWidget');
     const toggleBluetoothWidgetBtn = document.getElementById('toggleBluetoothWidget');
 
-    const bluetoothController = new BluetoothController();
+    // Data collection for global widget
+    let globalWidgetRrData = [];
+    let globalWidgetTimestamps = [];
+    let globalWidgetMeasurementStartTime;
+    let globalWidgetMeasurementInterval;
+
     const connectionStatusDisplay = bluetoothWidget.querySelector('#connectionStatusDisplay');
     const liveHrDisplay = bluetoothWidget.querySelector('#liveHrDisplay');
     const liveHrZoneDisplay = bluetoothWidget.querySelector('#liveHrZoneDisplay');
@@ -208,46 +197,75 @@ document.addEventListener('DOMContentLoaded', async () => {
     const startMeasurementBtnLive = bluetoothWidget.querySelector('#startMeasurementBtnLive');
     const stopMeasurementBtnLive = bluetoothWidget.querySelector('#stopMeasurementBtnLive');
 
-    let measurementStartTime;
-    let measurementInterval;
-
-    function updateTimer() {
-        if (measurementStartTime) {
-            const elapsedSeconds = Math.floor((Date.now() - measurementStartTime) / 1000);
+    function updateGlobalWidgetTimer() {
+        if (globalWidgetMeasurementStartTime) {
+            const elapsedSeconds = Math.floor((Date.now() - globalWidgetMeasurementStartTime) / 1000);
             const minutes = Math.floor(elapsedSeconds / 60);
             const seconds = elapsedSeconds % 60;
             liveTimerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
     }
 
-    bluetoothController.onStateChange = (state, deviceName) => {
+    bluetoothController.onStateChange = async (state, deviceName) => {
         connectionStatusDisplay.textContent = `Status: ${state} ${deviceName ? `(${deviceName})` : ''}`;
         if (state === 'STREAMING') {
-            startMeasurementBtnLive.style.display = 'none';
-            stopMeasurementBtnLive.style.display = 'block';
-            measurementStartTime = Date.now();
-            measurementInterval = setInterval(updateTimer, 1000);
+            if (startMeasurementBtnLive) startMeasurementBtnLive.style.display = 'none';
+            if (stopMeasurementBtnLive) stopMeasurementBtnLive.style.display = 'block';
+            globalWidgetMeasurementStartTime = Date.now();
+            globalWidgetMeasurementInterval = setInterval(updateGlobalWidgetTimer, 1000);
             showNotification(`Bluetooth verbonden met ${deviceName || 'apparaat'}!`, 'success');
+            // Reset data for new measurement
+            globalWidgetRrData = [];
+            globalWidgetTimestamps = [];
         } else if (state === 'ERROR') {
             showNotification('Bluetooth verbinding mislukt of geannuleerd.', 'error');
+            if (startMeasurementBtnLive) startMeasurementBtnLive.style.display = 'block';
+            if (stopMeasurementBtnLive) stopMeasurementBtnLive.style.display = 'none';
         } else if (state === 'STOPPED') {
             showNotification('Bluetooth meting gestopt.', 'info');
+            clearInterval(globalWidgetMeasurementInterval);
+            if (startMeasurementBtnLive) startMeasurementBtnLive.style.display = 'block';
+            if (stopMeasurementBtnBtn) stopMeasurementBtnLive.style.display = 'none';
+
+            // Save RR data to sessionStorage before navigating
+            if (globalWidgetRrData.length > 0) {
+                const rrDataWithTimestamps = globalWidgetRrData.map((value, index) => ({
+                    value: value,
+                    timestamp: globalWidgetTimestamps[index] ? new Date(globalWidgetTimestamps[index]).getTime() : (new Date().getTime() - (globalWidgetRrData.length - 1 - index) * 1000), // Use actual timestamp or estimate
+                    originalIndex: index
+                }));
+                sessionStorage.setItem('lastMeasurementRrData', JSON.stringify(rrDataWithTimestamps));
+            } else {
+                sessionStorage.removeItem('lastMeasurementRrData');
+            }
+
+            // Navigate to reports page after measurement stops
+            showView('reportsView');
         }
     };
 
-    bluetoothController.onData = (dataPacket) => {
-        liveHrDisplay.textContent = `${dataPacket.heartRate} BPM`;
+    bluetoothController.onData = async (dataPacket) => {
+        if (liveHrDisplay) liveHrDisplay.textContent = `${dataPacket.heartRate} BPM`;
 
-        const userBaseAtHR = parseFloat(document.getElementById('userBaseAtHR')?.value) || 0;
-        if (userBaseAtHR > 0) {
-            liveHrZoneDisplay.textContent = getHrZone(dataPacket.heartRate, userBaseAtHR);
-        } else {
-            liveHrZoneDisplay.textContent = '-- Zone';
+        // Store raw RR data and timestamps for global widget
+        if (dataPacket.rawRrIntervals && dataPacket.rawRrIntervals.length > 0) {
+            dataPacket.rawRrIntervals.forEach(rr => {
+                globalWidgetRrData.push(rr);
+                globalWidgetTimestamps.push(new Date().getTime()); // Store current timestamp for each RR
+            });
+        }
+
+        const userProfile = await getData('userProfile', currentAppUserId);
+        const userBaseAtHR = userProfile ? parseFloat(userProfile.userBaseAtHR) : 0;
+        
+        if (liveHrZoneDisplay) {
+            // getHrZone is imported at the top of app.js
+            liveHrZoneDisplay.textContent = getHrZone(dataPacket.heartRate, userBaseAtHR, 0); // Pass 0 for rmssd in global widget context
         }
 
         if (dataPacket.filteredRrIntervals && dataPacket.filteredRrIntervals.length > 0) {
             const avgRr = dataPacket.filteredRrIntervals.reduce((sum, val) => sum + val, 0) / dataPacket.filteredRrIntervals.length;
-            liveAvgRrDisplay.textContent = `${avgRr.toFixed(0)} MS`;
+            if (liveAvgRrDisplay) liveAvgRrDisplay.textContent = `${avgRr.toFixed(0)} MS`;
 
             if (dataPacket.filteredRrIntervals.length >= 2) {
                 let sumOfDifferencesSquared = 0;
@@ -255,18 +273,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                     sumOfDifferencesSquared += Math.pow(dataPacket.filteredRrIntervals[i+1] - dataPacket.filteredRrIntervals[i], 2);
                 }
                 const rmssd = Math.sqrt(sumOfDifferencesSquared / (dataPacket.filteredRrIntervals.length - 1));
-                liveRmssdDisplay.textContent = `RMSSD: ${rmssd.toFixed(2)} MS`;
+                if (liveRmssdDisplay) liveRmssdDisplay.textContent = `RMSSD: ${rmssd.toFixed(2)} MS`;
             } else {
-                liveRmssdDisplay.textContent = `RMSSD: -- MS`;
+                if (liveRmssdDisplay) liveRmssdDisplay.textContent = `RMSSD: -- MS`;
             }
         }
 
-        liveBreathRateDisplay.textContent = `${(Math.random() * 10 + 12).toFixed(1)} BPM`;
+        // Simulate breath rate for the global widget if not provided by Bluetooth
+        if (liveBreathRateDisplay) liveBreathRateDisplay.textContent = `${(Math.random() * 10 + 12).toFixed(1)} BPM`;
     };
 
     if (startMeasurementBtnLive) {
         startMeasurementBtnLive.addEventListener('click', () => {
-            bluetoothController.setPreset('resting');
+            bluetoothController.setPreset('resting'); // Default preset for global widget
             bluetoothController.connect();
         });
     }

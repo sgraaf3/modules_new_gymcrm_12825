@@ -1,0 +1,131 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span id="trainerDashboardTitle">Trainer Dashboard</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+
+<div class="main-container bg-gray-800 p-4">
+    <h1 class="text-blue-400 text-center text-3xl font-bold mb-6">Welkom, <span id="trainerNameDisplay">Trainer</span>!</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Assigned Members Overview -->
+        <div class="data-card bg-gray-700 p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-bold text-gray-100 mb-4">Mijn Toegewezen Leden</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-gray-900 rounded-lg overflow-hidden">
+                    <thead>
+                        <tr class="bg-gray-800 text-gray-300 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left">Lid Naam</th>
+                            <th class="py-3 px-6 text-left">E-mail</th>
+                            <th class="py-3 px-6 text-center">Acties</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assignedMembersListBody" class="text-gray-200 text-sm font-light">
+                        <!-- Assigned members will be loaded here -->
+                        <tr><td colspan="3" class="py-3 px-6 text-center">Geen leden toegewezen.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <button id="manageAssignmentsBtn" class="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md transition-colors w-full">
+                Beheer Toewijzingen
+            </button>
+        </div>
+
+        <!-- Quick Log Session / Hours Card -->
+        <div class="data-card bg-gray-700 p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-bold text-gray-100 mb-4">Snel Sessie Loggen / Uren Registreren</h3>
+            <div class="form-group mb-3">
+                <label for="logMemberSelect" class="block text-gray-300 text-sm font-bold mb-1">Kies Lid (voor sessie):</label>
+                <select id="logMemberSelect" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200">
+                    <option value="">-- Selecteer een lid --</option>
+                    <!-- Assigned members will be loaded here -->
+                </select>
+            </div>
+            <div class="form-group mb-3">
+                <label for="sessionDuration" class="block text-gray-300 text-sm font-bold mb-1">Duur Sessie (minuten):</label>
+                <input type="number" id="sessionDuration" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200" placeholder="60">
+            </div>
+            <div class="form-group mb-4">
+                <label for="sessionNotes" class="block text-gray-300 text-sm font-bold mb-1">Notities:</label>
+                <textarea id="sessionNotes" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200" rows="2" placeholder="Sessie notities..."></textarea>
+            </div>
+            <button id="logSessionBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors w-full">
+                Sessie Loggen
+            </button>
+            
+            <h4 class="text-lg font-bold text-gray-100 mt-8 mb-4">Mijn Geregistreerde Uren</h4>
+            <div class="grid grid-cols-2 gap-4 text-gray-200">
+                <div>Vandaag: <span id="hoursToday" class="font-semibold">0.0 uur</span></div>
+                <div>Deze Week: <span id="hoursThisWeek" class="font-semibold">0.0 uur</span></div>
+                <div class="col-span-2">Totaal: <span id="hoursTotal" class="font-semibold">0.0 uur</span></div>
+            </div>
+            <button id="viewHourReportsBtn" class="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md transition-colors w-full">
+                Bekijk Uren Rapporten
+            </button>
+        </div>
+    </div>
+
+    <!-- Member Progress Overview (Charts/Summaries) -->
+    <div class="window-section bg-gray-700 p-6 rounded-lg shadow-md mt-8">
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Leden Voortgang Overzicht</h2>
+        <div id="memberProgressChartsContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Dynamic charts/summaries for assigned members' progress -->
+            <p class="text-gray-400 col-span-full text-center">Selecteer een lid om gedetailleerde voortgang te zien, of beheer toewijzingen.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Specific styles for this view, extending base styles */
+    .data-card {
+        background-color: #1f2937; /* bg-gray-800 */
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        padding: 1.5rem;
+    }
+
+    table th, table td {
+        border-bottom: 1px solid #374151; /* gray-700 */
+    }
+    table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    table tbody tr:hover {
+        background-color: #1f2937; /* gray-800 */
+    }
+
+    /* Action buttons in table */
+    .table-action-button {
+        background-color: #4b5563; /* gray-600 */
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 0.375rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        margin-right: 0.5rem;
+    }
+    .table-action-button:hover {
+        background-color: #374151; /* gray-700 */
+    }
+    .table-action-button.view-profile-button {
+        background-color: #2563eb; /* blue-600 */
+    }
+    .table-action-button.view-profile-button:hover {
+        background-color: #1d4ed8; /* blue-700 */
+    }
+
+    /* Form input styles (already in base style.css, but ensure consistency) */
+    .form-group input, .form-group select, .form-group textarea {
+        background-color: #111827; /* bg-gray-900 */
+        border: 1px solid #374151; /* border-gray-700 */
+        color: #e5e7eb; /* text-gray-200 */
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+        outline: none;
+        border-color: #60a5fa; /* blue-400 */
+        box-shadow: 0 0 0 1px #60a5fa;
+    }
+</style>

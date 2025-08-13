@@ -1,59 +1,13 @@
 // Bestand: js/restMeasurementLiveView.js
 // Bevat logica voor het uitvoeren en opslaan van live rustmetingen.
 
-import { BluetoothController } from '../bluetooth.js';
+// Removed direct import of BluetoothController, will be passed or accessed globally
 import { putData, getData, getOrCreateUserId } from '../database.js';
 import { showNotification } from './notifications.js';
-import { Bodystandard, VO2, RuntimesVo2 } from '../rr_hr_hrv_engine.js';
+// Import Bodystandard, VO2, RuntimesVo2, HRVAnalyzer, BreathManager, generateMeasurementReport, getHrZone, simulateBreathingFromRr, smooth, getBreathRateColorClass, calculateRpe
+// from the new consolidated measurement_utils.js
+import { Bodystandard, VO2, RuntimesVo2, HRVAnalyzer, BreathManager, generateMeasurementReport, getHrZone, simulateBreathingFromRr, smooth, getBreathRateColorClass, calculateRpe } from '../js/measurement_utils.js';
 
-function generateReport(sessionData, measurementType, bodystandardAnalysis, vo2Analysis, runtimesVo2Analysis, hrChartDataUrl, rrChartDataUrl) {
-    let reportContent = `--- Measurement Report ---\n`;
-    reportContent += `Measurement Type: ${measurementType}\n`;
-    reportContent += `Duration: ${sessionData.totalDuration} seconds\n`;
-    reportContent += `Average Heart Rate: ${sessionData.avgHr.toFixed(0)} BPM\n`;
-    reportContent += `RMSSD: ${sessionData.rmssd.toFixed(2)} MS\n`;
-    reportContent += `Calories Burned: ${sessionData.caloriesBurned} kcal\n`;
-    reportContent += `\nRaw HR Data Points: ${sessionData.heartRates.length}\n`;
-    reportContent += `Raw RR Data Points: ${sessionData.rrIntervals.length}\n`;
-
-    if (bodystandardAnalysis && Object.keys(bodystandardAnalysis).length > 0) {
-        reportContent += `\n--- Body Standard Analysis ---\n`;
-        reportContent += `LBM: ${bodystandardAnalysis.LBM} kg\n`;
-        reportContent += `Fat Mass: ${bodystandardAnalysis.fatMass} kg\n`;
-        reportContent += `Muscle Mass: ${bodystandardAnalysis.muscleMass} kg\n`;
-        reportContent += `BMI: ${bodystandardAnalysis.bmi}\n`;
-        reportContent += `Ideal Weight (BMI): ${bodystandardAnalysis.idealWeightBMI} kg\n`;
-        reportContent += `Metabolic Age: ${bodystandardAnalysis.metabolicAge} years\n`;
-        reportContent += `BMR: ${bodystandardAnalysis.bmr} kcal/day\n`;
-    }
-
-    if (vo2Analysis && Object.keys(vo2Analysis).length > 0) {
-        reportContent += `\n--- VO2 Analysis ---\n`;
-        reportContent += `Maximal Oxygen Uptake: ${vo2Analysis.maximalOxygenUptake}\n`;
-        reportContent += `VO2 Standard: ${vo2Analysis.vo2Standard}\n`;
-        reportContent += `VO2 Max Potential: ${vo2Analysis.vo2MaxPotential}\n`;
-        reportContent += `Theoretical Max: ${vo2Analysis.theoreticalMax}\n`;
-        reportContent += `Warming Up HR: ${vo2Analysis.warmingUp} BPM\n`;
-        reportContent += `Cooling Down HR: ${vo2Analysis.coolingDown} BPM\n`;
-        reportContent += `Endurance 1 HR: ${vo2Analysis.endurance1} BPM\n`;
-        reportContent += `Endurance 2 HR: ${vo2Analysis.endurance2} BPM\n`;
-        reportContent += `Endurance 3 HR: ${vo2Analysis.endurance3} BPM\n`;
-        reportContent += `Intensive 1 HR: ${vo2Analysis.intensive1} BPM\n`;
-        reportContent += `Intensive 2 HR: ${vo2Analysis.intensive2} BPM\n`;
-    }
-
-    if (runtimesVo2Analysis && Object.keys(runtimesVo2Analysis).length > 0 && runtimesVo2Analysis.times) {
-        reportContent += `\n--- Estimated Run Times (based on VO2 Max) ---\n`;
-        for (const [distance, time] of Object.entries(runtimesVo2Analysis.times)) {
-            const minutes = Math.floor(time / 60);
-            const seconds = time % 60;
-            reportContent += `${distance}: ${minutes}m ${seconds}s\n`;
-        }
-    }
-
-    reportContent += `\n--- End of Report ---`;
-    return reportContent;
-}
 
 // Globale variabelen voor de grafiek en data
 let hrChart;
@@ -62,14 +16,14 @@ let hrData = [];
 let rrData = [];
 let selectedMeasurementType = 'resting'; // Standaard geselecteerd type
 
-// showViewCallback wordt nu doorgegeven vanuit app.js
-export async function initRestMeasurementLiveView(showViewCallback) {
+// showViewCallback en bluetoothController worden nu doorgegeven vanuit unifiedMeasurementView.js
+export async function initRestMeasurementLiveView(showViewCallback, bluetoothController) {
     console.log("Rustmeting Live View geïnitialiseerd.");
 
     const currentAppUserId = getOrCreateUserId();
 
-    const bluetoothController = new BluetoothController();
-    const measurementTypeSelect = document.getElementById('measurementTypeSelect'); // Nieuw selectieveld
+    // DOM elementen lokaal ophalen, aangezien de HTML dynamisch geladen wordt
+    const measurementTypeSelect = document.getElementById('measurementTypeSelect');
     const liveHrDisplay = document.getElementById('liveHrDisplay');
     const liveHrZoneDisplay = document.getElementById('liveHrZoneDisplay');
     const liveAvgRrDisplay = document.getElementById('liveAvgRrDisplay');
@@ -88,7 +42,7 @@ export async function initRestMeasurementLiveView(showViewCallback) {
         heartRates: [],
         rrIntervals: [],
         timestamps: [],
-        hrZones: [],
+        hrZones: [], // This will now store time spent in zones
         caloriesBurned: 0,
         totalDuration: 0,
         rmssd: 0,
@@ -101,6 +55,7 @@ export async function initRestMeasurementLiveView(showViewCallback) {
         measurementTypeSelect.addEventListener('change', (event) => {
             selectedMeasurementType = event.target.value;
             showNotification(`Metingstype ingesteld op: ${event.target.options[event.target.selectedIndex].text}`, 'info', 2000);
+            // In simple view, breathing is always shown, so no need to hide/show elements based on type
         });
     }
 
@@ -116,7 +71,7 @@ export async function initRestMeasurementLiveView(showViewCallback) {
     }
 
     // Initialiseer HR grafiek
-    if (hrChart) hrChart.destroy();
+    if (hrChart) hrChart.destroy(); // Destroy existing chart if any
     if (hrChartCtx) {
         hrChart = new Chart(hrChartCtx, {
             type: 'line',
@@ -158,7 +113,7 @@ export async function initRestMeasurementLiveView(showViewCallback) {
     }
 
     // Initialiseer RR grafiek
-    if (rrChart) rrChart.destroy();
+    if (rrChart) rrChart.destroy(); // Destroy existing chart if any
     if (rrChartCtx) {
         rrChart = new Chart(rrChartCtx, {
             type: 'line',
@@ -222,6 +177,23 @@ export async function initRestMeasurementLiveView(showViewCallback) {
             if (stopMeasurementBtnLive) stopMeasurementBtnLive.style.display = 'none';
             if (saveMeasurementBtn) saveMeasurementBtn.style.display = 'block'; // Toon de opslagknop na het stoppen
             if (measurementTypeSelect) measurementTypeSelect.disabled = false;
+            
+            // Save RR data to sessionStorage before navigating
+            if (currentSessionData.rrIntervals.length > 0) {
+                const rrDataWithTimestamps = currentSessionData.rrIntervals.map((value, index) => ({
+                    value: value,
+                    timestamp: new Date().getTime() - (currentSessionData.rrIntervals.length - 1 - index) * 1000, // Estimate timestamps
+                    originalIndex: index
+                }));
+                sessionStorage.setItem('lastMeasurementRrData', JSON.stringify(rrDataWithTimestamps));
+            } else {
+                sessionStorage.removeItem('lastMeasurementRrData');
+            }
+
+            // Navigate to reports page after measurement stops
+            if (showViewCallback) {
+                showViewCallback('reportsView');
+            }
         }
     };
 
@@ -231,13 +203,12 @@ export async function initRestMeasurementLiveView(showViewCallback) {
 
         const userProfile = await getData('userProfile', currentAppUserId);
         const userBaseAtHR = userProfile ? parseFloat(userProfile.userBaseAtHR) : 0;
+        const userRestHR = userProfile ? parseFloat(userProfile.userRestHR) : 0; // Needed for getHrZone
+        const userMaxHR = userProfile ? parseFloat(userProfile.userMaxHR) : 0; // Needed for getHrZone
 
         if (liveHrZoneDisplay) {
-            if (userBaseAtHR > 0) {
-                liveHrZoneDisplay.textContent = getHrZone(dataPacket.heartRate, userBaseAtHR);
-            } else {
-                liveHrZoneDisplay.textContent = '-- Zone';
-            }
+            // Pass a dummy RMSSD (0) for simple view as it's not calculated here
+            liveHrZoneDisplay.textContent = getHrZone(dataPacket.heartRate, userBaseAtHR, 0); 
         }
 
         // Voeg data toe aan de grafieken
@@ -341,9 +312,6 @@ export async function initRestMeasurementLiveView(showViewCallback) {
         stopMeasurementBtnLive.addEventListener('click', async () => {
             bluetoothController.disconnect();
             // Bereken gemiddelde HR en calorieën na stoppen
-            console.log("Stop button clicked. currentSessionData:", currentSessionData);
-            console.log("Heart Rates Length:", currentSessionData.heartRates.length);
-            // Bereken gemiddelde HR en calorieën na stoppen
             if (currentSessionData.heartRates.length > 0) {
                 const totalHr = currentSessionData.heartRates.reduce((sum, hr) => sum + hr, 0);
                 currentSessionData.avgHr = totalHr / currentSessionData.heartRates.length;
@@ -351,7 +319,6 @@ export async function initRestMeasurementLiveView(showViewCallback) {
                 // Aanname: 10 kcal per minuut per 100 BPM gemiddelde HR
                 currentSessionData.caloriesBurned = (currentSessionData.avgHr * currentSessionData.totalDuration / 60 / 10).toFixed(0);
 
-                console.log("Heart rates available, proceeding with report generation.");
                 // Fetch user profile for analysis
                 const userProfile = await getData('userProfile', currentAppUserId);
                 let bodystandardAnalysis = {};
@@ -369,71 +336,57 @@ export async function initRestMeasurementLiveView(showViewCallback) {
                         runtimesVo2Analysis = new RuntimesVo2(vo2Analysis.maximalOxygenUptake);
                     }
                 }
-                console.log("Attempting to capture charts with html2canvas.");
-                const hrChartCanvas = document.getElementById('hrChart');
-                const rrChartCanvas = document.getElementById('rrChart');
-                // Temporarily make charts visible for html2canvas
-                if (hrChartCanvas) hrChartCanvas.style.display = 'block';
-                if (rrChartCanvas) rrChartCanvas.style.display = 'block';
-                const hrChartImg = hrChartCanvas ? await html2canvas(hrChartCanvas) : null;
-                const rrChartImg = rrChartCanvas ? await html2canvas(rrChartCanvas) : null;
-                console.log("html2canvas capture complete. hrChartImg:", !!hrChartImg, "rrChartImg:", !!rrChartImg);
-                // Hide charts again
-                if (hrChartCanvas) hrChartCanvas.style.display = 'none';
-                if (rrChartCanvas) rrChartCanvas.style.display = 'none';
-                const hrChartDataUrl = hrChartImg ? hrChartImg.toDataURL('image/png') : null;
-                const rrChartDataUrl = rrChartImg ? rrChartImg.toDataURL('image/png') : null;
-
-                const report = generateReport(currentSessionData, selectedMeasurementType, bodystandardAnalysis, vo2Analysis, runtimesVo2Analysis, hrChartDataUrl, rrChartDataUrl);
-                console.log("Generated Report:\n", report); // Log for debugging
-
-                console.log("Attempting to generate PDF with jspdf.");
+                
                 // Generate PDF
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 let yPos = 10;
 
-                doc.text(report, 10, yPos);
-                yPos += report.split('\n').length * 5; // Estimate line height;
+                // Capture charts for PDF
+                const chartsToCapture = [];
+                if (hrChart && document.getElementById('hrChart')) chartsToCapture.push({ id: 'hrChart', chart: hrChart, canvas: document.getElementById('hrChart') });
+                if (rrChart && document.getElementById('rrChart')) chartsToCapture.push({ id: 'rrChart', chart: rrChart, canvas: document.getElementById('rrChart') });
 
-                if (hrChartDataUrl) {
-                    doc.addImage(hrChartDataUrl, 'PNG', 10, yPos, 180, 90);
-                    yPos += 100;
-                }
-                if (rrChartDataUrl) {
-                    doc.addImage(rrChartDataUrl, 'PNG', 10, yPos, 180, 90);
+                const capturedImages = {};
+                for (const { id, chart, canvas } of chartsToCapture) {
+                    // Temporarily make chart visible for html2canvas if it's hidden
+                    const originalDisplay = canvas.style.display;
+                    canvas.style.display = 'block';
+                    try {
+                        const img = await html2canvas(canvas);
+                        capturedImages[id] = img.toDataURL('image/png');
+                    } catch (error) {
+                        console.error(`Error capturing chart ${id}:`, error);
+                    } finally {
+                        canvas.style.display = originalDisplay; // Restore original display
+                    }
                 }
 
-                doc.save(`measurement_report_${new Date().toISOString().split('T')[0]}.pdf`);
-                console.log("PDF saved.");
+                // Generate text report content
+                const reportText = generateMeasurementReport(currentSessionData, selectedMeasurementType, bodystandardAnalysis, vo2Analysis, runtimesVo2Analysis);
+                doc.text(reportText, 10, yPos);
+                yPos += reportText.split('\n').length * 5; // Estimate line height;
 
-                // Print the report (opens print dialog)
-                const printWindow = window.open('', '_blank');
-                printWindow.document.write('<pre>' + report + '</pre>');
-                if (hrChartDataUrl) {
-                    printWindow.document.write('<img src="' + hrChartDataUrl + '" style="width:100%;">');
+                // Add captured images to PDF
+                for (const { id } of chartsToCapture) {
+                    if (capturedImages[id]) {
+                        doc.addImage(capturedImages[id], 'PNG', 10, yPos, 180, 90); // Adjust size as needed
+                        yPos += 100;
+                    }
                 }
-                if (rrChartDataUrl) {
-                    printWindow.document.write('<img src="' + rrChartDataUrl + '" style="width:100%;">');
-                }
-                printWindow.document.close();
-                printWindow.print();
-                console.log("Print dialog opened.");
 
-                // Download the text report as a fallback/alternative
-                const blob = new Blob([report], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `measurement_report_${new Date().toISOString().split('T')[0]}.txt`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                console.log("Text report downloaded.");
+                doc.save(`measurement_report_simple_${new Date().toISOString().split('T')[0]}.pdf`);
+                showNotification('Rapport succesvol gedownload!', 'success');
+
             } else {
-                console.log("No heart rate data available to generate report.");
+                showNotification('Geen metingsdata om rapport te genereren.', 'warning');
             }
+            // Navigate to reports page after measurement stops
+            if (showViewCallback) {
+                showViewCallback('reportsView');
+            }
+        });
+    }
 
     if (saveMeasurementBtn) {
         saveMeasurementBtn.addEventListener('click', async () => {
@@ -470,16 +423,7 @@ export async function initRestMeasurementLiveView(showViewCallback) {
     // Zorg ervoor dat de opslagknop initieel verborgen is
     if (saveMeasurementBtn) saveMeasurementBtn.style.display = 'none';
 
-    // Functie om HR Zone te bepalen (kan ook in een aparte utility file)
-    function getHrZone(currentHR, at) {
-        if (currentHR >= at * 1.1) return 'Intensive 2';
-        if (currentHR >= at * 1.05) return 'Intensive 1';
-        if (currentHR >= at * 0.95) return 'Endurance 3';
-        if (currentHR >= at * 0.85) return 'Endurance 2';
-        if (currentHR >= at * 0.75) return 'Endurance 1';
-        if (currentHR >= at * 0.7 + 5) return 'Cooldown';
-        if (currentHR >= at * 0.7) return 'Warmup';
-        return 'Resting';
-    }
-
-        })}}
+    // Remove old top-nav from the HTML as it's now handled by the unified view
+    const oldTopNav = document.querySelector('.top-nav');
+    if (oldTopNav) oldTopNav.remove();
+}

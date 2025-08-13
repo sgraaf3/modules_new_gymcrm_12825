@@ -1,0 +1,121 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>Trainer Beheer</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+
+<div class="main-container bg-gray-800 p-4">
+    <h1 class="text-blue-400 text-center text-3xl font-bold mb-6">Trainer & Lid Toewijzing</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Add/Edit Trainer Card -->
+        <div class="data-card bg-gray-700 p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-bold text-gray-100 mb-4">Trainer Toevoegen/Bewerken</h3>
+            <div class="form-group mb-3">
+                <label for="trainerSelect" class="block text-gray-300 text-sm font-bold mb-1">Kies Trainer (voor bewerken):</label>
+                <select id="trainerSelect" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200">
+                    <option value="">-- Nieuwe Trainer --</option>
+                    <!-- Trainers will be loaded here -->
+                </select>
+            </div>
+            <div class="form-group mb-3">
+                <label for="trainerEmail" class="block text-gray-300 text-sm font-bold mb-1">E-mail:</label>
+                <input type="email" id="trainerEmail" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200" placeholder="trainer@voorbeeld.nl">
+            </div>
+            <div class="form-group mb-3">
+                <label for="trainerFirstName" class="block text-gray-300 text-sm font-bold mb-1">Voornaam:</label>
+                <input type="text" id="trainerFirstName" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200" placeholder="Voornaam">
+            </div>
+            <div class="form-group mb-3">
+                <label for="trainerLastName" class="block text-gray-300 text-sm font-bold mb-1">Achternaam:</label>
+                <input type="text" id="trainerLastName" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200" placeholder="Achternaam">
+            </div>
+            <div class="form-group mb-3">
+                <label for="trainerSpecialties" class="block text-gray-300 text-sm font-bold mb-1">Specialties (comma-gescheiden):</label>
+                <input type="text" id="trainerSpecialties" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200" placeholder="Kracht, Cardio, Yoga">
+            </div>
+            <div class="form-group mb-4">
+                <label for="trainerBio" class="block text-gray-300 text-sm font-bold mb-1">Bio:</label>
+                <textarea id="trainerBio" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200" rows="3" placeholder="Korte beschrijving van de trainer"></textarea>
+            </div>
+            <button id="saveTrainerBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors w-full">
+                Trainer Opslaan
+            </button>
+            <button id="deleteTrainerBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md transition-colors w-full mt-2 hidden">
+                Trainer Verwijderen
+            </button>
+        </div>
+
+        <!-- Assign Member to Trainer Card -->
+        <div class="data-card bg-gray-700 p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-bold text-gray-100 mb-4">Lid Toewijzen aan Trainer</h3>
+            <div class="form-group mb-3">
+                <label for="memberToAssignSelect" class="block text-gray-300 text-sm font-bold mb-1">Kies Lid:</label>
+                <select id="memberToAssignSelect" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200">
+                    <option value="">-- Selecteer een lid --</option>
+                    <!-- Members will be loaded here -->
+                </select>
+            </div>
+            <div class="form-group mb-3">
+                <label for="assignTrainerToMemberSelect" class="block text-gray-300 text-sm font-bold mb-1">Kies Trainer:</label>
+                <select id="assignTrainerToMemberSelect" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200">
+                    <option value="">-- Selecteer een trainer --</option>
+                    <!-- Trainers will be loaded here -->
+                </select>
+            </div>
+            <button id="assignMemberBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors w-full">
+                Lid Toewijzen
+            </button>
+
+            <h3 class="text-xl font-bold text-gray-100 mt-8 mb-4">Toegewezen Leden per Trainer</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-gray-900 rounded-lg overflow-hidden">
+                    <thead>
+                        <tr class="bg-gray-800 text-gray-300 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left">Trainer</th>
+                            <th class="py-3 px-6 text-left">Toegewezen Leden</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assignedMembersTableBody" class="text-gray-200 text-sm font-light">
+                        <!-- Assigned members will be loaded here -->
+                        <tr><td colspan="2" class="py-3 px-6 text-center">Geen toewijzingen gevonden.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Specific styles for this view, extending base styles */
+    .data-card {
+        background-color: #1f2937; /* bg-gray-800 */
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        padding: 1.5rem;
+    }
+
+    table th, table td {
+        border-bottom: 1px solid #374151; /* gray-700 */
+    }
+    table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    table tbody tr:hover {
+        background-color: #1f2937; /* gray-800 */
+    }
+
+    /* Form input styles (already in base style.css, but ensure consistency) */
+    .form-group input, .form-group select, .form-group textarea {
+        background-color: #111827; /* bg-gray-900 */
+        border: 1px solid #374151; /* border-gray-700 */
+        color: #e5e7eb; /* text-gray-200 */
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+        outline: none;
+        border-color: #60a5fa; /* blue-400 */
+        box-shadow: 0 0 0 1px #60a5fa;
+    }
+</style>

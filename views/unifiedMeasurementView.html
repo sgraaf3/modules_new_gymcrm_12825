@@ -1,0 +1,64 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>Gezamenlijke Meting</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+
+<div class="p-4">
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Kies Metingsmodus</h2>
+
+    <div class="flex space-x-2 mb-4">
+        <button id="tabSimpleMeasurement" class="tab-button active">Live Meting (Simpel)</button>
+        <button id="tabAdvancedMeasurement" class="tab-button">Live Meting (Geavanceerd)</button>
+    </div>
+
+    <div id="measurementContent" class="relative">
+        <!-- Measurement content will be loaded here dynamically -->
+        <div class="loading-spinner hidden">
+            <i class="fas fa-spinner fa-spin text-blue-400 text-3xl"></i>
+            <p class="text-gray-400 mt-2">Laden van metingsinterface...</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Specific styles for tab buttons */
+    .tab-button {
+        background-color: #374151; /* gray-700 */
+        color: #e5e7eb; /* gray-200 */
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease;
+        border: none;
+        flex-grow: 1;
+        text-align: center;
+    }
+
+    .tab-button:hover {
+        background-color: #4b5563; /* gray-600 */
+    }
+
+    .tab-button.active {
+        background-color: #60a5fa; /* blue-400 */
+        color: white;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .tab-button.active:hover {
+        background-color: #3b82f6; /* blue-500 */
+    }
+
+    /* Loading spinner styles */
+    .loading-spinner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 300px; /* Ensure it's visible */
+    }
+    .loading-spinner.hidden {
+        display: none;
+    }
+</style>

@@ -2,336 +2,29 @@
 // Dit bestand is een gecorrigeerde en geconsolideerde versie die de functionaliteit van concept.txt
 // overneemt om een tweede, meer geavanceerde meetoptie te bieden.
 
-import { BluetoothController } from '../bluetooth.js';
+// Removed direct import of BluetoothController, will be passed or accessed globally
 import { putData, getData, getOrCreateUserId } from '../database.js';
 import { showNotification } from './notifications.js';
-import { Bodystandard, VO2, RuntimesVo2 } from '../rr_hr_hrv_engine.js';
+// Import Bodystandard, VO2, RuntimesVo2, HRVAnalyzer, BreathManager, generateMeasurementReport, getHrZone, simulateBreathingFromRr, smooth, getBreathRateColorClass, calculateRpe
+// from the new consolidated measurement_utils.js
+import { Bodystandard, VO2, RuntimesVo2, HRVAnalyzer, BreathManager, generateMeasurementReport, getHrZone, simulateBreathingFromRr, smooth, getBreathRateColorClass, calculateRpe } from '../js/measurement_utils.js';
 
-// ---- Geconsolideerde klassen uit concept.txt ----
-// Hrv-analyse
-class HRVAnalyzer {
-    constructor(rrIntervals) {
-        this.rrIntervals = rrIntervals.filter(n => typeof n === 'number' && !isNaN(n) && n > 0);
-        this.n = this.rrIntervals.length;
-        if (this.n < 2) {
-            this.setDefaultValues();
-            return;
-        }
-
-        this.meanRR = this.average(this.rrIntervals);
-        this.avgHR = 60000 / this.meanRR;
-        this.sdnn = this.standardDeviation(this.rrIntervals);
-        const rmssdValues = this.rrIntervals.slice(1).map((val, i) => Math.pow(val - this.rrIntervals[i], 2));
-        this.rmssd = Math.sqrt(rmssdValues.reduce((a, b) => a + b, 0) / (this.n - 1));
-        const nn50Array = this.rrIntervals.slice(1).map((val, i) => Math.abs(val - this.rrIntervals[i]));
-        this.nn50 = nn50Array.filter(diff => diff > 50).length;
-        this.pnn50 = (this.nn50 / (this.n - 1)) * 100;
-        this.frequency = this.analyzeFrequencyDomain(this.rrIntervals);
-        this.sd1 = this.rmssd / Math.sqrt(2);
-        const sd2_val = 2 * Math.pow(this.sdnn, 2) - 0.5 * Math.pow(this.rmssd, 2);
-        this.sd2 = Math.sqrt(Math.max(0, sd2_val));
-        this.sd2_sd1_ratio = this.sd1 > 0 ? this.sd2 / this.sd1 : 0;
-        this.rrHistogram = this.calculateRRHistogram(30);
-    }
-    setDefaultValues() {
-        this.avgHR = 0;
-        this.meanRR = 0; this.sdnn = 0; this.rmssd = 0;
-        this.nn50 = 0; this.pnn50 = 0;
-        this.frequency = { vlfPower: 0, lfPower: 0, hfPower: 0, lfHfRatio: 0, freqs: [], psd: [] };
-        this.sd1 = 0; this.sd2 = 0; this.sd2_sd1_ratio = 0;
-        this.rrHistogram = { labels: [], counts: [] };
-    }
-    average(arr) { return arr.reduce((a, b) => a + b, 0) / arr.length; }
-    standardDeviation(arr) {
-        const avg = this.average(arr);
-        return Math.sqrt(arr.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / (arr.length - 1));
-    }
-    calculateRRHistogram(numBins = 30) {
-        if (this.rrIntervals.length === 0) return { labels: [], counts: [] };
-        const minRR = Math.min(...this.rrIntervals);
-        const maxRR = Math.max(...this.rrIntervals);
-        const binWidth = (maxRR - minRR) / numBins || 1;
-        const counts = Array(numBins).fill(0);
-        this.rrIntervals.forEach(val => {
-            let binIndex = Math.floor((val - minRR) / binWidth);
-            if (binIndex >= numBins) binIndex = numBins - 1;
-            counts[binIndex]++;
-        });
-        const labels = Array.from({length: numBins}, (_, i) => `${(minRR + i * binWidth).toFixed(0)}`);
-        return { labels, counts };
-    }
-    analyzeFrequencyDomain(rr) {
-        const fs = 4;
-        const rrTimes = rr.reduce((acc, val) => [...acc, acc.length > 0 ? acc[acc.length - 1] + val / 1000 : val / 1000], []);
-        const duration = rrTimes[rrTimes.length - 1];
-        const uniformTimes = Array.from({ length: Math.floor(duration * fs) }, (_, i) => i / fs);
-        const interpRRs = uniformTimes.map(t => {
-            const i = rrTimes.findIndex(rt => rt >= t);
-            if (i <= 0) return rr[0];
-            if (i >= rrTimes.length) return rr[rr.length - 1];
-            const t1 = rrTimes[i - 1], t2 = rrTimes[i], v1 = rr[i - 1], v2 = rr[i];
-            return v1 + (v2 - v1) * (t - t1) / (t2 - t1);
-        });
-        const meanRR = this.average(interpRRs);
-        const detrended = interpRRs.map(x => x - meanRR);
-        const N = Math.pow(2, Math.ceil(Math.log2(detrended.length)));
-        while (detrended.length < N) detrended.push(0);
-        const X = Array.from({ length: N / 2 }, (_, k) => {
-            let re = 0, im = 0;
-            for (let n = 0; n < N; n++) {
-                const angle = 2 * Math.PI * k * n / N;
-                re += detrended[n] * Math.cos(angle);
-                im -= detrended[n] * Math.sin(angle);
-            }
-            return { re, im };
-        });
-        const freqs = X.map((_, k) => k * fs / N);
-        const psd = X.map(c => (c.re * c.re + c.im * c.im) / N);
-        const bandPower = (band) => freqs.reduce((power, f, i) => (f >= band[0] && f < band[1]) ? power + psd[i] : power, 0);
-        const vlfPower = bandPower([0.0033, 0.04]);
-        const lfPower = bandPower([0.04, 0.15]);
-        const hfPower = bandPower([0.15, 0.4]);
-        return { vlfPower, lfPower, hfPower, lfHfRatio: hfPower > 0 ? lfPower / hfPower : 0, freqs, psd };
-    }
-}
-
-// Ademhalingsanalyse
-class BreathManager {
-    constructor() {
-        this.reset();
-        this.cycleHistory = [];
-    }
-    reset() {
-        this.lastHR = null;
-        this.lastTimestamp = null;
-        this.phase = 'Inspiration';
-        this.cycles = [];
-        this.currentCycle = { timeIn: 0, timeOut: 0, start: null };
-        this.lastCompletedCycle = { inhaleTime: 0, exhaleTime: 0, tiTeRatio: 0, breathDepth: 'N/A' };
-        this.breathRate = 0;
-        this.cycleHistory = [];
-    }
-    update(avgHR) {
-        if (typeof avgHR !== 'number' || isNaN(avgHR)) { return this.lastCompletedCycle; }
-        const now = Date.now();
-        if (this.lastHR !== null) {
-            const dt = now - this.lastTimestamp;
-            if (avgHR > this.lastHR) {
-                if (this.phase !== 'Inspiration') {
-                    if (this.currentCycle.timeOut > 0) {
-                        this.cycles.push({ ...this.currentCycle });
-                        this.lastCompletedCycle = this.getCurrentMetrics(this.currentCycle);
-                        this.cycleHistory.push(this.lastCompletedCycle);
-                        if (this.cycleHistory.length > 7) this.cycleHistory.shift();
-                    }
-                    if (this.cycles.length > 100) this.cycles.shift();
-                    this.currentCycle = { timeIn: 0, timeOut: 0, start: now };
-                    this.phase = 'Inspiration';
-                }
-                this.currentCycle.timeIn += dt;
-            } else if (avgHR < this.lastHR) {
-                if (this.phase !== 'Expiration') {
-                    this.phase = 'Expiration';
-                    if (this.currentCycle.timeIn > 0) {
-                        this.cycles.push({ ...this.currentCycle });
-                        this.lastCompletedCycle = this.getCurrentMetrics(this.currentCycle);
-                        this.cycleHistory.push(this.lastCompletedCycle);
-                        if (this.cycleHistory.length > 7) this.cycleHistory.shift();
-                    }
-                    if (this.cycles.length > 100) this.cycles.shift();
-                    this.currentCycle = { timeIn: 0, timeOut: 0, start: now };
-                }
-                this.currentCycle.timeOut += dt;
-            } else {
-                if (this.phase === 'Inspiration') this.currentCycle.timeIn += dt;
-                else this.currentCycle.timeOut += dt;
-            }
-        } else { this.currentCycle.start = now; }
-        this.lastHR = avgHR;
-        this.lastTimestamp = now;
-        this.calculateBreathRate(now);
-        return this.lastCompletedCycle;
-    }
-    calculateBreathRate(now) {
-        const oneMinuteAgo = now - 60000;
-        const recentCycles = this.cycles.filter(c => c.start > oneMinuteAgo);
-        if (recentCycles.length > 0) { this.breathRate = recentCycles.length; }
-    }
-    getCurrentMetrics(cycle = this.currentCycle) {
-        const { timeIn, timeOut } = cycle;
-        const tiTeRatio = timeOut > 0 ? (timeIn / timeOut).toFixed(2) : 0;
-        let breathDepth = 'Shallow';
-        if (timeIn > 4000) breathDepth = 'Deep';
-        else if (timeIn > 2000) breathDepth = 'Good';
-        return { phase: this.phase, breathRate: this.breathRate, inhaleTime: timeIn, exhaleTime: timeOut, tiTeRatio: tiTeRatio, breathDepth: breathDepth };
-    }
-    getAverages(count = 0) {
-        const data = count > 0 ? this.cycleHistory.slice(-count) : this.cycles;
-        if (data.length === 0) {
-            return { avgBreathRate: 0, avgTiTeRatio: 0 };
-        }
-        const totalBreathRate = data.reduce((sum, c) => sum + c.breathRate, 0);
-        const totalTiTeRatio = data.reduce((sum, c) => sum + parseFloat(c.tiTeRatio), 0);
-        return {
-            avgBreathRate: totalBreathRate / data.length,
-            avgTiTeRatio: totalTiTeRatio / data.length
-        };
-    }
-}
-
-
-// Functie voor rapportage, nu uitgebreid met nieuwe data
-function generateReport(sessionData, measurementType, bodystandardAnalysis, vo2Analysis, runtimesVo2Analysis) {
-    let reportContent = `
---- REST MEASUREMENT REPORT ---
-Date: ${new Date().toLocaleDateString()}
-Measurement Type: ${measurementType}
-
---- OVERVIEW ---
-Duration: ${sessionData.totalDuration} seconds
-Average Heart Rate: ${sessionData.avgHr.toFixed(0)} BPM
-Calories Burned: ${sessionData.caloriesBurned} kcal
-
---- HRV ANALYSIS ---
-RMSSD: ${sessionData.rmssd.toFixed(2)} MS
-  - Explanation: RMSSD reflects the beat-to-beat variance in heart rate, primarily indicating parasympathetic nervous system activity. Higher values generally suggest better recovery and readiness.
-  - Interpretation: `;
-    if (sessionData.rmssd >= 70) {
-        reportContent += `Excellent recovery and high parasympathetic activity. You are likely well-rested and ready for intense activity.
-  - Improvement: Maintain healthy habits, ensure adequate sleep, and manage stress effectively.
-`;
-    } else if (sessionData.rmssd >= 50) {
-        reportContent += `Good recovery. Your body is responding well to training and stress. Continue with your current recovery strategies.
-  - Improvement: Focus on consistent sleep, balanced nutrition, and active recovery.
-`;
-    } else if (sessionData.rmssd >= 30) {
-        reportContent += `Moderate recovery. You might be experiencing some fatigue or stress. Consider light activity or active recovery.
-  - Improvement: Prioritize rest, reduce training intensity, and incorporate stress-reduction techniques.
-`;
-    } else {
-        reportContent += `Low recovery. This may indicate significant fatigue, stress, or illness. Consider taking a rest day or consulting a professional.
-  - Improvement: Complete rest, stress management, and re-evaluation of training load are crucial.
-`;
-    }
-    reportContent += `SDNN: ${sessionData.sdnn.toFixed(2)} MS
-  - Explanation: SDNN represents the overall variability of heart rate over a period. It reflects both sympathetic and parasympathetic nervous system activity.
-  - Interpretation: `;
-    if (sessionData.sdnn >= 100) {
-        reportContent += `Very high overall HRV, indicating excellent adaptability and resilience.
-`;
-    } else if (sessionData.sdnn >= 50) {
-        reportContent += `Good overall HRV, suggesting a healthy and adaptable cardiovascular system.
-`;
-    } else {
-        reportContent += `Lower overall HRV, which can be a sign of chronic stress, overtraining, or underlying health issues.
-`;
-    }
-    reportContent += `VLF Power: ${sessionData.vlfPower.toFixed(2)}
-LF Power: ${sessionData.lfPower.toFixed(2)}
-HF Power: ${sessionData.hfPower.toFixed(2)}
-
---- BREATHING ANALYSIS ---
-Breathing Rate: ${sessionData.avgBreathRate.toFixed(1)} BPM
-  - Explanation: Your breathing rate indicates how many breaths you take per minute. A lower resting breathing rate often correlates with better cardiovascular health and relaxation.
-  - Interpretation: `;
-    if (sessionData.avgBreathRate >= 16) {
-        reportContent += `Elevated breathing rate. This could be due to stress, anxiety, or poor breathing habits.
-  - Improvement: Practice diaphragmatic breathing exercises, mindfulness, and stress reduction techniques.
-`;
-    } else if (sessionData.avgBreathRate >= 12) {
-        reportContent += `Normal breathing rate. Consistent, calm breathing is beneficial for overall health.
-  - Improvement: Continue to be mindful of your breathing, especially during stressful situations.
-`;
-    } else if (sessionData.avgBreathRate >= 8) {
-        reportContent += `Optimal breathing rate. This indicates good respiratory efficiency and a relaxed state.
-  - Improvement: Maintain your current breathing patterns and consider advanced breathing techniques for performance enhancement.
-`;
-    } else {
-        reportContent += `Very low breathing rate. While often good, extremely low rates might warrant professional consultation if accompanied by other symptoms.
-  - Improvement: Ensure adequate oxygen intake and consult a specialist if concerned.
-`;
-    }
-
-    if (bodystandardAnalysis && Object.keys(bodystandardAnalysis).length > 0) {
-        reportContent += `
---- BODY COMPOSITION ANALYSIS ---
-LBM: ${bodystandardAnalysis.LBM} kg
-Fat Mass: ${bodystandardAnalysis.fatMass} kg
-Muscle Mass: ${bodystandardAnalysis.muscleMass} kg
-BMI: ${bodystandardAnalysis.bmi}
-Ideal Weight (BMI): ${bodystandardAnalysis.idealWeightBMI} kg
-Metabolic Age: ${bodystandardAnalysis.metabolicAge} years
-BMR: ${bodystandardAnalysis.bmr} kcal/day
-`;
-    }
-    if (vo2Analysis && Object.keys(vo2Analysis).length > 0) {
-        reportContent += `
---- VO2 ANALYSIS ---
-Maximal Oxygen Uptake: ${vo2Analysis.maximalOxygenUptake}
-VO2 Standard: ${vo2Analysis.vo2Standard}
-VO2 Max Potential: ${vo2Analysis.vo2MaxPotential}
-Theoretical Max: ${vo2Analysis.theoreticalMax}
-Warming Up HR: ${vo2Analysis.warmingUp} BPM
-`;
-        if (vo2Analysis.coolingDown) reportContent += `Cooling Down HR: ${vo2Analysis.coolingDown} BPM
-`;
-        if (vo2Analysis.endurance1) reportContent += `Endurance 1 HR: ${vo2Analysis.endurance1} BPM
-`;
-        if (vo2Analysis.endurance2) reportContent += `Endurance 2 HR: ${vo2Analysis.endurance2} BPM
-`;
-        if (vo2Analysis.endurance3) reportContent += `Endurance 3 HR: ${vo2Analysis.endurance3} BPM
-`;
-    }
-    if (runtimesVo2Analysis && Object.keys(runtimesVo2Analysis).length > 0 && runtimesVo2Analysis.times) {
-        reportContent += `
---- ESTIMATED RUN TIMES (based on VO2 Max) ---
-`;
-        for (const [distance, time] of Object.entries(runtimesVo2Analysis.times)) {
-            const minutes = Math.floor(time / 60);
-            const seconds = time % 60;
-            reportContent += `${distance}: ${minutes}m ${seconds}s
-`;
-        }
-    }
-    reportContent += `
---- End of Report ---`;
-    return reportContent;
-}
-
-function getHrvBasedRestZone(rmssd) {
-    if (rmssd >= 70) return 'Relaxed';
-    if (rmssd >= 50) return 'Rest';
-    if (rmssd >= 30) return 'Active Low';
-    if (rmssd >= 10) return 'Active High';
-    return 'Transition to sportzones'
-}
-
-function getHrZone(currentHR, at, rmssd) {
-    const warmupHrThreshold = at * 0.65;
-    if (currentHR >= at * 1.06) return 'Intensive 2';
-    if (currentHR >= at * 1.01) return 'Intensive 1';
-    if (currentHR >= at) return 'AT';
-    if (currentHR >= at * 0.90) return 'Endurance 3';
-    if (currentHR >= at * 0.80) return 'Endurance 2';
-    if (currentHR >= at * 0.70) return 'Endurance 1';
-    if (currentHR >= warmupHrThreshold + 5) return 'Cooldown';
-    if (currentHR >= warmupHrThreshold) return 'Warmup';
-    return getHrvBasedRestZone(rmssd);
-}
 
 // Globale variabelen voor de grafieken en data
-let hrChart, rrChart, rrHistogramChart, poincarePlotChart, powerSpectrumChart;
+let hrChart, rrHistogramChart, poincarePlotChart, powerSpectrumChart; // rrChart is removed from HTML
 let hrData = [];
-let rrData = [];
+let rrData = []; // Filtered RR intervals
+let rawRrData = []; // Unfiltered/raw RR intervals for background plot
 let selectedMeasurementType = 'resting';
 let hrvAnalyzer;
 let breathManager;
+let hrZoneInterval; // Interval for updating HR zone times
 
-export async function initRestMeasurementLiveView_2(showViewCallback) {
+export async function initRestMeasurementLiveView_2(showViewCallback, bluetoothController) {
     console.log("Geavanceerde Rustmeting View geïnitialiseerd.");
     const currentAppUserId = getOrCreateUserId();
-    const bluetoothController = new BluetoothController();
 
+    // DOM elementen lokaal ophalen, aangezien de HTML dynamisch geladen wordt
     const measurementTypeSelect = document.getElementById('measurementTypeSelect');
     const liveHrDisplay = document.getElementById('liveHrDisplay');
     const liveHrZoneDisplay = document.getElementById('liveHrZoneDisplay');
@@ -345,7 +38,6 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
 
     // Grafiek-contexts
     const hrChartCtx = document.getElementById('hrChart')?.getContext('2d');
-    const rrChartCtx = document.getElementById('rrChart')?.getContext('2d');
     const rrHistogramChartCtx = document.getElementById('rrHistogramChart')?.getContext('2d');
     const poincarePlotChartCtx = document.getElementById('poincarePlotChart')?.getContext('2d');
     const powerSpectrumChartCtx = document.getElementById('powerSpectrumChart')?.getContext('2d');
@@ -354,7 +46,7 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
     const summaryAvgHr = document.getElementById('summaryAvgHr');
     const summaryMaxHr = document.getElementById('summaryMaxHr');
     const summaryMinHr = document.getElementById('summaryMinHr');
-    const hrvRecoveryStatus = document.getElementById('hrvRecoveryStatus');
+    const hrvRecoveryStatus = document.getElementById('hrvRecoveryStatus'); // This element doesn't exist in HTML, remove or add
     const summaryRmssd = document.getElementById('summaryRmssd');
     const summarySdnn = document.getElementById('summarySdnn');
     const rpeDisplay = document.getElementById('rpeDisplay');
@@ -376,11 +68,11 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
 
     let measurementStartTime;
     let measurementInterval;
-    let hrZoneInterval;
+    
     let currentSessionData = {
         heartRates: [],
-        rrIntervals: [],
-        rawRrIntervals: [],
+        rrIntervals: [], // Filtered RR intervals
+        rawRrIntervals: [], // Unfiltered RR intervals
         timestamps: [],
         caloriesBurned: 0,
         totalDuration: 0,
@@ -512,52 +204,14 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
             }
         }
     }
-
-    function getHrvBasedRestZone(rmssd) {
-        if (rmssd >= 70) return 'Relaxed';
-        if (rmssd >= 50) return 'Rest';
-        if (rmssd >= 30) return 'Active Low';
-        if (rmssd >= 10) return 'Active High';
-        return 'Transition to sportzones'
-    }
-
-    function getHrZone(currentHR, at, rmssd) {
-        const warmupHrThreshold = at * 0.65;
-        if (currentHR >= at * 1.06) return 'Intensive 2';
-        if (currentHR >= at * 1.01) return 'Intensive 1';
-        if (currentHR >= at) return 'AT';
-        if (currentHR >= at * 0.90) return 'Endurance 3';
-        if (currentHR >= at * 0.80) return 'Endurance 2';
-        if (currentHR >= at * 0.70) return 'Endurance 1';
-        if (currentHR >= warmupHrThreshold + 5) return 'Cooldown';
-        if (currentHR >= warmupHrThreshold) return 'Warmup';
-        return getHrvBasedRestZone(rmssd);
-    }
     
-    function calculateRpe(currentHR, maxHR) {
-        if (!currentHR || !maxHR || maxHR <= 0) return '--';
-        const rpe = (currentHR / maxHR) * 10;
-        return rpe.toFixed(1);
-    }
-
-    function getBreathRateColorClass(bpm) {
-        if (bpm >= 8 && bpm <= 12) {
-            return 'text-green-400';
-        } else if ((bpm >= 6 && bpm < 8) || (bpm > 12 && bpm <= 15)) {
-            return 'text-orange-400';
-        } else if (bpm > 15 || bpm < 6) {
-            return 'text-red-400';
-        }
-        return '';
-    }
-
     function updateSummaryStatistics(dataPacket, hrvAnalyzer, breathManager) {
         // HR Summary
         if (hrData.length > 0) {
             const avgHr = hrData.reduce((sum, hr) => sum + hr, 0) / hrData.length;
             const maxHr = currentSessionData.maxHr;
             const minHr = currentSessionData.minHr;
-            const currentHr = dataPacket.heartRate;
+            const currentHr = dataPacket.heartRate; // Use current HR for RPE/HR_to_X calculations
 
             if (summaryAvgHr) summaryAvgHr.textContent = avgHr.toFixed(0);
             if (summaryMaxHr) summaryMaxHr.textContent = maxHr.toFixed(0);
@@ -614,9 +268,9 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
                 liveBreathRateDisplay.textContent = `${totalAvg.avgBreathRate.toFixed(1)} BPM`;
             }
         } else if (breathSummaryCard) {
-            breathSummaryCard.style.display = 'none';
+            breathSummaryCard.style.display = 'none'; // Hide breathing card if workout mode
             if (liveBreathRateDisplay) liveBreathRateDisplay.textContent = '-- BPM';
-        } else {
+        } else { // Fallback if breathManager is null or not in workout mode
             if (breathRateLast7) breathRateLast7.textContent = '--';
             if (breathRateTotal) breathRateTotal.textContent = '--';
             if (tiTeRatioLast7) tiTeRatioLast7.textContent = '--';
@@ -670,21 +324,7 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
             },
             animation: false
         });
-
-        // RR Chart (deze is verwijderd uit de HTML, dus deze code wordt niet uitgevoerd)
-        // if (rrChart) rrChart.destroy();
-        // rrChart = createChart(rrChartCtx, 'line', {
-        //     labels: [],
-        //     datasets: [
-        //         createRawDataConfig('Ruwe RR Interval (ms)', 'rgba(167, 139, 250, 0.3)'),
-        //         createLineConfig('Gefilterde RR Interval (ms)', '#a78bfa', 'y')
-        //     ]
-        // }, {
-        //     responsive: true, maintainAspectRatio: false,
-        //     scales: { y: { beginAtZero: true, min: 400, max: 1200, title: { display: true, text: 'RR Interval (ms)' } }, x: { display: false } },
-        //     animation: false
-        // });
-
+        
         if (rrHistogramChart) rrHistogramChart.destroy();
         rrHistogramChart = createChart(rrHistogramChartCtx, 'bar', {
             labels: [],
@@ -715,7 +355,7 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
             scales: { x: { title: { display: true, text: 'Frequentieband' } }, y: { beginAtZero: true, title: { display: true, text: 'Relatieve Kracht' } } }
         });
     };
-    initCharts();
+    initCharts(); // Initialize charts on view load
 
     bluetoothController.onStateChange = (state, deviceName) => {
         if (state === 'STREAMING') {
@@ -739,33 +379,24 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
             if (stopMeasurementBtnLive) stopMeasurementBtnLive.style.display = 'none';
             if (saveMeasurementBtn) saveMeasurementBtn.style.display = 'block';
             if (measurementTypeSelect) measurementTypeSelect.disabled = false;
-            updateSummaryStatistics({ heartRate: hrData[hrData.length - 1] }, hrvAnalyzer, breathManager);
+            
+            // Save RR data to sessionStorage before navigating
+            if (currentSessionData.rawRrIntervals.length > 0) {
+                sessionStorage.setItem('lastMeasurementRrData', JSON.stringify(currentSessionData.rawRrIntervals.map((value, index) => ({
+                    value: value,
+                    timestamp: currentSessionData.timestamps[index] ? new Date(currentSessionData.timestamps[index]).getTime() : (new Date().getTime() - (currentSessionData.rawRrIntervals.length - 1 - index) * 1000), // Use actual timestamp or estimate
+                    originalIndex: index
+                }))));
+            } else {
+                sessionStorage.removeItem('lastMeasurementRrData');
+            }
+
+            // Navigate to reports page after measurement stops
+            if (showViewCallback) {
+                showViewCallback('reportsView');
+            }
         }
     };
-
-    function simulateBreathingFromRr(rrIntervals) {
-        if (!rrIntervals || rrIntervals.length === 0) return [];
-        const breathingWave = [];
-        for (const rr of rrIntervals) {
-            const hr = 60000 / rr;
-            let amplitude = hr * 4 - 200;
-            amplitude = Math.min(Math.max(amplitude, 20), 120);
-            breathingWave.push(amplitude);
-        }
-        return smooth(breathingWave, 5);
-    }
-
-    function smooth(data, windowSize = 5) {
-        const smoothed = [];
-        for (let i = 0; i < data.length; i++) {
-            const start = Math.max(0, i - windowSize + 1);
-            const window = data.slice(start, i + 1);
-            const avg = window.reduce((sum, val) => sum + val, 0) / window.length;
-            smoothed.push(avg);
-        }
-        return smoothed;
-    }
-
 
     bluetoothController.onData = async (dataPacket) => {
         const userProfile = await getData('userProfile', currentAppUserId);
@@ -794,6 +425,7 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
             });
             
             dataPacket.rawRrIntervals.forEach(rr => {
+                rawRrData.push(rr); // Store raw RR data
                 currentSessionData.rawRrIntervals.push(rr);
             });
 
@@ -817,26 +449,27 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
             }
             
             breathSignal = simulateBreathingFromRr(dataPacket.filteredRrIntervals);
-            scaledRr = dataPacket.filteredRrIntervals.map(rr => rr / 10);
+            scaledRr = dataPacket.filteredRrIntervals.map(rr => rr / 10); // Scale for display on HR chart
             rrLabels = dataPacket.filteredRrIntervals.map(() => new Date().toLocaleTimeString());
 
-            const rrChartRawData = dataPacket.rawRrIntervals || [];
-            if (hrChart) { // Update hrChart with raw RR data
-                const hrChartDatasetRawRR = hrChart.data.datasets[3]; // Assuming index 3 for raw RR
-                if (hrChartDatasetRawRR) {
-                    hrChartDatasetRawRR.data.push(rrChartRawData[0] / 10 || null); // Scale raw RR for this chart
-                }
+            // Update hrChart with raw RR data (if it exists)
+            if (hrChart && hrChart.data.datasets[3]) { // Assuming index 3 for raw RR
+                hrChart.data.datasets[3].data.push(rawRrData[rawRrData.length - 1] / 10 || null); // Scale raw RR for this chart
             }
             
-            if (hrvAnalyzer && hrvAnalyzer.n >= 30) {
+            if (hrvAnalyzer && hrvAnalyzer.n >= 30) { // Only update HRV charts if enough data
                 if (rrHistogramChart) {
                     rrHistogramChart.data.labels = hrvAnalyzer.rrHistogram.labels;
                     rrHistogramChart.data.datasets[0].data = hrvAnalyzer.rrHistogram.counts;
                     rrHistogramChart.update();
                 }
                 if (poincarePlotChart) {
+                    // Use rawRrData for scatter plot if available, otherwise filtered
+                    const poincareData = rawRrData.slice(0, -1).map((val, i) => ({ x: val, y: rawRrData[i + 1] }));
                     const poincareDataFiltered = rrData.slice(0, -1).map((val, i) => ({ x: val, y: rrData[i + 1] }));
-                    poincarePlotChart.data.datasets[0].data = poincareDataFiltered;
+
+                    poincarePlotChart.data.datasets[0].data = poincareData; // Raw
+                    poincarePlotChart.data.datasets[1].data = poincareDataFiltered; // Filtered
                     poincarePlotChart.update();
                 }
                 if (powerSpectrumChart) {
@@ -857,8 +490,8 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
         if (hrChart) {
             hrChart.data.labels.push(now);
             hrChart.data.datasets[0].data.push(dataPacket.heartRate);
-            hrChart.data.datasets[1].data.push(scaledRr[0] || null);
-            hrChart.data.datasets[2].data.push(breathSignal[0] || null);
+            hrChart.data.datasets[1].data.push(scaledRr[0] || null); // Add first scaled RR if available
+            hrChart.data.datasets[2].data.push(breathSignal[0] || null); // Add first breath signal if available
 
             const maxDataPoints = 100;
             if (hrChart.data.labels.length > maxDataPoints) {
@@ -882,25 +515,29 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
 
     if (startMeasurementBtnLive) {
         startMeasurementBtnLive.addEventListener('click', async () => {
+            // Reset all data and charts
             hrData = [];
             rrData = [];
+            rawRrData = [];
             currentSessionData = {
                 heartRates: [], rrIntervals: [], rawRrIntervals: [], timestamps: [], caloriesBurned: 0,
                 totalDuration: 0, rmssd: 0, sdnn: 0, avgHr: 0, maxHr: 0, minHr: 0, avgBreathRate: 0, hrZonesTime: {
                     'Resting': 0, 'Warmup': 0, 'Endurance 1': 0, 'Endurance 2': 0, 'Endurance 3': 0,
                     'Intensive 1': 0, 'Intensive 2': 0, 'Cooldown': 0,
+                    'Relaxed': 0, 'Rest': 0, 'Active Low': 0, 'Active High': 0, 'Transition to sportzones': 0,
+                    'AT': 0
                 },
                 vlfPower: 0, lfPower: 0, hfPower: 0, pnn50: 0,
             };
             hrvAnalyzer = null; // Reset analyzer
-            breathManager = new BreathManager(); // Reset manager
+            if (breathManager) breathManager.reset(); // Reset manager, ensure it exists first
 
-            userProfile = await getData('userProfile', currentAppUserId);
+            userProfile = await getData('userProfile', currentAppUserId); // Re-fetch latest user profile
             userBaseAtHR = userProfile ? parseFloat(userProfile.userBaseAtHR) : 0;
             userRestHR = userProfile ? parseFloat(userProfile.userRestHR) : 0;
             userMaxHR = userProfile ? parseFloat(userProfile.userMaxHR) : 0;
 
-            initCharts();
+            initCharts(); // Re-initialize charts to clear them
             if (liveTimerDisplay) liveTimerDisplay.textContent = '00:00';
             if (saveMeasurementBtn) saveMeasurementBtn.style.display = 'none';
 
@@ -938,10 +575,13 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
                         runtimesVo2Analysis = new RuntimesVo2(vo2Analysis.maximalOxygenUptake);
                     }
                 }
-                const report = generateReport(currentSessionData, selectedMeasurementType, bodystandardAnalysis, vo2Analysis, runtimesVo2Analysis);
-                console.log("Generated Report:\n", report);
+                
+                // Generate PDF
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                let yPos = 10;
 
-                // Attempting to capture charts with html2canvas.
+                // Capture charts for PDF
                 const chartsToCapture = [
                     { id: 'hrChart', chart: hrChart },
                     { id: 'rrHistogramChart', chart: rrHistogramChart },
@@ -950,40 +590,56 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
                 ];
 
                 const capturedImages = {};
-                for (const { id, chart } of chartsToCapture) {
-                    const canvas = document.getElementById(id);
-                    if (canvas && chart) {
+                for (const { id, chart, canvas } of chartsToCapture) {
+                    const canvasElement = document.getElementById(id); // Get canvas element directly
+                    if (canvasElement && chart) {
                         // Temporarily make chart visible for html2canvas if it's hidden
-                        const originalDisplay = canvas.style.display;
-                        canvas.style.display = 'block';
+                        const originalDisplay = canvasElement.style.display;
+                        canvasElement.style.display = 'block';
                         try {
-                            const img = await html2canvas(canvas);
+                            const img = await html2canvas(canvasElement);
                             capturedImages[id] = img.toDataURL('image/png');
                         } catch (error) {
                             console.error(`Error capturing chart ${id}:`, error);
                         } finally {
-                            canvas.style.display = originalDisplay; // Restore original display
+                            canvasElement.style.display = originalDisplay; // Restore original display
                         }
                     }
                 }
 
-                // Generate PDF
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                let yPos = 10;
+                // Generate text report content
+                const reportText = generateMeasurementReport(currentSessionData, selectedMeasurementType, bodystandardAnalysis, vo2Analysis, runtimesVo2Analysis);
+                doc.text(reportText, 10, yPos);
+                yPos += reportText.split('\n').length * 5; // Estimate line height;
 
-                doc.text(report, 10, yPos);
-                yPos += report.split('\n').length * 5; // Estimate line height;
-
+                // Add captured images to PDF
                 for (const { id } of chartsToCapture) {
                     if (capturedImages[id]) {
-                        doc.addImage(capturedImages[id], 'PNG', 10, yPos, 180, 90);
+                        doc.addImage(capturedImages[id], 'PNG', 10, yPos, 180, 90); // Adjust size as needed
                         yPos += 100;
                     }
                 }
 
-                doc.save(`rest_measurement_report_${new Date().toISOString().split('T')[0]}.pdf`);
+                doc.save(`measurement_report_advanced_${new Date().toISOString().split('T')[0]}.pdf`);
                 showNotification('Rapport succesvol gedownload!', 'success');
+
+            } else {
+                showNotification('Geen metingsdata om rapport te genereren.', 'warning');
+            }
+            // Save RR data to sessionStorage before navigating
+            if (currentSessionData.rawRrIntervals.length > 0) {
+                sessionStorage.setItem('lastMeasurementRrData', JSON.stringify(currentSessionData.rawRrIntervals.map((value, index) => ({
+                    value: value,
+                    timestamp: currentSessionData.timestamps[index] ? new Date(currentSessionData.timestamps[index]).getTime() : (new Date().getTime() - (currentSessionData.rawRrIntervals.length - 1 - index) * 1000), // Use actual timestamp or estimate
+                    originalIndex: index
+                }))));
+            } else {
+                sessionStorage.removeItem('lastMeasurementRrData');
+            }
+
+            // Navigate to reports page after measurement stops
+            if (showViewCallback) {
+                showViewCallback('reportsView');
             }
         });
     }
@@ -1000,12 +656,15 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
                     rmssd: currentSessionData.rmssd,
                     caloriesBurned: currentSessionData.caloriesBurned,
                     rawHrData: currentSessionData.heartRates,
-                    rawRrData: currentSessionData.rrIntervals,
+                    rawRrData: currentSessionData.rawRrIntervals, // Save raw RR intervals
+                    filteredRrData: currentSessionData.rrIntervals, // Save filtered RR intervals
                     timestamps: currentSessionData.timestamps,
                     sdnn: currentSessionData.sdnn,
                     vlfPower: currentSessionData.vlfPower,
                     lfPower: currentSessionData.lfPower,
                     hfPower: currentSessionData.hfPower,
+                    pnn50: currentSessionData.pnn50,
+                    avgBreathRate: currentSessionData.avgBreathRate // Save average breath rate
                 };
 
                 try {
@@ -1025,4 +684,8 @@ export async function initRestMeasurementLiveView_2(showViewCallback) {
     }
 
     if (saveMeasurementBtn) saveMeasurementBtn.style.display = 'none';
+
+    // Remove old top-nav from the HTML as it's now handled by the unified view
+    const oldTopNav = document.querySelector('.top-nav');
+    if (oldTopNav) oldTopNav.remove();
 }

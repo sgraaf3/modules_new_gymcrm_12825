@@ -1,0 +1,77 @@
+<details id="analysisBuilderDetails" class="window-section mt-8" open>
+    <summary class="section-summary-button bg-indigo-600 hover:bg-indigo-700">Build Your Report</summary>
+    <div class="section-content p-6">
+        <h2 class="font-bold text-xl text-gray-100 mb-4">Add Analysis to Report</h2>
+        <div class="add-analysis-options grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-6">
+            <button data-analysis-id="poincare" class="bg-indigo-500 text-white p-2 rounded-md hover:bg-indigo-600 transition-colors flex items-center justify-center space-x-2">
+                <i class="fas fa-chart-scatter"></i> <span>Poincaré Plot</span>
+            </button>
+            <button data-analysis-id="histogram" class="bg-indigo-500 text-white p-2 rounded-md hover:bg-indigo-600 transition-colors flex items-center justify-center space-x-2">
+                <i class="fas fa-chart-bar"></i> <span>RR Interval Hist.</span>
+            </button>
+            <button data-analysis-id="hr_histogram" class="bg-indigo-500 text-white p-2 rounded-md hover:bg-indigo-600 transition-colors flex items-center justify-center space-x-2">
+                <i class="fas fa-heartbeat"></i> <span>Heart Rate Hist.</span>
+            </button>
+            <button data-analysis-id="time_series" class="bg-indigo-500 text-white p-2 rounded-md hover:bg-indigo-600 transition-colors flex items-center justify-center space-x-2">
+                <i class="fas fa-chart-line"></i> <span>RR Time Series</span>
+            </button>
+            <button data-analysis-id="hr_time_series" class="bg-indigo-500 text-white p-2 rounded-md hover:bg-indigo-600 transition-colors flex items-center justify-center space-x-2">
+                <i class="fas fa-wave-square"></i> <span>HR Time Series</span>
+            </button>
+            <button data-analysis-id="successive_diff_histogram" class="bg-indigo-500 text-white p-2 rounded-md hover:bg-indigo-600 transition-colors flex items-center justify-center space-x-2">
+                <i class="fas fa-chart-area"></i> <span>Successive Diff. Hist.</span>
+            </button>
+            <button data-analysis-id="general_summary" class="bg-indigo-500 text-white p-2 rounded-md hover:bg-indigo-600 transition-colors flex items-center justify-center space-x-2">
+                <i class="fas fa-list-alt"></i> <span>General Summary</span>
+            </button>
+            <button data-analysis-id="all_rr_data_view" class="bg-indigo-500 text-white p-2 rounded-md hover:bg-indigo-600 transition-colors flex items-center justify-center space-x-2">
+                <i class="fas fa-database"></i> <span>All RR Data (Raw)</span>
+            </button>
+            <!-- New Comprehensive Report Button -->
+            <button data-analysis-id="comprehensive_user_report" class="bg-pink-500 text-white p-2 rounded-md hover:bg-pink-600 transition-colors flex items-center justify-center space-x-2">
+                <i class="fas fa-file-alt"></i> <span>Comprehensive User Report</span>
+            </button>
+            <!-- New List Report Buttons -->
+            <button data-analysis-id="all_user_settings_report" class="bg-purple-500 text-white p-2 rounded-md hover:bg-purple-600 transition-colors flex items-center justify-center space-x-2">
+                <i class="fas fa-user-cog"></i> <span>All User Settings</span>
+            </button>
+            <button data-analysis-id="all_members_report" class="bg-purple-500 text-white p-2 rounded-md hover:bg-purple-600 transition-colors flex items-center justify-center space-x-2">
+                <i class="fas fa-users"></i> <span>All Members Report</span>
+            </button>
+            <button data-analysis-id="all_subscriptions_report" class="bg-purple-500 text-white p-2 rounded-md hover:bg-purple-600 transition-colors flex items-center justify-center space-x-2">
+                <i class="fas fa-receipt"></i> <span>All Subscriptions Report</span>
+            </button>
+            <button data-analysis-id="all_financials_report" class="bg-purple-500 text-white p-2 rounded-md hover:bg-purple-600 transition-colors flex items-center justify-center space-x-2">
+                <i class="fas fa-dollar-sign"></i> <span>All Financials Report</span>
+            </button>
+        </div>
+
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="font-bold text-xl text-gray-100">Selected Analyses for Report</h2>
+            <button id="addNewPageBtn" class="bg-purple-600 text-white p-2 rounded-md hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2">
+                <i class="fas fa-plus-circle"></i> <span>Add New Page</span>
+            </button>
+        </div>
+        
+        <p id="noAnalysesMessage" class="text-gray-400 text-center hidden mb-4 p-4 border border-dashed border-gray-600 rounded-md">
+            Click "Add" above to include analyses in your report. Drag to reorder elements within a page.
+        </p>
+        <div id="reportPagesWrapper" class="bg-gray-700 border-2 border-dashed border-gray-600 rounded-lg p-4 min-h-[400px] flex flex-col gap-4 overflow-hidden relative">
+            <!-- Dynamically added and draggable analysis boxes will go here within A4 pages -->
+        </div>
+
+        <div class="navigation-controls flex justify-between items-center mt-6">
+            <button id="prevPageBtn" class="nav-button bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2" disabled>
+                <i class="fas fa-arrow-left"></i> <span>Previous Page</span>
+            </button>
+            <span id="pageCounter" class="page-counter text-gray-200 font-bold">0 / 0</span>
+            <button id="nextPageBtn" class="nav-button bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2" disabled>
+                <span>Next Page</span> <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+        
+        <button id="printBtn" class="bg-emerald-600 text-white p-3 rounded-md hover:bg-emerald-700 transition-colors mt-8 font-bold shadow-md w-full flex items-center justify-center space-x-3">
+            <i class="fas fa-print"></i> <span>Print Report</span>
+        </button>
+    </div>
+</details>

@@ -1,15 +1,141 @@
 <div class="top-nav">
     <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
-    <span>Alleen voor Beheerders</span>
+    <span>Admin Beheer</span>
     <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
 </div>
-<div class="p-4">
-    <p class="text-lg text-gray-300 mb-4">Deze pagina bevat instellingen die alleen toegankelijk zijn voor beheerders.</p>
-    <p class="text-lg text-gray-300 mb-4">Hier kunt u systeemconfiguraties, gebruikersrechten en andere geavanceerde opties beheren.</p>
-    <div class="bg-red-900 bg-opacity-30 border border-red-700 rounded-lg p-4 mt-4">
-        <h2 class="text-xl font-bold text-gray-100 mb-2">Geheime Database Toegang</h2>
-        <p class="text-lg text-gray-300 mb-4">Klik op de knop om toegang te krijgen tot gevoelige beheerdersdata.</p>
-        <button id="accessSecretDbBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Toegang Geheime DB</button>
-        <pre id="secretDataDisplay" class="mt-4 p-4 bg-gray-700 rounded-md text-gray-200 overflow-auto max-h-60">Geheime data zal hier verschijnen...</pre>
+
+<div class="main-container bg-gray-800 p-4">
+    <h1 class="text-blue-400 text-center text-3xl font-bold mb-6">Beheerderspaneel</h1>
+
+    <!-- Secret Database Access (Existing) -->
+    <div class="window-section bg-gray-700 p-6 rounded-lg shadow-md mb-8">
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Geheime Database Toegang</h2>
+        <p class="text-gray-300 mb-4">Hier kunt u toegang krijgen tot gevoelige beheerdersdata.</p>
+        <button id="accessSecretDbBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md transition-colors w-full">
+            Toegang Geheime Data
+        </button>
+        <pre id="secretDataDisplay" class="bg-gray-900 text-green-400 p-4 rounded-md mt-4 overflow-x-auto text-sm hidden">
+            <!-- Secret data will be displayed here -->
+        </pre>
+    </div>
+
+    <!-- User Role Management (Existing) -->
+    <div class="window-section bg-gray-700 p-6 rounded-lg shadow-md mb-8">
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Gebruikersrollen Beheren</h2>
+        <div class="overflow-x-auto mb-4">
+            <table class="min-w-full bg-gray-900 rounded-lg overflow-hidden">
+                <thead>
+                    <tr class="bg-gray-800 text-gray-300 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Naam</th>
+                        <th class="py-3 px-6 text-left">E-mail</th>
+                        <th class="py-3 px-6 text-left">Rol</th>
+                        <th class="py-3 px-6 text-center">Acties</th>
+                    </tr>
+                </thead>
+                <tbody id="userRolesTableBody" class="text-gray-200 text-sm font-light">
+                    <!-- User roles will be loaded here -->
+                    <tr><td colspan="4" class="py-3 px-6 text-center">Geen gebruikers gevonden.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="form-group mb-3">
+            <label for="userSelectForRole" class="block text-gray-300 text-sm font-bold mb-1">Kies Gebruiker:</label>
+            <select id="userSelectForRole" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200">
+                <option value="">-- Selecteer een gebruiker --</option>
+            </select>
+        </div>
+        <div class="form-group mb-4">
+            <label for="roleSelectForUser" class="block text-gray-300 text-sm font-bold mb-1">Kies Rol:</label>
+            <select id="roleSelectForUser" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200">
+                <option value="member">Lid</option>
+                <option value="trainer">Trainer</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+        <button id="assignRoleBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors w-full">
+            Rol Toewijzen
+        </button>
+        <button id="deleteUserBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md transition-colors w-full mt-2 hidden">
+            Gebruiker Verwijderen
+        </button>
+    </div>
+
+    <!-- Manage User Passwords (NEW) -->
+    <div class="window-section bg-gray-700 p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Wachtwoorden Beheren</h2>
+        <p class="text-gray-300 mb-4">Als beheerder kunt u wachtwoorden van gebruikers wijzigen.</p>
+        <div class="form-group mb-3">
+            <label for="userSelectForPassword" class="block text-gray-300 text-sm font-bold mb-1">Kies Gebruiker:</label>
+            <select id="userSelectForPassword" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200">
+                <option value="">-- Selecteer een gebruiker --</option>
+                <!-- Users will be loaded here by JS -->
+            </select>
+        </div>
+        <div class="form-group mb-3">
+            <label for="newPasswordAdmin" class="block text-gray-300 text-sm font-bold mb-1">Nieuw Wachtwoord:</label>
+            <input type="password" id="newPasswordAdmin" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200" placeholder="Nieuw wachtwoord">
+        </div>
+        <div class="form-group mb-4">
+            <label for="confirmNewPasswordAdmin" class="block text-gray-300 text-sm font-bold mb-1">Bevestig Nieuw Wachtwoord:</label>
+            <input type="password" id="confirmNewPasswordAdmin" class="w-full p-2 rounded-md bg-gray-900 border border-gray-600 text-gray-200" placeholder="Bevestig nieuw wachtwoord">
+        </div>
+        <button id="changeUserPasswordBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors w-full">
+            Wachtwoord Wijzigen
+        </button>
     </div>
 </div>
+
+<style>
+    /* Specific styles for this view, extending base styles */
+    .data-card {
+        background-color: #1f2937; /* bg-gray-800 */
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        padding: 1.5rem;
+    }
+
+    .window-section {
+        background-color: #1f2937; /* bg-gray-800 */
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        overflow: hidden; /* For table rounded corners */
+    }
+
+    table th, table td {
+        border-bottom: 1px solid #374151; /* gray-700 */
+    }
+    table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    table tbody tr:hover {
+        background-color: #1f2937; /* gray-800 */
+    }
+
+    /* Form input styles (already in base style.css, but ensure consistency) */
+    .form-group input, .form-group select, .form-group textarea {
+        background-color: #111827; /* bg-gray-900 */
+        border: 1px solid #374151; /* border-gray-700 */
+        color: #e5e7eb; /* text-gray-200 */
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+        outline: none;
+        border-color: #60a5fa; /* blue-400 */
+        box-shadow: 0 0 0 1px #60a5fa;
+    }
+
+    /* Table action buttons */
+    .table-action-button {
+        background-color: #4b5563; /* gray-600 */
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 0.375rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+    .table-action-button:hover {
+        background-color: #374151; /* gray-700 */
+    }
+</style>
