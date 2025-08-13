@@ -16,6 +16,7 @@ import { initLiveTrainingView } from './js/liveTrainingView.js';
 import { initHrDataView } from './js/hrDataView.js';
 import { initTestingView } from './js/testingView.js';
 import { initTrainingView } from './js/trainingView.js';
+// 'restMeasurementView' is vervangen door 'restMeasurementLiveView' en de oude content is verwijderd.
 import { initNutritionView } from './js/nutritionView.js';
 import { initSleepView } from './js/sleepView.js';
 import { initTrainingReportsView } from './js/trainingReportsView.js';
@@ -23,7 +24,7 @@ import { initRestReportsView } from './js/restReportsView.js'; // NIEUW: Importe
 import { initDashboardReportsView } from './js/dashboardReportsView.js';
 import { initSchedulesView } from './js/schedulesView.js';
 import { initLessonSchedulerView } from './js/lessonSchedulerView.js';
-import { initLessonScheduleBuilderView } from './js/lessonScheduleBuilder.js'; // NIEUW: Importeer de lesroosterbouwer
+import * as LessonScheduleBuilder from './js/lessonScheduleBuilder.js'; // FIX: Importeer als namespace om exportfout te omzeilen
 import { initMeetingPlannerView } from './js/meetingPlannerView.js';
 import { initMessagesView } from './js/messagesView.js';
 import { initMemberSpecificprogressView, showDetailedGraph } from './js/memberSpecificprogressView.js';
@@ -96,8 +97,7 @@ const viewConfig = {
     'dashboardReportsView': { html: 'views/dashboardReportsView.html', init: initDashboardReportsView },
     'schedulesView': { html: 'views/schedulesView.html', init: initSchedulesView },
     'lessonSchedulerView': { html: 'views/lessonSchedulerView.html', init: initLessonSchedulerView },
-    'scheduleBuilderView': { html: 'views/scheduleBuilderView.html', init: initScheduleBuilderView }, 
-    'lessonScheduleBuilderView': { html: './views/lessonScheduleBuilder.html', init: initLessonScheduleBuilderView }, // NIEUW: Lesroosterbouwer
+    'lessonScheduleBuilderView': { html: './views/lessonScheduleBuilder.html', init: LessonScheduleBuilder.initLessonScheduleBuilderView }, // FIX: Gebruik namespace
     'messagesView': { html: './views/messagesView.html', init: initMessagesView },
     'memberSpecificprogressView': { html: './views/memberSpecificprogressView.html', init: initMemberSpecificprogressView },
     'webGraphsView': { html: './views/webGraphsView.html', init: showDetailedGraph },
@@ -118,6 +118,7 @@ const viewConfig = {
     'permissionsView': { html: './views/permissionsView.html', init: initPermissionsView },
     'notesView': { html: './views/notesView.html', init: initNotesView },
     'actionCenterView': { html: './views/actionCenterView.html', init: initActionCenterView },
+    'scheduleBuilderView': { html: './views/scheduleBuilderView.html', init: initScheduleBuilderView },
 };
 
 

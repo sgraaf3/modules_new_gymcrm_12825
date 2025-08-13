@@ -11,24 +11,27 @@ export function initToggleFunctionalityView() {
     const enableNutritionModule = document.getElementById('enableNutritionModule');
     const enableReportsModule = document.getElementById('enableReportsModule');
     const saveToggleSettingsBtn = document.getElementById('saveToggleSettingsBtn');
-    const toggleSettingsId = 'appToggleSettings';
+    const toggleSettingsId = 'appToggleSettings'; // Vaste ID voor de instellingen
 
-    if (saveToggleSettingsBtn) {
-        // Laad instellingen bij initialisatie van de view
-        (async () => {
-            try {
-                const settings = await getData('toggleSettings', toggleSettingsId);
-                if (settings) {
-                    enableTrainingModule.checked = settings.enableTrainingModule || false;
-                    enableNutritionModule.checked = settings.enableNutritionModule || false;
-                    enableReportsModule.checked = settings.enableReportsModule || false;
-                }
-            } catch (error) {
-                console.error("Fout bij laden toggle instellingen:", error);
-                showNotification('Fout bij laden instellingen.', 'error');
+    /**
+     * Laadt de toggle-instellingen uit de database en past de UI aan.
+     */
+    async function loadToggleSettings() {
+        try {
+            const settings = await getData('toggleSettings', toggleSettingsId);
+            if (settings) {
+                enableTrainingModule.checked = settings.enableTrainingModule || false;
+                enableNutritionModule.checked = settings.enableNutritionModule || false;
+                enableReportsModule.checked = settings.enableReportsModule || false;
             }
-        })();
-        
+        } catch (error) {
+            console.error("Fout bij laden toggle instellingen:", error);
+            showNotification('Fout bij laden instellingen.', 'error');
+        }
+    }
+
+    // Event listener voor het opslaan van de instellingen
+    if (saveToggleSettingsBtn) {
         saveToggleSettingsBtn.addEventListener('click', async () => {
             const settings = {
                 id: toggleSettingsId,
@@ -37,7 +40,7 @@ export function initToggleFunctionalityView() {
                 enableReportsModule: enableReportsModule.checked,
             };
             try {
-                await putData('toggleSettings', settings);
+                await putData('toggleSettings', settings); // Sla instellingen op in de 'toggleSettings' store
                 showNotification('Instellingen opgeslagen!', 'success');
             } catch (error) {
                 console.error("Fout bij opslaan toggle instellingen:", error);
@@ -45,4 +48,7 @@ export function initToggleFunctionalityView() {
             }
         });
     }
+
+    // Initial load of settings when the view is initialized
+    loadToggleSettings();
 }
