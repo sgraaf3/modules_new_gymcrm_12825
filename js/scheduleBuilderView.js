@@ -31,20 +31,31 @@ export function initScheduleBuilderView() {
     const customMeasurementsList = document.getElementById('custom-measurements-list');
     const availableModulesContainer = document.getElementById('available-modules');
     const allSavedItemsList = document.getElementById('all-saved-items-list'); // Nieuwe container voor gecombineerde lijst
+    const savedSessionsList = document.getElementById('saved-sessions-list'); // Nieuw: lijst voor opgeslagen sessies
 
     const tabContents = document.querySelectorAll('.tab-content');
     const tabButtons = document.querySelectorAll('.tab-button');
     const formBuilderTab = document.getElementById('tab-form-builder');
     const formBuilderTabButton = document.querySelector('.tab-button[data-tab="form-builder"]');
+    const sessionBuilderTab = document.getElementById('tab-session-builder'); // NEW
+    const sessionBuilderTabButton = document.querySelector('.tab-button[data-tab="session-builder"]'); // NEW
 
     const categorySelect = document.getElementById('category-select');
     const categoryContents = document.querySelectorAll('.category-content');
+
+    // NEW Session Builder Elements
+    const currentSessionNameInput = document.getElementById('current-session-name');
+    const sessionDropZone = document.getElementById('session-drop-zone');
+    const saveSessionBtn = document.getElementById('save-session-btn');
+    // const sessionTimeLabelsContainer = document.getElementById('session-time-labels'); // Removed as per new requirement
+
 
     let currentUserId = getOrCreateUserId(); // Haal de huidige gebruiker ID op
 
     // Functie om de zichtbaarheid van de zijbalk te updaten op basis van het actieve tabblad
     function updateSidebarVisibility(activeTabId) {
         const categorySelectContainer = document.querySelector('.category-select-container');
+        const createSessionBtn = document.getElementById('create-session-btn'); // NEW
         const createDayBtn = document.getElementById('create-day-btn');
         const createWeekBtn = document.getElementById('create-week-btn');
         const createBlockBtn = document.getElementById('create-block-btn');
@@ -55,6 +66,7 @@ export function initScheduleBuilderView() {
         availableModulesContainer.querySelectorAll('.drag-item').forEach(el => el.style.display = 'none');
 
         // Hide all "Create New..." buttons initially
+        if (createSessionBtn) createSessionBtn.style.display = 'none'; // NEW
         if (createDayBtn) createDayBtn.style.display = 'none';
         if (createWeekBtn) createWeekBtn.style.display = 'none';
         if (createBlockBtn) createBlockBtn.style.display = 'none';
@@ -63,64 +75,60 @@ export function initScheduleBuilderView() {
         if (categorySelectContainer) categorySelectContainer.style.display = 'none';
         // Hide the combined list initially
         if (allSavedItemsList) allSavedItemsList.style.display = 'none';
+        // Hide custom measurements list initially (it has its own category now)
+        if (customMeasurementsList) customMeasurementsList.style.display = 'none';
 
-        if (activeTabId === 'tab-dag') {
+
+        if (activeTabId === 'tab-session-builder') { // NEW: Sessie Bouwer
             if (categorySelectContainer) categorySelectContainer.style.display = 'block';
-            // Show the currently selected category content
+            // Show the currently selected category content (individual elements)
             const selectedCategory = categorySelect.value;
             const activeCategoryContent = document.getElementById(`category-${selectedCategory}`);
             if (activeCategoryContent) {
                 activeCategoryContent.style.display = 'block';
                 activeCategoryContent.querySelectorAll('.drag-item').forEach(el => el.style.display = 'flex');
             }
-            // Always show custom measurements list for Day tab
-            customMeasurementsList.style.display = 'block';
-            customMeasurementsList.querySelectorAll('.drag-item').forEach(el => el.style.display = 'flex');
-
-            // Show all "Create New..." buttons
-            if (createDayBtn) createDayBtn.style.display = 'block';
-            if (createWeekBtn) createWeekBtn.style.display = 'block';
-            if (createBlockBtn) createBlockBtn.style.display = 'block';
-
-        } else if (activeTabId === 'tab-week') {
+            // Show "Create New Session" button
+            if (createSessionBtn) createSessionBtn.style.display = 'block'; // NEW
+        } else if (activeTabId === 'tab-dag') { // Dag tab
             if (allSavedItemsList) allSavedItemsList.style.display = 'block';
             allSavedItemsList.querySelectorAll('.drag-item').forEach(el => {
+                // Only show saved configured sessions and saved days on the "Dag" tab
+                if (el.dataset.type === 'configured-session' || el.dataset.type === 'day') {
+                    el.style.display = 'flex';
+                } else {
+                    el.style.display = 'none';
+                }
+            });
+            // Show "Create New Day" button
+            if (createDayBtn) createDayBtn.style.display = 'block';
+        } else if (activeTabId === 'tab-week') { // Week tab
+            if (allSavedItemsList) allSavedItemsList.style.display = 'block';
+            allSavedItemsList.querySelectorAll('.drag-item').forEach(el => {
+                // Only show saved days on the "Week" tab
                 if (el.dataset.type === 'day') {
                     el.style.display = 'flex';
                 } else {
                     el.style.display = 'none';
                 }
             });
-            
-            // Show all "Create New..." buttons (as they create items for the sidebar)
-            if (createDayBtn) createDayBtn.style.display = 'block';
+            // Show "Create New Week" button
             if (createWeekBtn) createWeekBtn.style.display = 'block';
-            if (createBlockBtn) createBlockBtn.style.display = 'block';
-
-        } else if (activeTabId === 'tab-blok') {
+        } else if (activeTabId === 'tab-blok') { // Blok tab
             if (allSavedItemsList) allSavedItemsList.style.display = 'block';
             allSavedItemsList.querySelectorAll('.drag-item').forEach(el => {
-                if (el.dataset.type === 'week' || el.dataset.type === 'blok') {
+                // Only show saved weeks on the "Blok" tab
+                if (el.dataset.type === 'week') {
                     el.style.display = 'flex';
                 } else {
                     el.style.display = 'none';
                 }
             });
-            
-            // Show all "Create New..." buttons (as they create items for the sidebar)
-            if (createDayBtn) createDayBtn.style.display = 'block';
-            if (createWeekBtn) createWeekBtn.style.display = 'block';
+            // Show "Create New Block" button
             if (createBlockBtn) createBlockBtn.style.display = 'block';
-
-        } else if (activeTabId === 'tab-form-builder') {
-            // Show only custom measurements list
-            customMeasurementsList.style.display = 'block';
+        } else if (activeTabId === 'tab-form-builder') { // Form Builder tab
+            if (customMeasurementsList) customMeasurementsList.style.display = 'block';
             customMeasurementsList.querySelectorAll('.drag-item').forEach(el => el.style.display = 'flex');
-
-            // Show all "Create New..." buttons
-            if (createDayBtn) createDayBtn.style.display = 'block';
-            if (createWeekBtn) createWeekBtn.style.display = 'block';
-            if (createBlockBtn) createBlockBtn.style.display = 'block';
         }
     }
 
@@ -145,9 +153,9 @@ export function initScheduleBuilderView() {
                 targetContent.classList.add('active', 'fade-in');
                 // Specifieke actie voor het "Dag" tabblad om tijdlabels te genereren
                 if (activeTabId === 'tab-dag') {
-                    // Gebruik setTimeout om ervoor te zorgen dat de DOM volledig is gerenderd
-                    setTimeout(generateTimeLabels, 0); 
+                    setTimeout(() => generateTimeLabels('day-time-labels'), 0); // Generate for day tab
                 }
+                // Removed generateTimeLabels for session-builder as it's no longer a timeline
             }, 10);
             
             // Update de zichtbaarheid van de zijbalk
@@ -156,6 +164,7 @@ export function initScheduleBuilderView() {
             // Laad opgeslagen items wanneer van tabblad wordt gewisseld
             renderAllSavedItems(); // Roep de functie aan om de gecombineerde lijst te updaten
             loadCustomMeasurements(); // Laad aangepaste metingen
+            loadSavedSessions(); // NEW: Load saved sessions for Session Builder tab
         });
     });
 
@@ -181,21 +190,27 @@ export function initScheduleBuilderView() {
                 ...draggableItem.dataset 
             };
             
-            if (draggedItemData.content) {
+            // FIX: Voeg null/undefined/empty string checks toe voordat JSON.parse wordt aangeroepen
+            if (draggableItem.dataset.content && draggableItem.dataset.content !== "undefined" && draggableItem.dataset.content !== "") {
                 try {
-                    draggedItemData.content = JSON.parse(draggedItemData.content);
+                    draggedItemData.content = JSON.parse(draggableItem.dataset.content);
                 } catch (error) {
                     console.error("Fout bij het parsen van draggedItemData.content:", error);
                     draggedItemData.content = null;
                 }
+            } else {
+                draggedItemData.content = null;
             }
-            if (draggedItemData.customMeasurementDefinition) {
+            if (draggableItem.dataset.customMeasurementDefinition && draggableItem.dataset.customMeasurementDefinition !== "undefined" && draggableItem.dataset.customMeasurementDefinition !== "") {
                 try {
-                    draggedItemData.customMeasurementDefinition = JSON.parse(draggedItemData.customMeasurementDefinition);
-                } catch (error) {
+                    draggedItemData.customMeasurementDefinition = JSON.parse(draggableItem.dataset.customMeasurementDefinition);
+                }
+                catch (error) {
                     console.error("Fout bij het parsen van draggedItemData.customMeasurementDefinition:", error);
                     draggedItemData.customMeasurementDefinition = null;
                 }
+            } else {
+                draggedItemData.customMeasurementDefinition = null;
             }
 
             // Controleer of het een bestaand item in een dropzone is
@@ -212,7 +227,8 @@ export function initScheduleBuilderView() {
     }
 
     // Koppel dragstart listeners aan alle initiële sleepbare items
-    document.querySelectorAll('.drag-item').forEach(item => {
+    // Dit moet gebeuren voor alle drag-items in de sidebar
+    document.querySelectorAll('#available-modules .drag-item').forEach(item => {
         attachDragStartListener(item);
     });
 
@@ -239,22 +255,27 @@ export function initScheduleBuilderView() {
             let isValidDrop = false;
             let expectedTypes = [];
 
-            if (dropZoneId === 'day-drop-zone') { 
+            if (dropZoneId === 'session-drop-zone') { // NEW: Sessie Bouwer drop zone
                 expectedTypes = ['hr-zone', 'rest-day', 'training-measurement', 'rest-measurement-free', 'rest-measurement-base', 'document-link', 'custom-training-measurement', 'custom-rest-measurement', 'strength-exercise', 'recovery-activity', 'coordination-activity', 'flexibility-activity', 'speed-activity', 'nutrition-activity'];
                 if (expectedTypes.includes(data.type)) {
                     isValidDrop = true;
                 }
-            } else if (dropZoneClasses.contains('day-slot')) {
+            } else if (dropZoneId === 'day-drop-zone') { // Dag drop zone: accepteert alleen opgeslagen sessies of dagen
+                expectedTypes = ['configured-session', 'day'];
+                if (expectedTypes.includes(data.type)) {
+                    isValidDrop = true;
+                }
+            } else if (dropZoneClasses.contains('day-slot')) { // Week tab: accepteert alleen dagen
                 expectedTypes = ['day'];
                 if (data.type === 'day') {
                     isValidDrop = true;
                 }
-            } else if (dropZoneClasses.contains('week-slot')) {
+            } else if (dropZoneClasses.contains('week-slot')) { // Blok tab: accepteert alleen weken
                 expectedTypes = ['week'];
-                if (data.type === 'week') {
+                if (data.type === 'week') { 
                     isValidDrop = true;
                 }
-            } else if (dropZoneId === 'blok-drop-zone') {
+            } else if (dropZoneId === 'blok-drop-zone') { // Blok drop zone: accepteert alleen weken
                 expectedTypes = ['week'];
                 if (data.type === 'week') { 
                     isValidDrop = true;
@@ -295,30 +316,31 @@ export function initScheduleBuilderView() {
             const relativeY = e.clientY - rect.top;
 
             // Aangepaste logica voor het renderen van gedropte items
-            if (dropZoneId === 'day-drop-zone' && (data.type === 'custom-training-measurement' || data.type === 'custom-rest-measurement')) {
-                 renderCustomMeasurementInDay(relativeY, zone, data);
-            } else if (dropZoneId === 'day-drop-zone' || dropZoneId === 'custom-training-zones-drop-zone') {
-                createSingleDroppedItem(relativeY, zone, data, dropZoneId);
-            } else {
-                 createWeekOrBlockDroppedItem(relativeY, zone, data, dropZoneId);
+            if (dropZoneId === 'session-drop-zone') {
+                createStackedItemForDropZone(zone, data); // Always stacked for session builder
+            } else if (dropZoneId === 'custom-training-zones-drop-zone') {
+                createTimelineItemForDropZone(relativeY, zone, data); // Still timeline for custom training zones
+            } else if (dropZoneId === 'day-drop-zone') {
+                createDayDroppedItem(zone, data); // Stacked for day tab
+            } else { // Handles days for week and weeks for block
+                createStackedItemForDropZone(zone, data);
             }
             isDraggingExistingItem = false; // Reset de vlag na de drop
             originalParent = null; // Reset de oorspronkelijke ouder
         });
     });
 
-    function createSingleDroppedItem(yPosition, zone, data, dropZoneId) {
+    // Function to create items for Session Builder and other stacked drop zones (no absolute positioning)
+    function createStackedItemForDropZone(zone, data) {
         const droppedItem = document.createElement('div');
         droppedItem.dataset.id = data.id || generateUniqueId();
         droppedItem.dataset.type = data.type;
         droppedItem.dataset.name = data.name;
-        if (data.content) {
-            droppedItem.dataset.content = JSON.stringify(data.content);
-        }
+        droppedItem.dataset.content = (data.content && (typeof data.content === 'object' || Array.isArray(data.content))) ? JSON.stringify(data.content) : '';
         if (data.zoneColor) droppedItem.dataset.zoneColor = data.zoneColor;
         if (data.documentName) droppedItem.dataset.documentName = data.documentName;
         if (data.customMeasurementType) droppedItem.dataset.customMeasurementType = data.customMeasurementType;
-        if (data.customMeasurementDefinition) droppedItem.dataset.customMeasurementDefinition = JSON.stringify(data.customMeasurementDefinition);
+        droppedItem.dataset.customMeasurementDefinition = (data.customMeasurementDefinition && (typeof data.customMeasurementDefinition === 'object' || Array.isArray(data.customMeasurementDefinition))) ? JSON.stringify(data.customMeasurementDefinition) : '';
         if (data.customMeasurementDescription) droppedItem.dataset.customMeasurementDescription = data.customMeasurementDescription;
         if (data.customMeasurementGoals) droppedItem.dataset.customMeasurementGoals = data.customMeasurementGoals;
         if (data.inputType) droppedItem.dataset.inputType = data.inputType;
@@ -335,7 +357,7 @@ export function initScheduleBuilderView() {
         if (data.progressionEnabled) droppedItem.dataset.progressionEnabled = data.progressionEnabled;
         if (data.progressionValue) droppedItem.dataset.progressionValue = data.progressionValue;
 
-        droppedItem.setAttribute('draggable', 'true'); // Maak geplaatste items draggable
+        droppedItem.setAttribute('draggable', 'true');
 
         let innerHtmlContent = `
             <div class="element-header flex items-center justify-between w-full">
@@ -346,6 +368,7 @@ export function initScheduleBuilderView() {
         `;
 
         if (data.type === 'hr-zone') {
+            droppedItem.classList.add('hr-zone-bar'); // Apply specific class for styling
             innerHtmlContent += `
                 <div class="flex items-center space-x-2 ml-auto w-full md:w-auto flex-wrap">
                     <input type="number" placeholder="Minuten" class="w-20 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-duration-input value="${data.duration || ''}">
@@ -353,11 +376,116 @@ export function initScheduleBuilderView() {
                         <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500" data-progression-checkbox ${data.progressionEnabled ? 'checked' : ''}>
                         <span class="ml-1">Wekelijks toenemen?</span>
                     </label>
-                    <input type="number" placeholder="Minuten" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-progression-value-input value="${data.progressionValue || ''}" ${!data.progressionEnabled ? 'disabled' : ''}>
+                    <input type="number" placeholder="Waarde" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-progression-value-input value="${data.progressionValue || ''}" ${!data.progressionEnabled ? 'disabled' : ''}>
                     <input type="text" placeholder="Notities" class="w-24 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-notes-input value="${data.notes || ''}">
                 </div>
             `;
-            droppedItem.classList.add('hr-zone-bar');
+        } else if (['strength-exercise', 'recovery-activity', 'coordination-activity', 'flexibility-activity', 'speed-activity', 'nutrition-activity'].includes(data.type)) {
+            const timeDisplay = data.inputType === 'reps_sets' ? 'display:none;' : 'display:flex;';
+            const repsSetsDisplay = data.inputType === 'time' || !data.inputType ? 'display:none;' : 'display:flex;';
+            innerHtmlContent += `
+                <div class="flex items-center space-x-2 ml-auto w-full md:w-auto flex-wrap">
+                    <select class="p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm mt-1" data-input-type-select>
+                        <option value="time" ${data.inputType === 'time' ? 'selected' : ''}>Tijd (min)</option>
+                        <option value="reps_sets" ${data.inputType === 'reps_sets' ? 'selected' : ''}>Reps & Sets</option>
+                    </select>
+                    <div class="flex items-center space-x-1 mt-1" data-time-inputs style="${timeDisplay}">
+                        <input type="number" placeholder="Duur" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-duration-input value="${data.duration || ''}">
+                        <input type="number" placeholder="Min" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-min-time-input value="${data.minTime || ''}">
+                        <input type="number" placeholder="Max" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-max-time-input value="${data.maxTime || ''}">
+                    </div>
+                    <div class="flex items-center space-x-1 mt-1" data-reps-sets-inputs style="${repsSetsDisplay}">
+                        <input type="number" placeholder="Reps" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-reps-input value="${data.reps || ''}">
+                        <input type="number" placeholder="Sets" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-sets-input value="${data.sets || ''}">
+                        <input type="number" placeholder="Min R" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-min-reps-input value="${data.minReps || ''}">
+                        <input type="number" placeholder="Max R" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-max-reps-input value="${data.maxReps || ''}">
+                        <input type="number" placeholder="Min S" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-min-sets-input value="${data.minSets || ''}">
+                        <input type="number" placeholder="Max S" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-max-sets-input value="${data.maxSets || ''}">
+                    </div>
+                    <label class="flex items-center text-sm text-gray-300 mt-1">
+                        <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500" data-progression-checkbox ${data.progressionEnabled ? 'checked' : ''}>
+                        <span class="ml-1">Wekelijks toenemen?</span>
+                    </label>
+                    <input type="number" placeholder="Waarde" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm mt-1" data-progression-value-input value="${data.progressionValue || ''}" ${!data.progressionEnabled ? 'disabled' : ''}>
+                    <input type="text" placeholder="Notities" class="w-24 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm mt-1" data-notes-input value="${data.notes || ''}">
+                </div>
+            `;
+        } else if (data.type === 'custom-training-measurement' || data.type === 'custom-rest-measurement') {
+            // No specific settings for these when dropped, as their definition is already encapsulated
+            // The nested items will be rendered by renderCustomMeasurementInDay
+        } else if (data.type === 'document-link') {
+            // No specific settings for document link when dropped
+        } else if (data.type === 'rest-day' || data.type === 'training-measurement' || data.type === 'rest-measurement-free' || data.type === 'rest-measurement-base') {
+            // No specific settings for these when dropped
+        }
+
+        innerHtmlContent += `</div>`; // Sluit element-settings
+        droppedItem.innerHTML = innerHtmlContent;
+        
+        // For session-drop-zone, items are now stacked, not absolutely positioned
+        droppedItem.className = `dropped-item flex flex-col p-2 mb-1 rounded-md bg-gray-700`;
+        // Remove absolute positioning styles
+        droppedItem.style.top = '';
+        droppedItem.style.left = '';
+        droppedItem.style.width = '';
+        droppedItem.style.position = '';
+
+        zone.appendChild(droppedItem);
+        attachDragStartListener(droppedItem); // Koppel dragstart aan het nieuw geplaatste item
+        addEventListenersToDroppedItem(droppedItem);
+        showMessage(`${data.name} toegevoegd!`, 'success');
+    }
+
+    // Function to create items for Custom Training Zones (still timeline items with absolute positioning)
+    function createTimelineItemForDropZone(yPosition, zone, data) {
+        const droppedItem = document.createElement('div');
+        droppedItem.dataset.id = data.id || generateUniqueId();
+        droppedItem.dataset.type = data.type;
+        droppedItem.dataset.name = data.name;
+        droppedItem.dataset.content = (data.content && (typeof data.content === 'object' || Array.isArray(data.content))) ? JSON.stringify(data.content) : '';
+        if (data.zoneColor) droppedItem.dataset.zoneColor = data.zoneColor;
+        if (data.documentName) droppedItem.dataset.documentName = data.documentName;
+        if (data.customMeasurementType) droppedItem.dataset.customMeasurementType = data.customMeasurementType;
+        droppedItem.dataset.customMeasurementDefinition = (data.customMeasurementDefinition && (typeof data.customMeasurementDefinition === 'object' || Array.isArray(data.customMeasurementDefinition))) ? JSON.stringify(data.customMeasurementDefinition) : '';
+        if (data.customMeasurementDescription) droppedItem.dataset.customMeasurementDescription = data.customMeasurementDescription;
+        if (data.customMeasurementGoals) droppedItem.dataset.customMeasurementGoals = data.customMeasurementGoals;
+        if (data.inputType) droppedItem.dataset.inputType = data.inputType;
+        if (data.reps) droppedItem.dataset.reps = data.reps;
+        if (data.sets) droppedItem.dataset.sets = data.sets;
+        if (data.minReps) droppedItem.dataset.minReps = data.minReps;
+        if (data.maxReps) droppedItem.dataset.maxReps = data.maxReps;
+        if (data.minSets) droppedItem.dataset.minSets = data.minSets;
+        if (data.maxSets) droppedItem.dataset.maxSets = data.maxSets;
+        if (data.minTime) droppedItem.dataset.minTime = data.minTime;
+        if (data.maxTime) droppedItem.dataset.maxTime = data.maxTime;
+        if (data.notes) droppedItem.dataset.notes = data.notes;
+        if (data.duration) droppedItem.dataset.duration = data.duration;
+        if (data.progressionEnabled) droppedItem.dataset.progressionEnabled = data.progressionEnabled;
+        if (data.progressionValue) droppedItem.dataset.progressionValue = data.progressionValue;
+
+        droppedItem.setAttribute('draggable', 'true');
+
+        let innerHtmlContent = `
+            <div class="element-header flex items-center justify-between w-full">
+                <span><i class="${data.icon} mr-2 ${data.zoneColor || ''}"></i>${data.name}</span>
+                <button class="remove-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="element-settings hidden flex flex-col mt-2">
+        `;
+
+        if (data.type === 'hr-zone') {
+            droppedItem.classList.add('hr-zone-bar'); // Apply specific class for styling
+            innerHtmlContent += `
+                <div class="flex items-center space-x-2 ml-auto w-full md:w-auto flex-wrap">
+                    <input type="number" placeholder="Minuten" class="w-20 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-duration-input value="${data.duration || ''}">
+                    <label class="flex items-center text-sm text-gray-300">
+                        <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500" data-progression-checkbox ${data.progressionEnabled ? 'checked' : ''}>
+                        <span class="ml-1">Wekelijks toenemen?</span>
+                    </label>
+                    <input type="number" placeholder="Waarde" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-progression-value-input value="${data.progressionValue || ''}" ${!data.progressionEnabled ? 'disabled' : ''}>
+                    <input type="text" placeholder="Notities" class="w-24 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-notes-input value="${data.notes || ''}">
+                </div>
+            `;
         } else if (data.type === 'document-link') {
             if (!data.documentName) { 
                 const docName = prompt('Voer de naam/ID van het document in:');
@@ -398,30 +526,80 @@ export function initScheduleBuilderView() {
         }
         innerHtmlContent += `</div>`; // Sluit element-settings
         droppedItem.innerHTML = innerHtmlContent;
-        if (dropZoneId === 'day-drop-zone') {
-            droppedItem.className = `timeline-item flex flex-col p-2 mb-1 rounded-md bg-gray-700`;
-            droppedItem.style.top = `${yPosition}px`;
-            droppedItem.style.left = '0';
-            droppedItem.style.width = '100%';
-            droppedItem.style.position = 'absolute';
-        } else {
-             droppedItem.className = 'dropped-item flex flex-col p-2 mb-1 rounded-md bg-gray-700';
-        }
+        droppedItem.className = `timeline-item flex flex-col p-2 mb-1 rounded-md bg-gray-700`;
+        droppedItem.style.top = `${yPosition}px`;
+        droppedItem.style.left = '0';
+        droppedItem.style.width = '100%';
+        droppedItem.style.position = 'absolute';
 
         zone.appendChild(droppedItem);
-        attachDragStartListener(droppedItem); // Koppel dragstart aan het nieuw geplaatste item
+        attachDragStartListener(droppedItem);
         addEventListenersToDroppedItem(droppedItem);
         showMessage(`${data.name} toegevoegd!`, 'success');
     }
 
-    function createWeekOrBlockDroppedItem(yPosition, zone, data, dropZoneId) {
+    // NEW: Function to create items for Day tab (only accepts configured-session or day)
+    function createDayDroppedItem(zone, data) { // Removed yPosition as it's not needed for stacked items
+        const droppedItem = document.createElement('div');
+        droppedItem.dataset.id = data.id;
+        droppedItem.dataset.type = data.type;
+        droppedItem.dataset.name = data.name;
+        droppedItem.dataset.icon = data.icon;
+        droppedItem.dataset.content = (data.content && (typeof data.content === 'object' || Array.isArray(data.content))) ? JSON.stringify(data.content) : '';
+        if (data.zoneColor) droppedItem.dataset.zoneColor = data.zoneColor; // For configured-session color
+
+        droppedItem.setAttribute('draggable', 'true'); // Maak geplaatste items draggable
+
+        let innerHtmlContent = `
+            <div class="element-header flex items-center justify-between w-full">
+                <span><i class="${data.icon} mr-2 ${data.zoneColor || ''}"></i>${data.name}</span>
+                <button class="remove-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="element-settings hidden flex flex-col mt-2">
+        `;
+
+        if (data.type === 'configured-session') {
+            // Display summary of configured session
+            let summaryHtml = '';
+            const parsedContent = (data.content && typeof data.content === 'string' && data.content !== "undefined" && data.content !== "") ? JSON.parse(data.content) : [];
+            if (parsedContent && Array.isArray(parsedContent)) {
+                const names = parsedContent.map(item => item.name).join(', ');
+                summaryHtml = `<div class="text-xs text-gray-400 mt-1">Bevat: ${names}</div>`;
+            }
+            innerHtmlContent += summaryHtml;
+        } else if (data.type === 'day') {
+            // Display summary of day (if dragging an existing saved day)
+            let summaryHtml = '';
+            const parsedContent = (data.content && typeof data.content === 'string' && data.content !== "undefined" && data.content !== "") ? JSON.parse(data.content) : [];
+            if (parsedContent && Array.isArray(parsedContent)) {
+                const activityNames = parsedContent.map(act => act.name).join(', ');
+                summaryHtml = `<div class="text-xs text-gray-400 mt-1">Activiteiten: ${activityNames}</div>`;
+            }
+            innerHtmlContent += summaryHtml;
+        }
+        
+        innerHtmlContent += `</div>`; // Sluit element-settings
+        droppedItem.innerHTML = innerHtmlContent;
+        
+        // For day-drop-zone, items are stacked, not absolutely positioned
+        droppedItem.className = 'dropped-item flex flex-col p-2 mb-1 rounded-md bg-gray-700';
+
+        zone.appendChild(droppedItem);
+        attachDragStartListener(droppedItem);
+        addEventListenersToDroppedItem(droppedItem);
+        showMessage(`${data.name} toegevoegd aan dag!`, 'success');
+    }
+
+
+    // Renamed from createWeekOrBlockDroppedItem to be more semantically correct for stacked items
+    function createStackedItemForDropZone(zone, data) { // Removed yPosition param
         const droppedItem = document.createElement('div');
         droppedItem.className = 'dropped-item flex flex-col p-2 mb-2 rounded-md bg-gray-700';
         droppedItem.dataset.id = data.id;
         droppedItem.dataset.type = data.type;
         droppedItem.dataset.name = data.name;
         droppedItem.dataset.icon = data.icon;
-        droppedItem.dataset.content = JSON.stringify(data.content);
+        droppedItem.dataset.content = (data.content && (typeof data.content === 'object' || Array.isArray(data.content))) ? JSON.stringify(data.content) : '';
 
         droppedItem.setAttribute('draggable', 'true'); // Maak geplaatste items draggable
 
@@ -433,19 +611,23 @@ export function initScheduleBuilderView() {
             <div class="element-settings hidden flex flex-col mt-2">
         `;
 
-        if (data.type === 'week' && dropZoneId === 'blok-drop-zone') {
+        if (data.type === 'week' && zone.id === 'blok-drop-zone') { // Check zone.id for specific logic
             innerHtmlContent += `
                 <div class="flex items-center space-x-2 w-full">
                     <span class="text-sm text-gray-300">Herhalingen:</span>
                     <input type="number" value="${data.repetitions || 1}" min="1" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-repetitions-input>
+                    <span class="text-sm text-gray-300 ml-2">Herhaal elke:</span>
+                    <input type="number" value="${data.repetitionStep || 1}" min="1" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-repetition-step-input>
+                    <span class="text-sm text-gray-300 ml-1">weken</span>
                 </div>
             `;
-        } else if (data.type === 'day' && dropZoneId !== 'blok-drop-zone') {
+        } else if (data.type === 'day' && zone.classList.contains('day-slot')) { // Check zone.classList for specific logic
             // Samenvatting voor dag in kalenderweergave
             let summaryHtml = '';
-            if (data.content && Array.isArray(data.content)) {
-                const hrZonesSummary = data.content.filter(act => act.type === 'hr-zone').map(hrz => `${hrz.name} (${hrz.duration} min)`).join(', ');
-                const otherActivities = data.content.filter(act => act.type !== 'hr-zone').map(act => act.name).join(', ');
+            const parsedContent = (data.content && typeof data.content === 'string' && data.content !== "undefined" && data.content !== "") ? JSON.parse(data.content) : [];
+            if (parsedContent && Array.isArray(parsedContent)) {
+                const hrZonesSummary = parsedContent.filter(act => act.type === 'hr-zone').map(hrz => `${hrz.name} (${hrz.duration} min)`).join(', ');
+                const otherActivities = parsedContent.filter(act => act.type !== 'hr-zone').map(act => act.name).join(', ');
                 summaryHtml = `<div class="text-xs text-gray-400 mt-1">${hrZonesSummary}${otherActivities ? (hrZonesSummary ? '; ' : '') + otherActivities : ''}</div>`;
             }
             innerHtmlContent += summaryHtml;
@@ -453,12 +635,13 @@ export function initScheduleBuilderView() {
 
         innerHtmlContent += `</div>`; // Sluit element-settings
         droppedItem.innerHTML = innerHtmlContent;
-        zone.innerHTML = '';
+        zone.innerHTML = ''; // Clear placeholder if any
         zone.appendChild(droppedItem);
         attachDragStartListener(droppedItem); // Koppel dragstart aan het nieuw geplaatste item
         addEventListenersToDroppedItem(droppedItem);
         showMessage(`${data.name} toegevoegd!`, 'success');
     }
+
 
     function renderCustomMeasurementInDay(yPosition, zone, data) {
         const customMeasurementCard = document.createElement('div');
@@ -473,7 +656,7 @@ export function initScheduleBuilderView() {
         customMeasurementCard.dataset.name = data.name;
         customMeasurementCard.dataset.icon = data.icon;
         customMeasurementCard.dataset.customMeasurementType = data.customMeasurementType;
-        customMeasurementCard.dataset.customMeasurementDefinition = JSON.stringify(data.customMeasurementDefinition);
+        customMeasurementCard.dataset.customMeasurementDefinition = (data.customMeasurementDefinition && (typeof data.customMeasurementDefinition === 'object' || Array.isArray(data.customMeasurementDefinition))) ? JSON.stringify(data.customMeasurementDefinition) : '';
         customMeasurementCard.dataset.customMeasurementDescription = data.customMeasurementDescription;
         customMeasurementCard.dataset.customMeasurementGoals = data.customMeasurementGoals;
 
@@ -540,7 +723,7 @@ export function initScheduleBuilderView() {
                         <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500" data-progression-checkbox ${item.progressionEnabled ? 'checked' : ''}>
                         <span class="ml-1">Wekelijks toenemen?</span>
                     </label>
-                    <input type="number" placeholder="Minuten" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-progression-value-input value="${item.progressionValue || ''}" ${!item.progressionEnabled ? 'disabled' : ''}>
+                    <input type="number" placeholder="Waarde" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-progression-value-input value="${item.progressionValue || ''}" ${!item.progressionEnabled ? 'disabled' : ''}>
                     <input type="text" placeholder="Notities" class="w-24 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-notes-input value="${item.notes || ''}">
                 </div>
             `;
@@ -677,14 +860,18 @@ export function initScheduleBuilderView() {
         if (zone.children.length === 0) {
             const newPlaceholder = document.createElement('p');
             newPlaceholder.className = 'text-gray-400 text-center text-sm';
-            if (zone.id === 'day-drop-zone' || zone.id === 'custom-training-zones-drop-zone') { 
-                newPlaceholder.textContent = 'Sleep HR zones of oefeningen hierheen om de training te definiëren.';
+            if (zone.id === 'session-drop-zone') { // NEW: Placeholder for session builder
+                newPlaceholder.textContent = 'Sleep individuele activiteiten of HR-zones hierheen om de sessie te configureren.';
+            } else if (zone.id === 'day-drop-zone') { // NEW: Placeholder for day tab
+                newPlaceholder.textContent = 'Sleep opgeslagen sessies of dagen hierheen om de dag te configureren.';
             } else if (zone.classList.contains('day-slot')) {
                 newPlaceholder.textContent = 'Sleep dag hier';
             } else if (zone.classList.contains('week-slot')) {
                 newPlaceholder.textContent = 'Sleep week hier';
             } else if (zone.id === 'blok-drop-zone') {
                 newPlaceholder.textContent = 'Sleep weken hierheen om het blok te configureren.';
+            } else if (zone.id === 'custom-training-zones-drop-zone') { 
+                newPlaceholder.textContent = 'Sleep HR zones of oefeningen hierheen om de training te definiëren.';
             }
             zone.appendChild(newPlaceholder);
         }
@@ -699,108 +886,16 @@ export function initScheduleBuilderView() {
             return;
         }
 
-        if (Array.isArray(contentData)) { // Voor Dag (array van activiteiten) of Custom Training (array van zones)
+        if (Array.isArray(contentData)) { // Voor Sessie Bouwer, Dag (activities array), Custom Training (activities array)
             contentData.forEach(item => {
                 if (item.type === 'custom-training-measurement' || item.type === 'custom-rest-measurement') {
                      renderCustomMeasurementInDay(item.topPosition || 0, dropZoneElement, item);
                 } else {
-                     const droppedItem = document.createElement('div');
-                     droppedItem.dataset.id = item.id || generateUniqueId();
-                     droppedItem.dataset.type = item.type;
-                     droppedItem.dataset.name = item.name;
-                     droppedItem.dataset.icon = item.icon;
-                     droppedItem.dataset.zoneColor = item.zoneColor || '';
-                     droppedItem.dataset.documentName = item.documentName || '';
-                     droppedItem.dataset.customMeasurementType = item.customMeasurementType || '';
-                     droppedItem.dataset.customMeasurementDefinition = item.customMeasurementDefinition ? JSON.stringify(item.customMeasurementDefinition) : '';
-                     droppedItem.dataset.customMeasurementDescription = item.customMeasurementDescription || '';
-                     droppedItem.dataset.customMeasurementGoals = item.customMeasurementGoals || '';
-                     droppedItem.dataset.inputType = item.inputType || '';
-                     droppedItem.dataset.reps = item.reps || '';
-                     droppedItem.dataset.sets = item.sets || '';
-                     droppedItem.dataset.minReps = item.minReps || '';
-                     droppedItem.dataset.maxReps = item.maxReps || '';
-                     droppedItem.dataset.minSets = item.minSets || '';
-                     droppedItem.dataset.maxSets = item.maxSets || '';
-                     droppedItem.dataset.minTime = item.minTime || '';
-                     droppedItem.dataset.maxTime = item.maxTime || '';
-                     droppedItem.dataset.notes = item.notes || '';
-                     droppedItem.dataset.duration = item.duration || '';
-                     droppedItem.dataset.progressionEnabled = item.progressionEnabled || false;
-                     droppedItem.dataset.progressionValue = item.progressionValue || '';
-                     if (item.content) {
-                          droppedItem.dataset.content = JSON.stringify(item.content);
-                     }
-
-                    droppedItem.setAttribute('draggable', 'true'); // Maak geplaatste items draggable
-                    
-                     let innerHtmlContent = `
-                        <div class="element-header flex items-center justify-between w-full">
-                            <span><i class="${item.icon} mr-2 ${item.zoneColor || ''}"></i>${item.name}</span>
-                            <button class="remove-btn"><i class="fas fa-times"></i></button>
-                        </div>
-                        <div class="element-settings flex flex-col mt-2">
-                     `;
-            
-                    if (item.type === 'hr-zone') {
-                        droppedItem.className = `timeline-item flex flex-col p-2 mb-1 rounded-md bg-gray-700 hr-zone-bar`;
-                        innerHtmlContent += `
-                            <div class="flex items-center space-x-2 w-full md:w-auto flex-wrap">
-                                <input type="number" placeholder="Minuten" class="w-20 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-duration-input value="${item.duration || ''}">
-                                <label class="flex items-center text-sm text-gray-300">
-                                    <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500" data-progression-checkbox ${item.progressionEnabled ? 'checked' : ''}>
-                                    <span class="ml-1">Wekelijks toenemen?</span>
-                                </label>
-                                <input type="number" placeholder="Minuten" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-progression-value-input value="${item.progressionValue || ''}" ${!item.progressionEnabled ? 'disabled' : ''}>
-                                <input type="text" placeholder="Notities" class="w-24 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-notes-input value="${item.notes || ''}">
-                            </div>
-                         `;
-                    } else if (['strength-exercise', 'recovery-activity', 'coordination-activity', 'flexibility-activity', 'speed-activity', 'nutrition-activity'].includes(item.type)) {
-                         const timeDisplay = item.inputType === 'reps_sets' ? 'display:none;' : 'display:flex;';
-                         const repsSetsDisplay = item.inputType === 'time' || !item.inputType ? 'display:none;' : 'display:flex;';
-                         droppedItem.className = 'timeline-item flex flex-col p-2 mb-1 rounded-md bg-gray-700';
-                         innerHtmlContent += `
-                            <div class="flex items-center space-x-2 w-full md:w-auto flex-wrap">
-                                <select class="p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm mt-1" data-input-type-select>
-                                    <option value="time" ${item.inputType === 'time' ? 'selected' : ''}>Tijd (min)</option>
-                                    <option value="reps_sets" ${item.inputType === 'reps_sets' ? 'selected' : ''}>Reps & Sets</option>
-                                </select>
-                                <div class="flex items-center space-x-1 mt-1" data-time-inputs style="${timeDisplay}">
-                                    <input type="number" placeholder="Duur" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-duration-input value="${item.duration || ''}">
-                                    <input type="number" placeholder="Min" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-min-time-input value="${item.minTime || ''}">
-                                    <input type="number" placeholder="Max" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-max-time-input value="${item.maxTime || ''}">
-                                </div>
-                                <div class="flex items-center space-x-1 mt-1" data-reps-sets-inputs style="${repsSetsDisplay}">
-                                    <input type="number" placeholder="Reps" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-reps-input value="${item.reps || ''}">
-                                    <input type="number" placeholder="Sets" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-sets-input value="${item.sets || ''}">
-                                    <input type="number" placeholder="Min R" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-min-reps-input value="${item.minReps || ''}">
-                                    <input type="number" placeholder="Max R" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-max-reps-input value="${item.maxReps || ''}">
-                                    <input type="number" placeholder="Min S" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-min-sets-input value="${item.minSets || ''}">
-                                    <input type="number" placeholder="Max S" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-max-sets-input value="${item.maxSets || ''}">
-                                </div>
-                                <label class="flex items-center text-sm text-gray-300 mt-1">
-                                    <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500" data-progression-checkbox ${item.progressionEnabled ? 'checked' : ''}>
-                                    <span class="ml-1">Wekelijks toenemen?</span>
-                                </label>
-                                <input type="number" placeholder="Waarde" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm mt-1" data-progression-value-input value="${item.progressionValue || ''}" ${!item.progressionEnabled ? 'disabled' : ''}>
-                                <input type="text" placeholder="Notities" class="w-24 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm mt-1" data-notes-input value="${item.notes || ''}">
-                            </div>
-                         `;
+                    if (dropZoneElement.id === 'session-drop-zone') {
+                        createStackedItemForDropZone(dropZoneElement, item);
+                    } else { // This handles custom-training-zones-drop-zone
+                        createTimelineItemForDropZone(item.topPosition || 0, dropZoneElement, item);
                     }
-                    innerHtmlContent += `</div>`; // Sluit element-settings
-                    droppedItem.innerHTML = innerHtmlContent;
-
-                     // Set position for loaded items in day-drop-zone
-                     if (dropZoneElement.id === 'day-drop-zone') {
-                         droppedItem.style.top = `${item.topPosition || 0}px`;
-                         droppedItem.style.left = '0';
-                         droppedItem.style.width = '100%';
-                         droppedItem.style.position = 'absolute';
-                     }
-                
-                     dropZoneElement.appendChild(droppedItem);
-                     attachDragStartListener(droppedItem); // Koppel dragstart aan het nieuw geplaatste item
-                     addEventListenersToDroppedItem(droppedItem);
                 }
             });
         } else if (contentData && typeof contentData === 'object' && targetType === 'object') {
@@ -816,14 +911,15 @@ export function initScheduleBuilderView() {
                         droppedItem.dataset.type = item.type;
                         droppedItem.dataset.name = item.name;
                         droppedItem.dataset.icon = item.icon;
-                        droppedItem.dataset.content = JSON.stringify(item.content);
+                        droppedItem.dataset.content = (item.content && (typeof item.content === 'object' || Array.isArray(item.content))) ? JSON.stringify(item.content) : '';
 
                         droppedItem.setAttribute('draggable', 'true'); // Maak geplaatste items draggable
 
                         let summaryHtml = '';
-                        if (item.type === 'day' && item.content && Array.isArray(item.content)) {
-                            const hrZonesSummary = item.content.filter(act => act.type === 'hr-zone').map(hrz => `${hrz.name} (${hrz.duration} min)`).join(', ');
-                            const otherActivities = item.content.filter(act => act.type !== 'hr-zone').map(act => act.name).join(', ');
+                        const parsedContent = (item.content && typeof item.content === 'string' && item.content !== "undefined" && item.content !== "") ? JSON.parse(item.content) : [];
+                        if (parsedContent && Array.isArray(parsedContent)) {
+                            const hrZonesSummary = parsedContent.filter(act => act.type === 'hr-zone').map(hrz => `${hrz.name} (${hrz.duration} min)`).join(', ');
+                            const otherActivities = parsedContent.filter(act => act.type !== 'hr-zone').map(act => act.name).join(', ');
                             summaryHtml = `<div class="text-xs text-gray-400 mt-1">${hrZonesSummary}${otherActivities ? (hrZonesSummary ? '; ' : '') + otherActivities : ''}</div>`;
                         } else if (item.type === 'week' && item.content && typeof item.content === 'object') {
                             const daysCount = Object.values(item.content).filter(d => d !== null).map(d => d.name).join(', ');
@@ -862,8 +958,9 @@ export function initScheduleBuilderView() {
                 droppedItem.dataset.type = item.type;
                 droppedItem.dataset.name = item.name;
                 droppedItem.dataset.icon = item.icon;
-                droppedItem.dataset.content = JSON.stringify(item.content);
+                droppedItem.dataset.content = (item.content && (typeof item.content === 'object' || Array.isArray(item.content))) ? JSON.stringify(item.content) : '';
                 droppedItem.dataset.repetitions = item.repetitions || 1;
+                droppedItem.dataset.repetitionStep = item.repetitionStep || 1; // NEW: repetitionStep
 
                 droppedItem.setAttribute('draggable', 'true'); // Maak geplaatste items draggable
 
@@ -876,6 +973,9 @@ export function initScheduleBuilderView() {
                          <div class="flex items-center space-x-2 w-full">
                             <span class="text-sm text-gray-300">Herhalingen:</span>
                             <input type="number" value="${item.repetitions || 1}" min="1" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-repetitions-input>
+                            <span class="text-sm text-gray-300 ml-2">Herhaal elke:</span>
+                            <input type="number" value="${item.repetitionStep || 1}" min="1" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-repetition-step-input>
+                            <span class="text-sm text-gray-300 ml-1">weken</span>
                         </div>
                         <div class="text-xs text-gray-300 mt-2">
                             ${Object.keys(item.content).filter(day => item.content[day]).map(day => `<span class="inline-block bg-gray-800 rounded-full px-2 py-1 text-xs font-semibold text-gray-300 mr-1 mb-1">${item.content[day].name}</span>`).join('')}
@@ -889,7 +989,7 @@ export function initScheduleBuilderView() {
         }
     }
 
-    // --- Render alle opgeslagen items (Dagen, Weken, Blokken) in één lijst ---
+    // --- Render alle opgeslagen items (Dagen, Weken, Blokken, Sessies) in één lijst ---
     async function renderAllSavedItems() {
         if (!allSavedItemsList) {
             console.error("Container for all saved items not found.");
@@ -897,20 +997,32 @@ export function initScheduleBuilderView() {
         }
         allSavedItemsList.innerHTML = ''; // Clear the list
 
-        const savedDays = await getAllData('trainingDays'); // Changed from localStorage
-        const savedWeeks = await getAllData('trainingWeeks'); // Changed from localStorage
-        const savedBloks = await getAllData('trainingBlocks'); // Changed from localStorage
+        const savedDays = await getAllData('trainingDays');
+        const savedWeeks = await getAllData('trainingWeeks');
+        const savedBloks = await getAllData('trainingBlocks');
+        const savedConfiguredSessions = await getAllData('configuredSessions'); // NEW
 
         let allItems = [];
+
+        // Add saved configured sessions
+        savedConfiguredSessions.forEach(session => {
+            allItems.push({
+                ...session,
+                type: 'configured-session', // Ensure correct type for filtering
+                displayType: 'Sessie',
+                sortOrder: 1, // First in the list
+                listName: 'configuredSessions'
+            });
+        });
 
         // Add saved days
         savedDays.forEach(day => {
             allItems.push({
                 ...day,
                 type: 'day',
-                displayType: 'Dag', // For sorting and display
-                sortOrder: 2, // After elements, before weeks
-                listName: 'trainingDays' // Add listName for removal
+                displayType: 'Dag',
+                sortOrder: 2, // After sessions
+                listName: 'trainingDays'
             });
         });
 
@@ -919,9 +1031,9 @@ export function initScheduleBuilderView() {
             allItems.push({
                 ...week,
                 type: 'week',
-                displayType: 'Week', // For sorting and display
-                sortOrder: 3, // After days, before blocks
-                listName: 'trainingWeeks' // Add listName for removal
+                displayType: 'Week',
+                sortOrder: 3, // After days
+                listName: 'trainingWeeks'
             });
         });
 
@@ -930,13 +1042,13 @@ export function initScheduleBuilderView() {
             allItems.push({
                 ...blok,
                 type: 'blok',
-                displayType: 'Blok', // For sorting and display
+                displayType: 'Blok',
                 sortOrder: 4, // Last
-                listName: 'trainingBlocks' // Add listName for removal
+                listName: 'trainingBlocks'
             });
         });
 
-        // Sort items: element (if added) -> day -> week -> block -> custom measurements
+        // Sort items: configured-session -> day -> week -> block -> custom measurements
         allItems.sort((a, b) => {
             if (a.sortOrder !== b.sortOrder) {
                 return a.sortOrder - b.sortOrder;
@@ -957,23 +1069,35 @@ export function initScheduleBuilderView() {
             itemCard.dataset.id = item.id;
             itemCard.dataset.name = item.name;
             itemCard.dataset.icon = item.icon;
-            if (item.content) itemCard.dataset.content = JSON.stringify(item.content);
+            itemCard.dataset.content = (item.content && (typeof item.content === 'object' || Array.isArray(item.content))) ? JSON.stringify(item.content) : '';
             if (item.repetitions) itemCard.dataset.repetitions = item.repetitions;
             if (item.customMeasurementType) itemCard.dataset.customMeasurementType = item.customMeasurementType;
-            if (item.customMeasurementDefinition) itemCard.dataset.customMeasurementDefinition = JSON.stringify(item.customMeasurementDefinition);
+            itemCard.dataset.customMeasurementDefinition = (item.customMeasurementDefinition && (typeof item.customMeasurementDefinition === 'object' || Array.isArray(item.customMeasurementDefinition))) ? JSON.stringify(item.customMeasurementDefinition) : '';
             if (item.customMeasurementDescription) itemCard.dataset.customMeasurementDescription = item.customMeasurementDescription;
             if (item.customMeasurementGoals) itemCard.dataset.customMeasurementGoals = item.customMeasurementGoals;
+            if (item.repetitionStep) itemCard.dataset.repetitionStep = item.repetitionStep; // NEW: repetitionStep for display
 
 
             let summaryText = '';
-            if (item.type === 'day' && item.activities && Array.isArray(item.activities)) {
+            if (item.type === 'configured-session' && item.content && Array.isArray(item.content)) {
+                const names = item.content.map(subItem => subItem.name).join(', ');
+                summaryText = `<div class="text-xs text-gray-400 mt-1">Bevat: ${names}</div>`;
+            } else if (item.type === 'day' && item.activities && Array.isArray(item.activities)) {
                 const activityNames = item.activities.map(act => act.name).join(', ');
                 summaryText = `<div class="text-xs text-gray-400 mt-1">Activiteiten: ${activityNames}</div>`;
             } else if (item.type === 'week' && item.days && typeof item.days === 'object') {
                 const configuredDays = Object.values(item.days).filter(day => day !== null).map(day => day.name);
                 summaryText = `<div class="text-xs text-gray-400 mt-1">Dagen: ${configuredDays.length > 0 ? configuredDays.join(', ') : 'Geen dagen'}</div>`;
+                if (item.repetitionStep && item.repetitionStep > 1) {
+                    summaryText += `<div class="text-xs text-gray-400 mt-1">Herhaal elke ${item.repetitionStep} weken</div>`;
+                }
             } else if (item.type === 'blok' && item.weeks && Array.isArray(item.weeks)) {
-                const configuredWeeks = item.weeks.map(week => `${week.name} (${week.repetitions}x)`).join(', ');
+                const configuredWeeks = item.weeks.map(week => {
+                    let weekSummary = week.name;
+                    if (week.repetitions && week.repetitions > 1) weekSummary += ` (${week.repetitions}x)`;
+                    if (week.repetitionStep && week.repetitionStep > 1) weekSummary += ` elke ${week.repetitionStep}w`;
+                    return weekSummary;
+                }).join(', ');
                 summaryText = `<div class="text-xs text-gray-400 mt-1">Weken: ${configuredWeeks.length > 0 ? configuredWeeks : 'Geen weken'}</div>`;
             } else if (item.type === 'custom-training-measurement' && item.customMeasurementDefinition) {
                 const totalDuration = item.customMeasurementDefinition.reduce((sum, subItem) => sum + (subItem.duration || 0), 0);
@@ -998,8 +1122,160 @@ export function initScheduleBuilderView() {
         addRemoveListenersToSavedItems(); // Re-attach listeners for dynamically loaded items
     }
 
+    // NEW: Load and display saved configured sessions
+    async function loadSavedSessions() {
+        savedSessionsList.innerHTML = '';
+        const savedSessions = await getAllData('configuredSessions');
+        if (savedSessions.length === 0) {
+            savedSessionsList.innerHTML = '<p class="text-gray-400 col-span-full">Nog geen sessies opgeslagen.</p>';
+            return;
+        }
+
+        savedSessions.forEach(session => {
+            const sessionCard = document.createElement('div');
+            sessionCard.className = 'drag-item bg-gray-600 p-3 rounded-md shadow flex flex-col cursor-grab';
+            sessionCard.setAttribute('draggable', 'true');
+            sessionCard.dataset.type = 'configured-session'; // NEW type
+            sessionCard.dataset.id = session.id;
+            sessionCard.dataset.name = session.name;
+            sessionCard.dataset.icon = session.icon || 'fas fa-running'; // Default icon
+            sessionCard.dataset.content = (session.activities && Array.isArray(session.activities)) ? JSON.stringify(session.activities) : '';
+            sessionCard.dataset.zoneColor = session.zoneColor || ''; // For visual consistency
+
+            let summaryHtml = '';
+            if (session.activities && Array.isArray(session.activities)) {
+                const activityNames = session.activities.map(act => act.name).join(', ');
+                summaryHtml = `<div class="text-xs text-gray-400 mt-1">Bevat: ${activityNames}</div>`;
+            }
+
+            sessionCard.innerHTML = `
+                <div class="flex items-center justify-between w-full">
+                    <span><i class="${sessionCard.dataset.icon} mr-2 ${sessionCard.dataset.zoneColor}"></i>${session.name}</span>
+                    <button class="remove-saved-item-btn text-red-400 hover:text-red-300" data-id="${session.id}" data-list="configuredSessions"><i class="fas fa-times"></i></button>
+                </div>
+                ${summaryHtml}
+            `;
+            savedSessionsList.appendChild(sessionCard);
+            attachDragStartListener(sessionCard);
+        });
+        addRemoveListenersToSavedItems(); // Re-attach listeners
+    }
+
 
     // --- Opslaan en Laden van Schema's (via IndexedDB) ---
+
+    // NEW: Save Session (from Session Builder)
+    if (saveSessionBtn) {
+        saveSessionBtn.addEventListener('click', async () => {
+            const sessionName = currentSessionNameInput.value.trim();
+            if (!sessionName) {
+                showMessage('Geef de sessie een naam.', 'error');
+                return;
+            }
+
+            const activities = [];
+            let hasError = false;
+            sessionDropZone.querySelectorAll('.dropped-item').forEach(item => { // Use .dropped-item for stacked items
+                const activity = {
+                    type: item.dataset.type,
+                    name: item.dataset.name,
+                    icon: item.querySelector('.element-header i').className,
+                    zoneColor: item.dataset.zoneColor || '',
+                    // For stacked items, topPosition is not relevant for saving
+                    progressionEnabled: item.dataset.progressionEnabled === 'true',
+                    inputType: item.dataset.inputType || null,
+                    reps: item.dataset.reps || null,
+                    sets: item.dataset.sets || null,
+                    minReps: item.dataset.minReps || null,
+                    maxReps: item.dataset.maxReps || null,
+                    minSets: item.dataset.minSets || null,
+                    maxSets: item.dataset.maxSets || null,
+                    minTime: item.dataset.minTime || null,
+                    maxTime: item.dataset.maxTime || null,
+                    notes: item.dataset.notes || null,
+                    duration: item.dataset.duration || null,
+                    progressionValue: item.dataset.progressionValue || null
+                };
+
+                if (item.dataset.type === 'hr-zone') {
+                    const durationInput = item.querySelector('[data-duration-input]');
+                    const progressionCheckbox = item.querySelector('[data-progression-checkbox]');
+                    const progressionValueInput = item.querySelector('[data-progression-value-input]');
+                    const notesInput = item.querySelector('[data-notes-input]');
+                    
+                    const duration = parseInt(durationInput.value);
+                    if (isNaN(duration) || duration <= 0) {
+                        hasError = true;
+                        showMessage('Vul een geldige duur (in minuten) in voor alle hartslagzones.', 'error');
+                        return;
+                    }
+                    activity.duration = duration;
+                    activity.progressionEnabled = progressionCheckbox.checked;
+                    activity.progressionValue = progressionCheckbox.checked ? parseInt(progressionValueInput.value) : null;
+                    if (activity.progressionEnabled && (isNaN(activity.progressionValue) || activity.progressionValue <= 0)) {
+                        hasError = true;
+                        showMessage('Vul een geldige toename waarde (in minuten) in voor wekelijkse toename.', 'error');
+                        return;
+                    }
+                    activity.notes = notesInput.value;
+                } else if (['strength-exercise', 'recovery-activity', 'coordination-activity', 'flexibility-activity', 'speed-activity', 'nutrition-activity'].includes(item.dataset.type)) {
+                    const inputTypeSelect = item.querySelector('[data-input-type-select]');
+                    const progressionCheckbox = item.querySelector('[data-progression-checkbox]');
+                    const progressionValueInput = item.querySelector('[data-progression-value-input]');
+                    const notesInput = item.querySelector('[data-notes-input]');
+                
+                    activity.inputType = inputTypeSelect ? inputTypeSelect.value : null;
+                    activity.progressionEnabled = progressionCheckbox ? progressionCheckbox.checked : false;
+                    activity.progressionValue = (progressionCheckbox && progressionCheckbox.checked) ? parseInt(progressionValueInput.value) : null;
+                    activity.notes = notesInput ? notesInput.value : '';
+
+                    if (activity.inputType === 'time') {
+                        activity.duration = parseInt(item.querySelector('[data-duration-input]').value);
+                        activity.minTime = parseInt(item.querySelector('[data-min-time-input]').value);
+                        activity.maxTime = parseInt(item.querySelector('[data-max-time-input]').value);
+                    } else if (activity.inputType === 'reps_sets') {
+                        activity.reps = parseInt(item.querySelector('[data-reps-input]').value);
+                        activity.sets = parseInt(item.querySelector('[data-sets-input]').value);
+                        activity.minReps = parseInt(item.querySelector('[data-min-reps-input]').value);
+                        activity.maxReps = parseInt(item.querySelector('[data-max-reps-input]').value);
+                        activity.minSets = parseInt(item.querySelector('[data-min-sets-input]').value);
+                        activity.maxSets = parseInt(item.querySelector('[data-max-sets-input]').value);
+                    }
+                } else if (item.dataset.type === 'document-link') {
+                    activity.documentName = item.dataset.documentName;
+                } else if (item.dataset.type === 'custom-training-measurement' || item.dataset.type === 'custom-rest-measurement') {
+                    activity.customMeasurementType = item.dataset.customMeasurementType;
+                    activity.customMeasurementDescription = item.dataset.customMeasurementDescription || null;
+                    activity.customMeasurementGoals = item.dataset.customMeasurementGoals || null;
+                    // For custom measurements, their definition is already stored. We just need to reference it.
+                    // The content of the custom measurement is in its customMeasurementDefinition dataset.
+                    activity.customMeasurementDefinition = (item.dataset.customMeasurementDefinition && item.dataset.customMeasurementDefinition !== "undefined" && item.dataset.customMeasurementDefinition !== "") ? JSON.parse(item.dataset.customMeasurementDefinition) : null;
+                }
+                activities.push(activity);
+            });
+
+            if (hasError) {
+                return;
+            }
+            if (activities.length === 0) {
+                showMessage('Voeg activiteiten toe aan de sessie.', 'error');
+                return;
+            }
+
+            // No sorting by topPosition for stacked items
+            // activities.sort((a, b) => a.topPosition - b.topPosition);
+
+            const sessionId = generateUniqueId();
+            const newSession = { id: sessionId, name: sessionName, activities: activities };
+
+            await putData('configuredSessions', newSession); // Save to new store
+            showMessage('Sessie opgeslagen!', 'success');
+            currentSessionNameInput.value = '';
+            sessionDropZone.innerHTML = '<p class="text-gray-400 text-center">Sleep individuele activiteiten of HR-zones hierheen om de sessie te configureren.</p>';
+            loadSavedSessions(); // Reload saved sessions list
+            renderAllSavedItems(); // Update combined list in sidebar
+        });
+    }
 
     // Dagen
     const currentDayNameInput = document.getElementById('current-day-name');
@@ -1007,148 +1283,49 @@ export function initScheduleBuilderView() {
     const saveDayBtn = document.getElementById('save-day-btn');
     const savedDaysList = document.getElementById('saved-days-list');
 
-    saveDayBtn.addEventListener('click', async () => { // Added async
+    saveDayBtn.addEventListener('click', async () => {
         const dayName = currentDayNameInput.value.trim();
         if (!dayName) {
             showMessage('Geef de dag een naam.', 'error');
             return;
         }
 
-        const activities = [];
-        let hasError = false; 
-        dayDropZone.querySelectorAll('.timeline-item').forEach(item => {
-             const activity = {
-                 type: item.dataset.type,
-                 name: item.dataset.name,
-                 icon: item.querySelector('.element-header i').className, // Correcte selector
-                 zoneColor: item.dataset.zoneColor || '',
-                 topPosition: parseFloat(item.style.top) || 0,
-                 progressionEnabled: item.dataset.progressionEnabled === 'true',
-                 inputType: item.dataset.inputType || null,
-                 reps: item.dataset.reps || null,
-                 sets: item.dataset.sets || null,
-                 minReps: item.dataset.minReps || null,
-                 maxReps: item.dataset.maxReps || null,
-                 minSets: item.dataset.minSets || null,
-                 maxSets: item.dataset.maxSets || null,
-                 minTime: item.dataset.minTime || null,
-                 maxTime: item.dataset.maxTime || null,
-                 notes: item.dataset.notes || null,
-                 duration: item.dataset.duration || null,
-                 progressionValue: item.dataset.progressionValue || null
-             };
-            
-             if (item.dataset.type === 'hr-zone') {
-                 const durationInput = item.querySelector('[data-duration-input]');
-                 const progressionCheckbox = item.querySelector('[data-progression-checkbox]');
-                 const progressionValueInput = item.querySelector('[data-progression-value-input]');
-                 const notesInput = item.querySelector('[data-notes-input]');
-                
-                 const duration = parseInt(durationInput.value);
-                 if (isNaN(duration) || duration <= 0) {
-                     hasError = true;
-                     showMessage('Vul een geldige duur (in minuten) in voor alle hartslagzones.', 'error');
-                     return; 
-                 }
-                 activity.duration = duration;
-                 activity.progressionEnabled = progressionCheckbox.checked;
-                 activity.progressionValue = progressionCheckbox.checked ? parseInt(progressionValueInput.value) : null; 
-                 if (activity.progressionEnabled && (isNaN(activity.progressionValue) || activity.progressionValue <= 0)) {
-                     hasError = true;
-                     showMessage('Vul een geldige toename waarde (in minuten) in voor wekelijkse toename.', 'error');
-                     return;
-                 }
-                 activity.notes = notesInput.value;
-            } else if (['strength-exercise', 'recovery-activity', 'coordination-activity', 'flexibility-activity', 'speed-activity', 'nutrition-activity'].includes(item.dataset.type)) {
-                const inputTypeSelect = item.querySelector('[data-input-type-select]');
-                const progressionCheckbox = item.querySelector('[data-progression-checkbox]');
-                const progressionValueInput = item.querySelector('[data-progression-value-input]');
-                const notesInput = item.querySelector('[data-notes-input]');
-            
-                activity.inputType = inputTypeSelect ? inputTypeSelect.value : null;
-                activity.progressionEnabled = progressionCheckbox ? progressionCheckbox.checked : false;
-                activity.progressionValue = (progressionCheckbox && progressionCheckbox.checked) ? parseInt(progressionValueInput.value) : null;
-                activity.notes = notesInput ? notesInput.value : '';
-
-                if (activity.inputType === 'time') {
-                    activity.duration = parseInt(item.querySelector('[data-duration-input]').value);
-                    activity.minTime = parseInt(item.querySelector('[data-min-time-input]').value);
-                    activity.maxTime = parseInt(item.querySelector('[data-max-time-input]').value);
-                } else if (activity.inputType === 'reps_sets') {
-                    activity.reps = parseInt(item.querySelector('[data-reps-input]').value);
-                    activity.sets = parseInt(item.querySelector('[data-sets-input]').value);
-                    activity.minReps = parseInt(item.querySelector('[data-min-reps-input]').value);
-                    activity.maxReps = parseInt(item.querySelector('[data-max-reps-input]').value);
-                    activity.minSets = parseInt(item.querySelector('[data-min-sets-input]').value);
-                    activity.maxSets = parseInt(item.querySelector('[data-max-sets-input]').value);
-                }
-            } else if (item.dataset.type === 'document-link') {
-                 activity.documentName = item.dataset.documentName;
-            } else if (item.dataset.type === 'custom-training-measurement' || item.dataset.type === 'custom-rest-measurement') {
-                 // Haal de data uit de dataset van de main container
-                 activity.customMeasurementType = item.dataset.customMeasurementType;
-                 activity.customMeasurementDescription = item.dataset.customMeasurementDescription || null;
-                 activity.customMeasurementGoals = item.dataset.customMeasurementGoals || null;
-                
-                 // Nu itereren over de geneste items om hun actuele waarden op te halen
-                 const nestedDefinition = [];
-                 item.querySelectorAll('.nested-item').forEach(nestedItem => {
-                     const subActivity = {
-                         type: nestedItem.dataset.type,
-                         name: nestedItem.dataset.name,
-                         icon: nestedItem.querySelector('.element-header i').className, // Correcte selector
-                         zoneColor: nestedItem.dataset.zoneColor,
-                         inputType: nestedItem.dataset.inputType,
-                         progressionEnabled: nestedItem.dataset.progressionEnabled === 'true',
-                         notes: nestedItem.querySelector('[data-notes-input]') ? nestedItem.querySelector('[data-notes-input]').value : ''
-                     };
-                     
-                     if (subActivity.type === 'hr-zone') {
-                         subActivity.duration = parseInt(nestedItem.querySelector('[data-duration-input]').value);
-                         subActivity.progressionValue = subActivity.progressionEnabled ? parseInt(nestedItem.querySelector('[data-progression-value-input]').value) : null;
-                     } else if (subActivity.inputType === 'time') {
-                         subActivity.duration = parseInt(nestedItem.querySelector('[data-duration-input]').value);
-                         subActivity.minTime = parseInt(nestedItem.querySelector('[data-min-time-input]').value);
-                         subActivity.maxTime = parseInt(nestedItem.querySelector('[data-max-time-input]').value);
-                     } else if (subActivity.inputType === 'reps_sets') {
-                         subActivity.reps = parseInt(nestedItem.querySelector('[data-reps-input]').value);
-                         subActivity.sets = parseInt(nestedItem.querySelector('[data-sets-input]').value);
-                         subActivity.minReps = parseInt(nestedItem.querySelector('[data-min-reps-input]').value);
-                         subActivity.maxReps = parseInt(nestedItem.querySelector('[data-max-reps-input]').value);
-                         subActivity.minSets = parseInt(nestedItem.querySelector('[data-min-sets-input]').value);
-                         subActivity.maxSets = parseInt(nestedItem.querySelector('[data-max-sets-input]').value);
-                     }
-                     nestedDefinition.push(subActivity);
-                 });
-                 activity.customMeasurementDefinition = nestedDefinition;
-            }
-             activities.push(activity);
+        const activities = []; // For the Day tab, these are now configured sessions or existing days
+        let hasError = false;
+        dayDropZone.querySelectorAll('.dropped-item').forEach(item => { // Use .dropped-item for day tab
+            const activity = {
+                id: item.dataset.id,
+                type: item.dataset.type, // Will be 'configured-session' or 'day'
+                name: item.dataset.name,
+                icon: item.dataset.icon,
+                content: (item.dataset.content && item.dataset.content !== "undefined" && item.dataset.content !== "") ? JSON.parse(item.dataset.content) : null,
+                zoneColor: item.dataset.zoneColor || ''
+            };
+            activities.push(activity);
         });
 
         if (hasError) {
-            return; 
-        }
-
-        if (activities.length === 0) {
-            showMessage('Voeg activiteiten toe aan de dag.', 'error');
             return;
         }
 
-        activities.sort((a, b) => a.topPosition - b.topPosition);
+        if (activities.length === 0) {
+            showMessage('Voeg sessies of dagen toe aan de dag.', 'error'); // Updated message
+            return;
+        }
 
         const dayId = generateUniqueId();
-        const newDay = { id: dayId, name: dayName, activities: activities };
+        const newDay = { id: dayId, name: dayName, activities: activities }; // Activities here are references to sessions/days
 
-        await putData('trainingDays', newDay); // Changed from localStorage
+        await putData('trainingDays', newDay);
         showMessage('Dag opgeslagen!', 'success');
         currentDayNameInput.value = '';
-        dayDropZone.innerHTML = '<p class="text-gray-400 text-center">Sleep hartslagzones, rust, metingen of documenten hierheen om de dag te configureren.</p>';
-        renderAllSavedItems(); // Roep de functie aan om de gecombineerde lijst te updaten
+        dayDropZone.innerHTML = '<p class="text-gray-400 text-center">Sleep opgeslagen sessies of dagen hierheen om de dag te configureren.</p>'; // Updated placeholder
+        renderAllSavedItems();
     });
 
-    async function loadSavedDays() { // Added async
+    async function loadSavedDays() {
         savedDaysList.innerHTML = '';
-        const savedDays = await getAllData('trainingDays'); // Changed from localStorage
+        const savedDays = await getAllData('trainingDays');
         if (savedDays.length === 0) {
             savedDaysList.innerHTML = '<p class="text-gray-400 col-span-full">Nog geen dagen opgeslagen.</p>';
             return;
@@ -1161,132 +1338,123 @@ export function initScheduleBuilderView() {
             dayCard.dataset.type = 'day';
             dayCard.dataset.id = day.id;
             dayCard.dataset.name = day.name;
-            dayCard.dataset.icon = 'fas fa-calendar-day'; 
-            dayCard.dataset.content = JSON.stringify(day.activities); 
+            dayCard.dataset.icon = 'fas fa-calendar-day';
+            dayCard.dataset.content = (day.activities && Array.isArray(day.activities)) ? JSON.stringify(day.activities) : '';
+
+            let summaryText = '';
+            if (day.activities && Array.isArray(day.activities)) {
+                const activityNames = day.activities.map(act => act.name).join(', ');
+                summaryText = `<div class="text-xs text-gray-400 mt-1">Bevat: ${activityNames}</div>`;
+            }
 
             dayCard.innerHTML = `
                 <div class="flex items-center justify-between w-full">
                     <span><i class="${dayCard.dataset.icon} mr-2 text-blue-300"></i>${day.name}</span>
                     <button class="remove-saved-item-btn text-red-400 hover:text-red-300" data-id="${day.id}" data-list="trainingDays"><i class="fas fa-times"></i></button>
                 </div>
-                <div class="text-xs text-gray-300 mt-2">
-                    ${day.activities.map(act => {
-                        let activityText = `<span class="inline-block bg-gray-800 rounded-full px-2 py-1 text-xs font-semibold text-gray-300 mr-1 mb-1"><i class="${act.icon.split(' ')[1]} mr-1 ${act.zoneColor || ''}"></i>${act.name}`;
-                        if (act.type === 'hr-zone') {
-                            if (act.duration) {
-                                activityText += ` (${act.duration} min)`;
-                            }
-                            if (act.progressionEnabled && act.progressionValue) {
-                                activityText += ` (+${act.progressionValue} min)`; 
-                            }
-                        } else if (act.type === 'document-link') {
-                            activityText += ` (${act.documentName || 'Onbekend'})`;
-                        } else if (act.type === 'custom-training-measurement') {
-                            const totalDuration = act.customMeasurementDefinition ? act.customMeasurementDefinition.reduce((sum, subItem) => sum + (subItem.duration || 0), 0) : 0;
-                            activityText += ` (${totalDuration} min)`;
-                        } else if (act.type === 'custom-rest-measurement') {
-                            activityText += ` (Aangepaste Rust)`;
-                        }
-                        activityText += `</span>`;
-                        return activityText;
-                    }).join('')}
-                </div>
+                ${summaryText}
             `;
             savedDaysList.appendChild(dayCard);
+            attachDragStartListener(dayCard);
         });
         addRemoveListenersToSavedItems();
     }
 
     // Weken
     const currentWeekNameInput = document.getElementById('current-week-name');
-    const weekDaySlots = document.querySelectorAll('.day-slot'); 
+    const weekDaySlots = document.querySelectorAll('.day-slot');
     const saveWeekBtn = document.getElementById('save-week-btn');
     const savedWeeksList = document.getElementById('saved-weeks-list');
 
-    saveWeekBtn.addEventListener('click', async () => { // Added async
+    saveWeekBtn.addEventListener('click', async () => {
         const weekName = currentWeekNameInput.value.trim();
         if (!weekName) {
             showMessage('Geef de week een naam.', 'error');
             return;
         }
 
-    const daysInWeek = {};
-    let isEmptyWeek = true;
-    weekDaySlots.forEach(slot => {
-        const droppedDay = slot.querySelector('.dropped-item');
-        if (droppedDay) {
-            daysInWeek[slot.dataset.dayOfWeek] = {
-                id: droppedDay.dataset.id,
-                name: droppedDay.dataset.name,
-                icon: droppedDay.dataset.icon,
-                content: JSON.parse(droppedDay.dataset.content)
-            };
-            isEmptyWeek = false;
-        } else {
-            daysInWeek[slot.dataset.dayOfWeek] = null; 
+        const daysInWeek = {};
+        let isEmptyWeek = true;
+        weekDaySlots.forEach(slot => {
+            const droppedDay = slot.querySelector('.dropped-item');
+            if (droppedDay) {
+                daysInWeek[slot.dataset.dayOfWeek] = {
+                    id: droppedDay.dataset.id,
+                    name: droppedDay.dataset.name,
+                    icon: droppedDay.dataset.icon,
+                    content: (droppedDay.dataset.content && typeof droppedDay.dataset.content === 'string' && droppedDay.dataset.content !== "undefined" && droppedDay.dataset.content !== "") ? JSON.parse(droppedDay.dataset.content) : null
+                };
+                isEmptyWeek = false;
+            } else {
+                daysInWeek[slot.dataset.dayOfWeek] = null;
+            }
+        });
+
+        if (isEmptyWeek) {
+            showMessage('Voeg dagen toe aan de week.', 'error');
+            return;
         }
+
+        const weekId = generateUniqueId();
+        const newWeek = { id: weekId, name: weekName, days: daysInWeek };
+
+        await putData('trainingWeeks', newWeek);
+        showMessage('Week opgeslagen!', 'success');
+        currentWeekNameInput.value = '';
+        weekDaySlots.forEach(slot => {
+            slot.innerHTML = '<p class="text-gray-400 text-center text-sm">Sleep dag hier</p>';
+        });
+        renderAllSavedItems();
     });
 
-    if (isEmptyWeek) {
-        showMessage('Voeg dagen toe aan de week.', 'error');
-        return;
+    async function loadSavedWeeks() {
+        savedWeeksList.innerHTML = '';
+        const savedWeeks = await getAllData('trainingWeeks');
+        if (savedWeeks.length === 0) {
+            savedWeeksList.innerHTML = '<p class="text-gray-400 col-span-full">Nog geen weken opgeslagen.</p>';
+            return;
+        }
+
+        savedWeeks.forEach(week => {
+            const weekCard = document.createElement('div');
+            weekCard.className = 'drag-item bg-gray-600 p-3 rounded-md shadow flex flex-col cursor-grab';
+            weekCard.setAttribute('draggable', 'true');
+            weekCard.dataset.type = 'week';
+            weekCard.dataset.id = week.id;
+            weekCard.dataset.name = week.name;
+            weekCard.dataset.icon = 'fas fa-calendar-week';
+            weekCard.dataset.content = (week.days && typeof week.days === 'object') ? JSON.stringify(week.days) : '';
+            if (week.repetitionStep) weekCard.dataset.repetitionStep = week.repetitionStep; // NEW: repetitionStep for display
+
+            const configuredDays = Object.values(week.days).filter(day => day !== null).map(day => day.name);
+            let summaryText = configuredDays.length > 0 ? configuredDays.join(', ') : 'Geen dagen geconfigureerd';
+            if (week.repetitionStep && week.repetitionStep > 1) {
+                summaryText += ` (elke ${week.repetitionStep} weken)`;
+            }
+
+            weekCard.innerHTML = `
+                <div class="flex items-center justify-between w-full">
+                    <span><i class="${weekCard.dataset.icon} mr-2 text-purple-300"></i>${week.name}</span>
+                    <button class="remove-saved-item-btn text-red-400 hover:text-red-300" data-id="${week.id}" data-list="trainingWeeks"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="text-xs text-gray-300 mt-2">
+                    ${summaryText}
+                </div>
+            `;
+            savedWeeksList.appendChild(weekCard);
+            attachDragStartListener(weekCard);
+        });
+        addRemoveListenersToSavedItems();
     }
 
-    const weekId = generateUniqueId();
-    const newWeek = { id: weekId, name: weekName, days: daysInWeek };
-
-    await putData('trainingWeeks', newWeek); // Changed from localStorage
-    showMessage('Week opgeslagen!', 'success');
-    currentWeekNameInput.value = '';
-    weekDaySlots.forEach(slot => {
-        slot.innerHTML = '<p class="text-gray-400 text-center text-sm">Sleep dag hier</p>';
-    });
-    renderAllSavedItems(); // Roep de functie aan om de gecombineerde lijst te updaten
-});
-
-async function loadSavedWeeks() { // Added async
-    savedWeeksList.innerHTML = '';
-    const savedWeeks = await getAllData('trainingWeeks'); // Changed from localStorage
-    if (savedWeeks.length === 0) {
-        savedWeeksList.innerHTML = '<p class="text-gray-400 col-span-full">Nog geen weken opgeslagen.</p>';
-        return;
-    }
-
-    savedWeeks.forEach(week => {
-        const weekCard = document.createElement('div');
-        weekCard.className = 'drag-item bg-gray-600 p-3 rounded-md shadow flex flex-col cursor-grab';
-        weekCard.setAttribute('draggable', 'true');
-        weekCard.dataset.type = 'week';
-        weekCard.dataset.id = week.id;
-        weekCard.dataset.name = week.name;
-        weekCard.dataset.icon = 'fas fa-calendar-week'; 
-        weekCard.dataset.content = JSON.stringify(week.days); 
-
-        const configuredDays = Object.values(week.days).filter(day => day !== null).map(day => day.name);
-        const summaryText = configuredDays.length > 0 ? configuredDays.join(', ') : 'Geen dagen geconfigureerd';
-
-        weekCard.innerHTML = `
-            <div class="flex items-center justify-between w-full">
-                <span><i class="${weekCard.dataset.icon} mr-2 text-purple-300"></i>${week.name}</span>
-                <button class="remove-saved-item-btn text-red-400 hover:text-red-300" data-id="${week.id}" data-list="trainingWeeks"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="text-xs text-gray-300 mt-2">
-                ${summaryText}
-            </div>
-        `;
-        savedWeeksList.appendChild(weekCard);
-    });
-    addRemoveListenersToSavedItems();
-}
-
-// Blokken
+    // Blokken
     const currentBlokNameInput = document.getElementById('current-blok-name');
     const currentBlokNotesInput = document.getElementById('current-blok-notes');
     const blokDropZone = document.getElementById('blok-drop-zone');
     const saveBlokBtn = document.getElementById('save-blok-btn');
     const savedBloksList = document.getElementById('saved-bloks-list');
 
-    saveBlokBtn.addEventListener('click', async () => { // Added async
+    saveBlokBtn.addEventListener('click', async () => {
         const blokName = currentBlokNameInput.value.trim();
         const blokNotes = currentBlokNotesInput.value.trim();
         if (!blokName) {
@@ -1298,10 +1466,18 @@ async function loadSavedWeeks() { // Added async
         let hasError = false;
         blokDropZone.querySelectorAll('.dropped-item').forEach(item => {
             const repetitionsInput = item.querySelector('[data-repetitions-input]');
+            const repetitionStepInput = item.querySelector('[data-repetition-step-input]'); // NEW
             const repetitions = parseInt(repetitionsInput.value);
+            const repetitionStep = parseInt(repetitionStepInput.value); // NEW
+
             if (isNaN(repetitions) || repetitions <= 0) {
                 hasError = true;
                 showMessage('Vul een geldig aantal herhalingen in voor elke week.', 'error');
+                return;
+            }
+            if (isNaN(repetitionStep) || repetitionStep <= 0) { // NEW validation
+                hasError = true;
+                showMessage('Vul een geldige herhaalstap in (minimaal 1).', 'error');
                 return;
             }
 
@@ -1309,8 +1485,9 @@ async function loadSavedWeeks() { // Added async
                 weekId: item.dataset.id,
                 name: item.dataset.name,
                 icon: item.dataset.icon,
-                content: JSON.parse(item.dataset.content),
-                repetitions: repetitions
+                content: (item.dataset.content && typeof item.dataset.content === 'string' && item.dataset.content !== "undefined" && item.dataset.content !== "") ? JSON.parse(item.dataset.content) : null,
+                repetitions: repetitions,
+                repetitionStep: repetitionStep // NEW
             });
         });
 
@@ -1329,24 +1506,24 @@ async function loadSavedWeeks() { // Added async
         }
 
         const blokId = generateUniqueId();
-        const newBlok = { 
-            id: blokId, 
-            name: blokName, 
+        const newBlok = {
+            id: blokId,
+            name: blokName,
             weeks: weeksInBlok,
             notes: blokNotes
-        }; 
+        };
 
-        await putData('trainingBlocks', newBlok); // Changed from localStorage
+        await putData('trainingBlocks', newBlok);
         showMessage('Blok opgeslagen!', 'success');
         currentBlokNameInput.value = '';
         currentBlokNotesInput.value = '';
         blokDropZone.innerHTML = '<p class="text-gray-400 text-center">Sleep weken hierheen om het blok te configureren.</p>';
-        renderAllSavedItems(); // Roep de functie aan om de gecombineerde lijst te updaten
+        renderAllSavedItems();
     });
 
-    async function loadSavedBloks() { // Added async
+    async function loadSavedBloks() {
         savedBloksList.innerHTML = '';
-        const savedBloks = await getAllData('trainingBlocks'); // Changed from localStorage
+        const savedBloks = await getAllData('trainingBlocks');
         if (savedBloks.length === 0) {
             savedBloksList.innerHTML = '<p class="text-gray-400 col-span-full">Nog geen blokken opgeslagen.</p>';
             return;
@@ -1354,13 +1531,22 @@ async function loadSavedWeeks() { // Added async
 
         savedBloks.forEach(blok => {
             const blokCard = document.createElement('div');
-            blokCard.className = 'drag-item bg-gray-600 p-3 rounded-md shadow flex flex-col cursor-grab'; // Changed to drag-item
+            blokCard.className = 'drag-item bg-gray-600 p-3 rounded-md shadow flex flex-col cursor-grab';
             blokCard.setAttribute('draggable', 'true');
             blokCard.dataset.id = blok.id;
             blokCard.dataset.name = blok.name;
             blokCard.dataset.type = 'blok';
+            blokCard.dataset.content = (blok.weeks && Array.isArray(blok.weeks)) ? JSON.stringify(blok.weeks) : '';
+            blokCard.dataset.repetitions = blok.repetitions || 1; // This might be redundant if repetitions are per week in the block
+            if (blok.repetitionStep) blokCard.dataset.repetitionStep = blok.repetitionStep; // NEW: repetitionStep for display
 
-            const configuredWeeksSummary = blok.weeks.map(week => `${week.name} (${week.repetitions}x)`).join(', ');
+            const configuredWeeksSummary = blok.weeks.map(week => {
+                let weekText = `${week.name} (${week.repetitions}x)`;
+                if (week.repetitionStep && week.repetitionStep > 1) {
+                    weekText += ` elke ${week.repetitionStep}w`;
+                }
+                return weekText;
+            }).join(', ');
             const summaryText = configuredWeeksSummary || 'Geen weken geconfigureerd';
             const notesText = blok.notes ? `<div class="text-xs text-gray-400 mt-1">Notities: ${blok.notes.substring(0, 50)}${blok.notes.length > 50 ? '...' : ''}</div>` : '';
 
@@ -1374,6 +1560,9 @@ async function loadSavedWeeks() { // Added async
                      <div class="flex items-center space-x-2 w-full">
                         <span class="text-sm text-gray-300">Herhalingen:</span>
                         <input type="number" value="${blok.repetitions || 1}" min="1" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-repetitions-input>
+                        <span class="text-sm text-gray-300 ml-2">Herhaal elke:</span>
+                        <input type="number" value="${blok.repetitionStep || 1}" min="1" class="w-16 p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 text-sm" data-repetition-step-input>
+                        <span class="text-sm text-gray-300 ml-1">weken</span>
                     </div>
                     <div class="text-xs text-gray-300 mt-2">
                         ${summaryText}
@@ -1382,26 +1571,28 @@ async function loadSavedWeeks() { // Added async
                 ${notesText}
             `;
             savedBloksList.appendChild(blokCard);
+            attachDragStartListener(blokCard); // Attach listener to the new element
             addEventListenersToDroppedItem(blokCard);
         });
         addRemoveListenersToSavedItems();
     }
 
     // Functie voor het verwijderen van opgeslagen items (algemeen)
-    async function addRemoveListenersToSavedItems() { // Added async
+    async function addRemoveListenersToSavedItems() {
         document.querySelectorAll('.remove-saved-item-btn').forEach(button => {
-            button.addEventListener('click', async (e) => { // Added async
+            button.addEventListener('click', async (e) => {
                 const idToRemove = e.target.closest('button').dataset.id;
                 const listName = e.target.closest('button').dataset.list;
                 
                 try {
-                    await deleteData(listName, idToRemove); // Changed from localStorage
+                    await deleteData(listName, idToRemove);
                     showMessage('Item verwijderd!', 'info');
                     // Herlaad de juiste lijst
                     if (listName === 'trainingDays') loadSavedDays();
                     if (listName === 'trainingWeeks') loadSavedWeeks();
                     if (listName === 'trainingBlocks') loadSavedBloks(); 
                     if (listName === 'customMeasurements') loadCustomMeasurements();
+                    if (listName === 'configuredSessions') loadSavedSessions(); // NEW
                     renderAllSavedItems(); // Update de gecombineerde lijst na verwijdering
                 } catch (error) {
                     console.error("Error deleting item:", error);
@@ -1412,20 +1603,37 @@ async function loadSavedWeeks() { // Added async
     }
 
     // --- Knoppen om nieuwe drag-items te maken (met kopieeroptie) ---
-    async function createNewItem(type, namePrompt, listName, icon, color) { // Added async
+    async function createNewItem(type, namePrompt, listName, icon, color) {
         const copyOption = confirm(`Wil je kopiëren van een bestaande ${type}?`);
         let itemName = '';
-        let contentToCopy = (type === 'day' || type === 'custom-training-measurement') ? [] : {}; 
+        let contentToCopy = null;
+        let repetitionStepToCopy = null; // NEW
 
         if (copyOption) {
             const itemIdToCopy = prompt(`Voer de ID in van de ${type} die je wilt kopiëren:`);
             if (itemIdToCopy) {
-                const itemToCopy = await getData(listName, itemIdToCopy); // Changed from localStorage
+                const itemToCopy = await getData(listName, itemIdToCopy);
                 if (itemToCopy) {
                     itemName = prompt(`${namePrompt} (kopie van "${itemToCopy.name}"):`);
                     if (itemName) {
-                        contentToCopy = JSON.parse(JSON.stringify(itemToCopy.activities || itemToCopy.days || itemToCopy.weeks || itemToCopy.customMeasurementDefinition));
-                        if (type === 'blok' && itemToCopy.notes) { // Corrected type to 'blok'
+                        if (type === 'day') {
+                            contentToCopy = itemToCopy.activities ? JSON.parse(JSON.stringify(itemToCopy.activities)) : null;
+                        } else if (type === 'week') {
+                            contentToCopy = itemToCopy.days ? JSON.parse(JSON.stringify(itemToCopy.days)) : null;
+                            repetitionStepToCopy = itemToCopy.repetitionStep || 1; // NEW
+                        } else if (type === 'blok') {
+                            contentToCopy = itemToCopy.weeks ? JSON.parse(JSON.stringify(itemToCopy.weeks)) : null;
+                        } else if (type === 'configured-session') { // NEW: Copy configured session content
+                            contentToCopy = itemToCopy.activities ? JSON.parse(JSON.stringify(itemToCopy.activities)) : null;
+                        } else if (type === 'custom-training-measurement') {
+                            contentToCopy = itemToCopy.customMeasurementDefinition ? JSON.parse(JSON.stringify(itemToCopy.customMeasurementDefinition)) : null;
+                        } else if (type === 'custom-rest-measurement') {
+                            contentToCopy = {
+                                customMeasurementDescription: itemToCopy.customMeasurementDescription,
+                                customMeasurementGoals: itemToCopy.customMeasurementGoals
+                            };
+                        }
+                        if (type === 'blok' && itemToCopy.notes) {
                             contentToCopy.notes = itemToCopy.notes;
                         }
                     }
@@ -1450,17 +1658,18 @@ async function loadSavedWeeks() { // Added async
             newItemElement.dataset.name = itemName;
             newItemElement.dataset.icon = icon;
             
+            newItemElement.dataset.content = (contentToCopy && (typeof contentToCopy === 'object' || Array.isArray(contentToCopy))) ? JSON.stringify(contentToCopy) : '';
+            if (repetitionStepToCopy) newItemElement.dataset.repetitionStep = repetitionStepToCopy; // NEW
+
             if (type === 'custom-training-measurement') {
                 newItemElement.dataset.customMeasurementType = 'training';
-                newItemElement.dataset.customMeasurementDefinition = JSON.stringify(contentToCopy);
-                newItemElement.dataset.content = '[]';
+                newItemElement.dataset.customMeasurementDefinition = (contentToCopy && (typeof contentToCopy === 'object' || Array.isArray(contentToCopy))) ? JSON.stringify(contentToCopy) : '';
             } else if (type === 'custom-rest-measurement') {
                 newItemElement.dataset.customMeasurementType = 'rest';
-                newItemElement.dataset.customMeasurementDescription = contentToCopy.customMeasurementDescription || '';
-                newItemElement.dataset.customMeasurementGoals = contentToCopy.customMeasurementGoals || '';
-                newItemElement.dataset.content = '[]';
-            } else {
-                newItemElement.dataset.content = JSON.stringify(contentToCopy);
+                newItemElement.dataset.customMeasurementDescription = contentToCopy?.customMeasurementDescription || '';
+                newItemElement.dataset.customMeasurementGoals = contentToCopy?.customMeasurementGoals || '';
+            } else if (type === 'configured-session') { // NEW: For configured session
+                newItemElement.dataset.content = (contentToCopy && Array.isArray(contentToCopy)) ? JSON.stringify(contentToCopy) : '';
             }
 
 
@@ -1477,23 +1686,28 @@ async function loadSavedWeeks() { // Added async
         }
     }
 
+    // NEW: Create Session button
+    document.getElementById('create-session-btn').addEventListener('click', () => {
+        createNewItem('configured-session', 'Naam voor de nieuwe sessie:', 'configuredSessions', 'fas fa-running', 'text-green-300');
+    });
+
     document.getElementById('create-day-btn').addEventListener('click', () => {
-        createNewItem('day', 'Naam voor de nieuwe dag:', 'trainingDays', 'fas fa-calendar-day', 'text-blue-300'); // Changed listName
+        createNewItem('day', 'Naam voor de nieuwe dag:', 'trainingDays', 'fas fa-calendar-day', 'text-blue-300');
     });
 
     document.getElementById('create-week-btn').addEventListener('click', () => {
-        createNewItem('week', 'Naam voor de nieuwe week:', 'trainingWeeks', 'fas fa-calendar-week', 'text-purple-300'); // Changed listName
+        createNewItem('week', 'Naam voor de nieuwe week:', 'trainingWeeks', 'fas fa-calendar-week', 'text-purple-300');
     });
 
     document.getElementById('create-block-btn').addEventListener('click', () => {
-        createNewItem('blok', 'Naam voor het nieuwe blok:', 'trainingBlocks', 'fas fa-layer-group', 'text-cyan-300'); // Changed listName and type to 'blok'
+        createNewItem('blok', 'Naam voor het nieuwe blok:', 'trainingBlocks', 'fas fa-layer-group', 'text-cyan-300');
     });
 
-    // Genereer tijdlabels voor de dagweergave
-    function generateTimeLabels() {
-        const timeLabelsContainer = document.getElementById('day-time-labels');
-        if (!timeLabelsContainer) { // Add null check
-            console.error("Element with ID 'day-time-labels' not found.");
+    // Genereer tijdlabels voor de sessie/dag weergave
+    function generateTimeLabels(containerId) { // Added containerId parameter
+        const timeLabelsContainer = document.getElementById(containerId);
+        if (!timeLabelsContainer) {
+            console.error(`Element with ID '${containerId}' not found.`);
             return;
         }
         timeLabelsContainer.innerHTML = '';
@@ -1509,9 +1723,8 @@ async function loadSavedWeeks() { // Added async
         }
     }
 
-    // generateTimeLabels() is now called via the tab click event listener
-
-    saveCustomTrainingBtn.addEventListener('click', async () => { // Added async
+    // saveCustomTrainingBtn en saveCustomRestBtn blijven hetzelfde
+    saveCustomTrainingBtn.addEventListener('click', async () => {
         const trainingName = customTrainingNameInput.value.trim();
         if (!trainingName) {
             showMessage('Geef de aangepaste training een naam.', 'error');
@@ -1520,12 +1733,12 @@ async function loadSavedWeeks() { // Added async
 
         const definition = [];
         let hasError = false;
-        customTrainingZonesDropZone.querySelectorAll('.dropped-item').forEach(item => {
+        customTrainingZonesDropZone.querySelectorAll('.timeline-item').forEach(item => {
             const itemType = item.dataset.type;
             const subItem = {
                 type: itemType,
                 name: item.dataset.name,
-                icon: item.querySelector('i').className,
+                icon: item.querySelector('.element-header i').className,
                 zoneColor: item.dataset.zoneColor || '',
                 inputType: item.dataset.inputType || null,
                 progressionEnabled: item.querySelector('[data-progression-checkbox]') ? item.querySelector('[data-progression-checkbox]').checked : false,
@@ -1582,14 +1795,14 @@ async function loadSavedWeeks() { // Added async
             customMeasurementDefinition: definition
         };
 
-        await putData('customMeasurements', newCustomTraining); // Changed from localStorage
+        await putData('customMeasurements', newCustomTraining);
         showMessage('Aangepaste training opgeslagen!', 'success');
         customTrainingNameInput.value = '';
         customTrainingZonesDropZone.innerHTML = '<p class="text-gray-400 text-center text-sm">Sleep HR zones of oefeningen hierheen om de training te definiëren.</p>';
         loadCustomMeasurements();
     });
 
-    saveCustomRestBtn.addEventListener('click', async () => { // Added async
+    saveCustomRestBtn.addEventListener('click', async () => {
         const restName = customRestNameInput.value.trim();
         const restDescription = customRestDescriptionInput.value.trim();
         const restGoals = customRestGoalsInput.value.trim();
@@ -1611,7 +1824,7 @@ async function loadSavedWeeks() { // Added async
             customMeasurementGoals: restGoals
         };
 
-        await putData('customMeasurements', newCustomRest); // Changed from localStorage
+        await putData('customMeasurements', newCustomRest);
         showMessage('Aangepaste rustmeting opgeslagen!', 'success');
         customRestNameInput.value = '';
         customRestDescriptionInput.value = '';
@@ -1619,11 +1832,12 @@ async function loadSavedWeeks() { // Added async
         loadCustomMeasurements();
     });
 
-    async function loadCustomMeasurements() { // Added async
+    async function loadCustomMeasurements() {
         const availableModulesContainer = document.getElementById('available-modules');
+        // Remove existing custom measurement items from the sidebar to prevent duplicates
         availableModulesContainer.querySelectorAll('.drag-item[data-type^="custom-"]').forEach(item => item.remove());
 
-        const savedCustomMeasurements = await getAllData('customMeasurements'); // Changed from localStorage
+        const savedCustomMeasurements = await getAllData('customMeasurements');
         const customMeasurementsList = document.getElementById('custom-measurements-list');
         customMeasurementsList.innerHTML = '';
 
@@ -1644,7 +1858,7 @@ async function loadSavedWeeks() { // Added async
 
             if (measurement.customMeasurementType === 'training') {
                 measurementItem.dataset.customMeasurementType = 'training';
-                measurementItem.dataset.customMeasurementDefinition = JSON.stringify(measurement.customMeasurementDefinition);
+                measurementItem.dataset.customMeasurementDefinition = (measurement.customMeasurementDefinition && (typeof measurement.customMeasurementDefinition === 'object' || Array.isArray(measurement.customMeasurementDefinition))) ? JSON.stringify(measurement.customMeasurementDefinition) : '';
             } else if (measurement.customMeasurementType === 'rest') {
                 measurementItem.dataset.customMeasurementType = 'rest';
                 measurementItem.dataset.customMeasurementDescription = measurement.customMeasurementDescription;
@@ -1673,15 +1887,19 @@ async function loadSavedWeeks() { // Added async
     categorySelect.addEventListener('change', (e) => {
         const selectedCategory = e.target.value;
         categoryContents.forEach(contentDiv => {
-            if (contentDiv.id === `category-${selectedCategory}`) {
-                contentDiv.classList.add('active');
-                contentDiv.style.display = 'block'; // Zorg dat de geselecteerde categorie zichtbaar is
-                contentDiv.querySelectorAll('.drag-item').forEach(item => item.style.display = 'flex'); // Toon items in de categorie
-            } else {
-                contentDiv.classList.remove('active');
-                contentDiv.style.display = 'none'; // Verberg andere categorieën
-            }
+            // Hide all category content divs initially
+            contentDiv.style.display = 'none';
+            contentDiv.classList.remove('active');
+            // Hide all individual drag-items within this category
+            contentDiv.querySelectorAll('.drag-item').forEach(el => el.style.display = 'none');
         });
+
+        const activeCategoryContent = document.getElementById(`category-${selectedCategory}`);
+        if (activeCategoryContent) {
+            activeCategoryContent.classList.add('active');
+            activeCategoryContent.style.display = 'block'; // Zorg dat de geselecteerde categorie zichtbaar is
+            activeCategoryContent.querySelectorAll('.drag-item').forEach(item => item.style.display = 'flex'); // Toon items in de categorie
+        }
     });
 
     // Event listener voor inklapbare headers
@@ -1707,8 +1925,8 @@ async function loadSavedWeeks() { // Added async
             if (formBuilderTab) formBuilderTab.style.display = 'none';
             if (formBuilderTabButton) formBuilderTabButton.style.display = 'none';
         }
-        // Activeer de Dag tab bij het laden van de pagina
-        document.querySelector('.tab-button[data-tab="dag"]').click();
+        // Activeer de Sessie Bouwer tab bij het laden van de pagina
+        document.querySelector('.tab-button[data-tab="session-builder"]').click(); // NEW: Default to Session Builder
         renderAllSavedItems(); // Laad alle opgeslagen items bij opstart
         // Open de eerste inklapbare sectie standaard
         const firstCollapsibleHeader = document.querySelector('.collapsible-header');

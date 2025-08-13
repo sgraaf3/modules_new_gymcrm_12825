@@ -150,13 +150,14 @@
             opacity: 1;
         }
 
-        /* Dag Weergave Specifieke Stijlen */
+        /* Sessie Bouwer & Dag Weergave Specifieke Stijlen */
+        /* session-timeline-container is nu verwijderd, alleen day-timeline-container blijft over */
         .day-timeline-container {
             display: grid;
             grid-template-columns: 50px 1fr; /* Tijdlabel kolom en inhoudskolom */
             gap: 0.5rem;
             margin-top: 1rem;
-            border: 2px dashed #4b5563;
+            border: 2px dashed #4b5563; /* border-gray-600 */
             border-radius: 0.5rem;
             padding: 1rem;
             min-height: 300px; /* Voldoende hoogte voor de tijdlijn */
@@ -178,6 +179,7 @@
             align-items: center;
             justify-content: flex-end;
         }
+        /* session-drop-zone-content is nu verwijderd, alleen day-drop-zone-content blijft over */
         .day-drop-zone-content { /* Dit is de werkelijke dropzone */
             position: relative; /* Cruciaal voor absolute positioning van children */
             min-height: 1200px; /* Zorg dat het dropgebied groot genoeg is voor 24 uur */
@@ -185,8 +187,9 @@
             padding: 0; /* Remove padding here, items will position themselves */
             border: none; /* Remove border from here, it's on the container */
         }
+        /* timeline-item is nu alleen voor day-timeline-container */
         .timeline-item {
-            position: absolute; /* Position absolutely within day-drop-zone-content */
+            position: absolute; /* Position absolutely within day-timeline-container */
             left: 0;
             width: 100%; /* Take full width of the content area */
             background-color: #2c2c34;
@@ -312,10 +315,38 @@
             background-color: #2c2c34; /* Donkerder dan de algemene drag-items */
             border: 1px solid #4b5563;
         }
+
+        /* Collapsible section styling */
+        .collapsible-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #374151;
+            cursor: pointer;
+            color: #e5e7eb;
+            font-weight: bold;
+            font-size: 1.125rem;
+            margin-top: 1rem;
+        }
+        .collapsible-header i {
+            transition: transform 0.2s ease-in-out;
+        }
+        .collapsible-header.collapsed i {
+            transform: rotate(-90deg);
+        }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        .collapsible-content.expanded {
+            max-height: 500px; /* Max height to allow smooth transition, adjust as needed */
+        }
     </style>
 </head>
 <body>
-    <div class="app-container">
+    <div class="app-container" id="lesson-schedule-builder-container">
         <div class="sidebar">
             <h2 class="text-xl font-bold mb-4 text-gray-100">Beschikbare Elementen</h2>
 
@@ -557,7 +588,7 @@
                     </div>
 
                     <h4 class="text-md font-semibold mt-4 mb-2 text-gray-300">Voeding Schema's</h4>
-                    <div class="drag-item" draggable="true" data-type="day" data-name="Voedingsplan Dag" data-icon="fas fa-utensils" data-content='[{"type":"nutrition-activity","name":"Maaltijdplan","icon":"fas fa-utensils","zoneColor":"text-lime-300","duration":null,"notes":"Volg gepersonaliseerd maaltijdplan","topPosition":0},{"type":"nutrition-activity","name":"Hydratatie Doel","icon":"fas fa-water","zoneColor":"text-blue-300","duration":null,"notes":"Drink 3 liter water","topPosition":50}]'>
+                    <div class="drag-item" draggable="true" data-type="day" data-name="Voedingsplan Dag" data-icon="fas fa-utensils" data-zone-color="text-lime-300" data-content='[{"type":"nutrition-activity","name":"Maaltijdplan","icon":"fas fa-utensils","zoneColor":"text-lime-300","duration":null,"notes":"Volg gepersonaliseerd maaltijdplan","topPosition":0},{"type":"nutrition-activity","name":"Hydratatie Doel","icon":"fas fa-water","zoneColor":"text-blue-300","duration":null,"notes":"Drink 3 liter water","topPosition":50}]'>
                         <span><i class="fas fa-utensils mr-2 text-lime-300"></i>Voedingsplan Dag</span>
                         <i class="fas fa-grip-vertical text-gray-400"></i>
                     </div>
@@ -568,12 +599,17 @@
                     <p class="text-gray-400 text-sm">Geen aangepaste metingen.</p>
                 </div>
 
+                <!-- Nieuwe container voor alle opgeslagen dagen, weken, blokken, en sessies -->
                 <div id="all-saved-items-list" class="category-content">
                     <h3 class="text-lg font-bold mt-6 mb-2 text-gray-100">Opgeslagen Schema's</h3>
                     <p class="text-gray-400 text-sm">Nog geen schema's opgeslagen.</p>
                 </div>
 
-                <button id="create-day-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
+                <!-- Create buttons -->
+                <button id="create-session-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
+                    <i class="fas fa-plus mr-2"></i>Maak Nieuwe Sessie
+                </button>
+                <button id="create-day-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-2">
                     <i class="fas fa-plus mr-2"></i>Maak Nieuwe Dag
                 </button>
                 <button id="create-week-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-2">
@@ -590,28 +626,53 @@
             <button id="settings-btn" class="settings-icon-btn" title="Instellingen"><i class="fas fa-cog"></i></button>
 
             <div class="flex border-b border-gray-700 mb-4">
-                <button class="tab-button active" data-tab="dag">Dag</button>
+                <button class="tab-button active" data-tab="session-builder">Sessie Bouwer</button>
+                <button class="tab-button" data-tab="dag">Dag</button>
                 <button class="tab-button" data-tab="week">Week</button>
                 <button class="tab-button" data-tab="blok">Blok</button>
                 <button class="tab-button" data-tab="form-builder">Form Builder</button>
             </div>
 
-            <div id="tab-dag" class="tab-content active">
+            <div id="tab-session-builder" class="tab-content active">
+                <h2 class="text-xl font-bold mb-2 text-gray-100">Configureer Sessie</h2>
+                <input type="text" id="current-session-name" placeholder="Naam van deze sessie (bijv. HIIT 30/30)" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full mb-4">
+                <div id="session-drop-zone" class="drop-zone flex flex-col gap-2"> <!-- Simplified drop zone for stacking -->
+                    <p class="text-gray-400 text-center">Sleep individuele activiteiten of HR-zones hierheen om de sessie te configureren.</p>
+                </div>
+                <button id="save-session-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
+                    <i class="fas fa-save mr-2"></i>Sla Sessie op
+                </button>
+                
+                <div class="collapsible-header" data-collapsible-target="saved-sessions-collapsible-content">
+                    <h3 class="text-lg font-bold text-gray-100">Opgeslagen Sessies</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div id="saved-sessions-collapsible-content" class="collapsible-content">
+                    <div id="saved-sessions-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
+                        <p class="text-gray-400 col-span-full">Nog geen sessies opgeslagen.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-dag" class="tab-content hidden">
                 <h2 class="text-xl font-bold mb-2 text-gray-100">Configureer Dag</h2>
                 <input type="text" id="current-day-name" placeholder="Naam van deze dag (bijv. Maandag Intensief)" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full mb-4">
-                <div class="day-timeline-container">
-                    <div class="time-labels" id="day-time-labels">
-                        </div>
-                    <div id="day-drop-zone" class="day-drop-zone-content drop-zone">
-                        <p class="text-gray-400 text-center">Sleep hartslagzones, rust, metingen of documenten hierheen om de dag te configureren.</p>
-                    </div>
+                <div id="day-drop-zone" class="drop-zone"> <!-- Simplified drop zone for days -->
+                    <p class="text-gray-400 text-center">Sleep opgeslagen sessies of dagen hierheen om de dag te configureren.</p>
                 </div>
                 <button id="save-day-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
                     <i class="fas fa-save mr-2"></i>Sla Dag op
                 </button>
-                <h3 class="text-lg font-bold mt-6 mb-2 text-gray-100">Opgeslagen Dagen</h3>
-                <div id="saved-days-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <p class="text-gray-400 col-span-full">Nog geen dagen opgeslagen.</p>
+                
+                <!-- Collapsible section for Opgeslagen Dagen -->
+                <div class="collapsible-header" data-collapsible-target="saved-days-collapsible-content">
+                    <h3 class="text-lg font-bold text-gray-100">Opgeslagen Dagen</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div id="saved-days-collapsible-content" class="collapsible-content">
+                    <div id="saved-days-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
+                        <p class="text-gray-400 col-span-full">Nog geen dagen opgeslagen.</p>
+                    </div>
                 </div>
             </div>
 
@@ -665,9 +726,16 @@
                 <button id="save-week-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
                     <i class="fas fa-save mr-2"></i>Sla Week op
                 </button>
-                <h3 class="text-lg font-bold mt-6 mb-2 text-gray-100">Opgeslagen Weken</h3>
-                <div id="saved-weeks-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <p class="text-gray-400 col-span-full">Nog geen weken opgeslagen.</p>
+                
+                <!-- Collapsible section for Opgeslagen Weken -->
+                <div class="collapsible-header" data-collapsible-target="saved-weeks-collapsible-content">
+                    <h3 class="text-lg font-bold text-gray-100">Opgeslagen Weken</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div id="saved-weeks-collapsible-content" class="collapsible-content">
+                    <div id="saved-weeks-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
+                        <p class="text-gray-400 col-span-full">Nog geen weken opgeslagen.</p>
+                    </div>
                 </div>
             </div>
 
@@ -681,9 +749,16 @@
                 <button id="save-blok-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
                     <i class="fas fa-save mr-2"></i>Sla Blok op
                 </button>
-                <h3 class="text-lg font-bold mt-6 mb-2 text-gray-100">Opgeslagen Blokken</h3>
-                <div id="saved-bloks-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <p class="text-gray-400 col-span-full">Nog geen blokken opgeslagen.</p>
+                
+                <!-- Collapsible section for Opgeslagen Blokken -->
+                <div class="collapsible-header" data-collapsible-target="saved-bloks-collapsible-content">
+                    <h3 class="text-lg font-bold text-gray-100">Opgeslagen Blokken</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div id="saved-bloks-collapsible-content" class="collapsible-content">
+                    <div id="saved-bloks-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
+                        <p class="text-gray-400 col-span-full">Nog geen blokken opgeslagen.</p>
+                    </div>
                 </div>
             </div>
 

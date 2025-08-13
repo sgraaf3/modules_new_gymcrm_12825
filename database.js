@@ -1,5 +1,5 @@
 const DB_NAME = 'SportsCRMDB';
-const DB_VERSION = 15; // VERSIE VERHOOGD NAAR 15 voor de nieuwe trainingsschema stores
+const DB_VERSION = 17; // VERSIE VERHOOGD NAAR 17 om de IndexedDB upgrade te forceren
 
 const USER_PROFILE_STORE = 'userProfile';
 const TRAINING_SESSIONS_STORE = 'trainingSessions';
@@ -21,8 +21,8 @@ const DOCS_STORE = 'documents';
 const TOGGLE_SETTINGS_STORE = 'toggleSettings';
 const DASHBOARD_SETTINGS_STORE = 'dashboardSettings';
 const NUTRITION_PROGRAMS_STORE = 'nutritionPrograms';
-const ASSIGNED_NUTRITION_PROGRAMS_STORE = 'assignedNutritionPrograms'; // NIEUW
-const FOOD_LOGS_STORE = 'foodLogs'; // NIEUW
+const ASSIGNED_NUTRITION_PROGRAMS_STORE = 'assignedNutritionPrograms';
+const FOOD_LOGS_STORE = 'foodLogs';
 const SPORT_STORE = 'sportData';
 const ACTIVITIES_STORE = 'activitiesData';
 const PERMISSIONS_STORE = 'permissionsData';
@@ -30,14 +30,17 @@ const NOTES_STORE = 'notesData';
 const ACTION_CENTER_STORE = 'actionCenterData';
 const USER_ROLE_STORE = 'userRoles';
 const SLEEP_DATA_STORE = 'sleepData';
-const LESSONS_STORE = 'lessons'; // NIEUW: Store voor individuele lessen
-const TEST_PROTOCOLS_STORE = 'testProtocols'; // NIEUW
+const LESSONS_STORE = 'lessons';
+const TEST_PROTOCOLS_STORE = 'testProtocols';
 
 // New stores for schedule builder content
 const TRAINING_DAYS_STORE = 'trainingDays';
 const TRAINING_WEEKS_STORE = 'trainingWeeks';
 const TRAINING_BLOCKS_STORE = 'trainingBlocks';
-const CUSTOM_MEASUREMENTS_STORE = 'customMeasurements'; // For custom training/rest measurements
+const CUSTOM_MEASUREMENTS_STORE = 'customMeasurements'; // For custom training/rest measurements (from form builder)
+const CONFIGURED_SESSIONS_STORE = 'configuredSessions'; // NIEUW: Voor opgeslagen sessies uit de Sessie Bouwer
+const ROLES_STORE = 'roles'; // Added for permissions module
+const LINKED_DOCUMENTS_STORE = 'linkedDocuments'; // Added for documents module
 
 let dbInstance;
 
@@ -64,16 +67,22 @@ export async function openDatabase() {
                 'restSessionsFree',
                 'restSessionsAdvanced',
                 LESSONS_STORE, TEST_PROTOCOLS_STORE,
-                TRAINING_DAYS_STORE, TRAINING_WEEKS_STORE, TRAINING_BLOCKS_STORE, CUSTOM_MEASUREMENTS_STORE // NIEUW
+                TRAINING_DAYS_STORE, TRAINING_WEEKS_STORE, TRAINING_BLOCKS_STORE, CUSTOM_MEASUREMENTS_STORE,
+                CONFIGURED_SESSIONS_STORE, // NIEUW
+                ROLES_STORE, // NIEUW
+                LINKED_DOCUMENTS_STORE // NIEUW
             ];
 
             stores.forEach(storeName => {
                 if (!db.objectStoreNames.contains(storeName)) {
                     let options = { keyPath: 'id', autoIncrement: true };
-                    if (storeName === USER_PROFILE_STORE || storeName === ADMIN_SECRET_STORE || storeName === LESSON_SCHEDULES_STORE) {
-                        options = { keyPath: 'id' }; // These stores use 'id' as keyPath, no autoIncrement
-                    } else if (storeName === USER_ROLE_STORE) {
-                        options = { keyPath: 'userId' }; // userRoles uses 'userId' as keyPath
+                    if (storeName === USER_PROFILE_STORE || storeName === ADMIN_SECRET_STORE || storeName === LESSON_SCHEDULES_STORE || storeName === USER_ROLE_STORE) {
+                        // userRoles uses 'userId' as keyPath, not 'id'
+                        if (storeName === USER_ROLE_STORE) {
+                            options = { keyPath: 'userId' };
+                        } else {
+                            options = { keyPath: 'id' }; // These stores use 'id' as keyPath, no autoIncrement
+                        }
                     }
                     db.createObjectStore(storeName, options);
                 }

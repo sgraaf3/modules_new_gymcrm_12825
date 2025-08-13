@@ -69,8 +69,8 @@ export async function initDashboardOverviewView() {
 
         // Nieuwe Leden (Deze Maand) (KPI)
         const newMembersMonth = members.filter(member => {
-            const joinDate = new Date(member.joinDate);
-            return joinDate.getMonth() === currentMonth && joinDate.getFullYear() === currentYear;
+            const joinDate = new Date(member.joinDate || ''); // Voeg null-check toe
+            return !isNaN(joinDate.getTime()) && joinDate.getMonth() === currentMonth && joinDate.getFullYear() === currentYear;
         }).length;
         if (overviewNewMembersMonth) overviewNewMembersMonth.textContent = newMembersMonth;
 
@@ -99,36 +99,37 @@ export async function initDashboardOverviewView() {
         let upcomingItems = [];
 
         // Voeg algemene schema's toe (als ze een 'nextOccurrence' of vergelijkbaar veld hebben)
-        // Voor nu, een placeholder:
+        // OPMERKING: 'schedules' store heeft momenteel geen 'nextOccurrence' veld.
+        // Deze sectie toont een placeholder tenzij de schema-structuur wordt uitgebreid.
         schedules.forEach(schedule => {
-            // Aanname: schema's hebben een 'dateCreated' of 'nextOccurrence' veld
-            // Voor dit voorbeeld gebruiken we een placeholder voor de datum
             upcomingItems.push({
                 type: 'Algemeen Schema',
                 name: schedule.name,
-                date: 'Toekomstige datum (placeholder)' // Moet worden bijgewerkt met echte planning
+                date: 'Onbekend', // Placeholder, vereist concrete planning in 'schedules' store
+                time: ''
             });
         });
 
         // Voeg lessen uit lesroosters toe (uit de huidige week of toekomstige weken)
-        // Dit is complexer omdat lessonSchedules week-objecten zijn. We moeten in de schedule-objecten duiken.
+        // OPMERKING: De datumgeneratie voor lessen is hier nog gesimuleerd/random.
+        // Een robuuste implementatie zou de weeknummer en dag van de week omzetten naar een concrete datum.
         const allLessonSchedules = await getAllData('lessonSchedules');
         allLessonSchedules.forEach(weekSchedule => {
             if (weekSchedule.schedule) {
                 for (const dayOfWeek in weekSchedule.schedule) {
                     weekSchedule.schedule[dayOfWeek].forEach(lesson => {
-                        // Creëer een dummy datum voor de les om te sorteren
-                        // Dit is een simpele benadering, echte implementatie zou de weeknummer en dag van de week omzetten naar een concrete datum
-                        const dummyDate = new Date(); // Gebruik huidige datum als basis
+                        // Creëer een dummy datum voor de les om te sorteren (nog steeds gesimuleerd)
+                        const dummyDate = new Date();
                         dummyDate.setDate(dummyDate.getDate() + (Math.floor(Math.random() * 30))); // Random toekomstige datum
-                        dummyDate.setHours(parseInt(lesson.startTime.split(':')[0]), parseInt(lesson.startTime.split(':')[1]));
+                        const [hours, minutes] = (lesson.startTime || '00:00').split(':').map(Number); // Null-check voor startTime
+                        dummyDate.setHours(hours, minutes);
 
                         if (dummyDate > now) { // Alleen toekomstige lessen
                             upcomingItems.push({
                                 type: 'Les',
                                 name: lesson.name,
-                                date: dummyDate.toLocaleString(),
-                                time: lesson.startTime
+                                date: dummyDate.toISOString(), // Gebruik ISO string voor consistente opslag/sortering
+                                time: lesson.startTime || ''
                             });
                         }
                     });
@@ -143,8 +144,8 @@ export async function initDashboardOverviewView() {
                 upcomingItems.push({
                     type: 'Vergadering',
                     name: meeting.subject,
-                    date: meetingDateTime.toLocaleString(),
-                    time: meeting.time
+                    date: meetingDateTime.toISOString(), // Gebruik ISO string
+                    time: meeting.time || ''
                 });
             }
         });
@@ -160,6 +161,7 @@ export async function initDashboardOverviewView() {
                 top5Upcoming.forEach(item => {
                     const itemEntry = document.createElement('div');
                     itemEntry.className = 'text-sm text-gray-300 border-b border-gray-700 last:border-b-0 pb-1 pt-1';
+                    // Gebruik toLocaleDateString() voor de datum en voeg tijd apart toe
                     itemEntry.textContent = `${item.type}: ${item.name} (${new Date(item.date).toLocaleDateString()} ${item.time || ''})`;
                     overviewUpcomingSchedules.appendChild(itemEntry);
                 });
