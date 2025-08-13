@@ -1,0 +1,133 @@
+<div class="top-nav">
+    <button class="icon-button" data-action="backToDashboard"><i class="fas fa-chevron-left"></i></button>
+    <span>Lessenplanner</span>
+    <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+</div>
+<div class="app-container" id="lesson-planner-container">
+    <div class="sidebar">
+        <h2 class="text-xl font-bold mb-4 text-gray-100">Beschikbare Elementen</h2>
+
+        <div id="available-lesson-modules">
+            <h3 class="text-lg font-bold mt-6 mb-2 text-gray-100">Individuele Lessen</h3>
+            <div id="available-lessons-list" class="flex flex-col gap-3 mb-4">
+                <p class="text-gray-400">Laden...</p>
+            </div>
+            <button id="create-new-lesson-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
+                <i class="fas fa-plus mr-2"></i>Maak Nieuwe Les
+            </button>
+
+            <div class="collapsible-header" data-collapsible-target="saved-lesson-items-collapsible-content">
+                <h3 class="text-lg font-bold text-gray-100">Opgeslagen Les Schema's</h3>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="saved-lesson-items-collapsible-content" class="collapsible-content expanded">
+                <div id="all-saved-lesson-items-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
+                    <p class="text-gray-400 col-span-full">Nog geen les schema's opgeslagen.</p>
+                </div>
+            </div>
+
+            <button id="create-lesson-day-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
+                <i class="fas fa-plus mr-2"></i>Maak Nieuwe Les Dag
+            </button>
+            <button id="create-lesson-week-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-2">
+                <i class="fas fa-plus mr-2"></i>Maak Nieuwe Les Week
+            </button>
+            <button id="create-lesson-block-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-2">
+                <i class="fas fa-plus mr-2"></i>Maak Nieuw Les Blok
+            </button>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <h1 class="text-2xl font-bold mb-4 text-gray-100">Lesrooster Bouwer</h1>
+        
+        <div class="flex border-b border-gray-700 mb-4">
+            <button class="tab-button active" data-tab="lesson-builder">Nieuwe Les</button>
+            <button class="tab-button" data-tab="lesson-day-builder">Les Dag</button>
+            <button class="tab-button" data-tab="lesson-week-builder">Les Week</button>
+            <button class="tab-button" data-tab="lesson-block-builder">Les Blok</button>
+        </div>
+        
+        <div id="tab-lesson-builder" class="tab-content active">
+            <h2 class="text-xl font-bold mb-2 text-gray-100">Configureer Nieuwe Les</h2>
+            <form id="lessonForm" class="flex flex-col gap-3">
+                <input type="hidden" id="lessonId">
+                <div class="form-group"><label for="lessonName">Naam Les:</label><input type="text" id="lessonName" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200"></div>
+                <div class="form-group"><label for="lessonCategory">Sectie/Categorie:</label><input type="text" id="lessonCategory" required class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200" placeholder="Bijv. Fitness, Budo, Dans, Zwemmen"></div>
+                <div class="form-group">
+                    <label for="lessonTeacher">Docent:</label>
+                    <select id="lessonTeacher" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                        <option value="">Selecteer Docent</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="lessonRoom">Lokaal:</label>
+                    <select id="lessonRoom" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200">
+                        <option value="">Selecteer Lokaal</option>
+                    </select>
+                </div>
+                <div class="form-group"><label for="lessonTotalPlaces">Max. Deelnemers:</label><input type="number" id="lessonTotalPlaces" min="1" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200"></div>
+                <div class="form-group"><label for="lessonDuration">Duur (minuten):</label><input type="number" id="lessonDuration" min="1" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200"></div>
+                <div class="form-group"><label for="lessonExplanation">Uitleg:</label><textarea id="lessonExplanation" rows="3" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200"></textarea></div>
+                <button type="submit" id="saveLessonBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Sla Les op</button>
+                <button type="button" id="clearLessonFormBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Formulier Leegmaken</button>
+            </form>
+        </div>
+        
+        <div id="tab-lesson-day-builder" class="tab-content hidden">
+            <h2 class="text-xl font-bold mb-2 text-gray-100">Configureer Les Dag</h2>
+            <input type="text" id="current-lesson-day-name" placeholder="Naam van deze dag (bijv. Maandag Avondlessen)" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full mb-4">
+            <div class="day-timeline-container">
+                <div class="time-labels" id="lesson-day-time-labels">
+                    </div>
+                <div id="lesson-day-drop-zone" class="day-drop-zone-content drop-zone">
+                    <p class="text-gray-400 text-center">Sleep lessen hierheen om de dag te configureren.</p>
+                </div>
+            </div>
+            <button id="save-lesson-day-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
+                <i class="fas fa-save mr-2"></i>Sla Les Dag op
+            </button>
+        </div>
+
+        <div id="tab-lesson-week-builder" class="tab-content hidden">
+            <h2 class="text-xl font-bold mb-2 text-gray-100">Configureer Les Week</h2>
+            <input type="text" id="current-schedule-name" placeholder="Naam voor dit rooster (bijv. Week 1)" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full mb-4">
+            <div class="calendar-grid-lesson">
+                <div class="calendar-header-day">Maandag</div>
+                <div class="calendar-header-day">Dinsdag</div>
+                <div class="calendar-header-day">Woensdag</div>
+                <div class="calendar-header-day">Donderdag</div>
+                <div class="calendar-header-day">Vrijdag</div>
+                <div class="calendar-header-day">Zaterdag</div>
+                <div class="calendar-header-day">Zondag</div>
+                
+                <div class="calendar-day-cell-lesson lesson-drop-zone" data-day-of-week="Maandag"><p class="text-gray-400 text-center text-sm">Sleep les dag hier</p></div>
+                <div class="calendar-day-cell-lesson lesson-drop-zone" data-day-of-week="Dinsdag"><p class="text-gray-400 text-center text-sm">Sleep les dag hier</p></div>
+                <div class="calendar-day-cell-lesson lesson-drop-zone" data-day-of-week="Woensdag"><p class="text-gray-400 text-center text-sm">Sleep les dag hier</p></div>
+                <div class="calendar-day-cell-lesson lesson-drop-zone" data-day-of-week="Donderdag"><p class="text-gray-400 text-center text-sm">Sleep les dag hier</p></div>
+                <div class="calendar-day-cell-lesson lesson-drop-zone" data-day-of-week="Vrijdag"><p class="text-gray-400 text-center text-sm">Sleep les dag hier</p></div>
+                <div class="calendar-day-cell-lesson lesson-drop-zone" data-day-of-week="Zaterdag"><p class="text-gray-400 text-center text-sm">Sleep les dag hier</p></div>
+                <div class="calendar-day-cell-lesson lesson-drop-zone" data-day-of-week="Zondag"><p class="text-gray-400 text-center text-sm">Sleep les dag hier</p></div>
+            </div>
+            <button id="saveLessonWeekBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
+                <i class="fas fa-save mr-2"></i>Sla Les Week op
+            </button>
+        </div>
+
+        <div id="tab-lesson-block-builder" class="tab-content hidden">
+            <h2 class="text-xl font-bold mb-2 text-gray-100">Configureer Les Blok</h2>
+            <input type="text" id="current-lesson-block-name" placeholder="Naam van dit blok (bijv. Zomerrooster)" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full mb-4">
+            <textarea id="current-lesson-block-notes" placeholder="Notities voor dit blok (bijv. Belangrijke wijzigingen, focuspunten)" rows="3" class="p-2 rounded-md bg-gray-700 border border-gray-600 text-gray-200 w-full mb-4"></textarea>
+            <div id="lesson-block-drop-zone" class="drop-zone">
+                <p class="text-gray-400 text-center">Sleep les weken hierheen om het blok te configureren.</p>
+            </div>
+            <button id="save-lesson-block-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 w-full mt-4">
+                <i class="fas fa-save mr-2"></i>Sla Les Blok op
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="message-box" class="message-box"></div>
+
+<script type="module" src="../js/lessonPlannerView.js"></script>

@@ -30,7 +30,7 @@ const NOTES_STORE = 'notesData';
 const ACTION_CENTER_STORE = 'actionCenterData';
 const USER_ROLE_STORE = 'userRoles';
 const SLEEP_DATA_STORE = 'sleepData';
-const LESSONS_STORE = 'lessons';
+const LESSONS_STORE = 'lessons'; // Correctly defined
 const TEST_PROTOCOLS_STORE = 'testProtocols';
 
 // New stores for schedule builder content

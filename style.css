@@ -1003,10 +1003,10 @@ body {
 
 /* Kleurcodering voor sportsecties */
 .bg-fitness { background-color: #ef4444; } /* Red */
-.bg-budo { background-color: #e5e7eb; color: #1f2937; } /* White with dark text */
-.bg-dance { background-color: #facc15; } /* Yellow */
-.bg-swim { background-color: #3b82f6; } /* Blue */
-.bg-group { background-color: #22c55e; } /* Green */
+.bg-budo { background-color: #3b82f6; } /* Blue */
+.bg-dance { background-color: #c084fc; } /* Purple */
+.bg-zwemmen { background-color: #22d3ee; } /* Cyan */
+.bg-groep { background-color: #4ade80; } /* Green */
 /* Default is al gedefinieerd in JS als bg-gray-600 */
 
 /* Modale overlay stijlen (indien nodig, zorg dat deze niet conflicteren met bestaande) */

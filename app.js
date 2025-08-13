@@ -46,6 +46,7 @@ import { initPermissionsView } from './js/permissionsView.js';
 import { initNotesView } from './js/notesView.js';
 import { initActionCenterView } from './js/actionCenterView.js';
 import { initScheduleBuilderView } from './js/scheduleBuilderView.js';
+import { initLessonPlannerView } from './js/lessonPlannerView.js'; // NIEUW: Importeer de nieuwe Lessenplanner
 
 // Importeer het nieuwe notificatiesysteem
 import { showNotification } from './js/notifications.js';
@@ -98,6 +99,7 @@ const viewConfig = {
     'schedulesView': { html: 'views/schedulesView.html', init: initSchedulesView },
     'lessonSchedulerView': { html: 'views/lessonSchedulerView.html', init: initLessonSchedulerView },
     'lessonScheduleBuilderView': { html: './views/lessonScheduleBuilder.html', init: LessonScheduleBuilder.initLessonScheduleBuilderView }, // FIX: Gebruik namespace
+    'lessonPlannerView': { html: './views/lessonPlannerView.html', init: initLessonPlannerView }, // NIEUW: Lessenplanner
     'messagesView': { html: './views/messagesView.html', init: initMessagesView },
     'memberSpecificprogressView': { html: './views/memberSpecificprogressView.html', init: initMemberSpecificprogressView },
     'webGraphsView': { html: './views/webGraphsView.html', init: showDetailedGraph },
