@@ -136,13 +136,20 @@ export async function initRegistryView(showView) { // showView is passed for nav
             event.preventDefault();
             
             const memberData = {
-                id: memberIdInput.value ? parseInt(memberIdInput.value) : undefined, // Use undefined for autoIncrement
                 name: memberNameInput.value,
                 email: memberEmailInput.value,
                 phone: memberPhoneInput.value,
                 joinDate: memberJoinDateInput.value,
                 status: memberStatusSelect.value
             };
+
+            // Only add the 'id' property if it's an existing record being updated
+            if (memberIdInput.value) {
+                const parsedId = parseInt(memberIdInput.value);
+                if (!isNaN(parsedId)) {
+                    memberData.id = parsedId;
+                }
+            }
 
             const role = memberRoleSelect.value;
 
