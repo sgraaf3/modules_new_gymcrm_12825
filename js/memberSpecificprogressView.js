@@ -1,7 +1,7 @@
 // Bestand: js/views/memberSpecificprogressView.js
 // Bevat logica voor het weergeven van gebruikersprogressie en gedetailleerde grafieken.
 
-import { getData, getAllData, getUserRole } from '../database.js'; // Let op het relatieve pad
+import { getData, getAllData, getUserRole, getOrCreateUserId } from '../database.js'; // Let op het relatieve pad
 
 let userProgressMainChart;
 let currentDetailedChart; // Houd de gedetailleerde grafiek bij

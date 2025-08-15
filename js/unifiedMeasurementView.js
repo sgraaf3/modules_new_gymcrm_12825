@@ -1,8 +1,6 @@
 // Bestand: js/unifiedMeasurementView.js
 // Beheert de weergave en logica voor de geconsolideerde meetpagina.
 
-import { initRestMeasurementLiveView } from './restMeasurementLiveView.js';
-import { initRestMeasurementLiveView_2 } from './restMeasurementLiveView_2.js';
 import { showNotification } from './notifications.js';
 
 // Global variables to store the current active tab and loaded content/init functions
@@ -63,39 +61,4 @@ async function switchMeasurementTab(tabName, showViewCallback) {
     measurementContentDiv.innerHTML = loadingSpinner ? loadingSpinner.outerHTML : '<p class="text-gray-400 text-center py-8">Laden...</p>';
 
 
-    let htmlPath, initFunction;
-    if (tabName === 'simple') {
-        htmlPath = './views/restMeasurementLiveView.html';
-        initFunction = initRestMeasurementLiveView;
-    } else { // 'advanced'
-        htmlPath = './views/restMeasurementLiveView_2.html';
-        initFunction = initRestMeasurementLiveView_2;
-    }
-
-    try {
-        let htmlContent;
-        if (loadedHtmlContent[tabName]) {
-            htmlContent = loadedHtmlContent[tabName]; // Use cached content
-        } else {
-            const response = await fetch(htmlPath);
-            htmlContent = await response.text();
-            // Remove the top-nav from the loaded content as unified view has its own
-            htmlContent = htmlContent.replace(/<div class="top-nav">[\s\S]*?<\/div>/, '');
-            loadedHtmlContent[tabName] = htmlContent; // Cache content
-        }
-        
-        measurementContentDiv.innerHTML = htmlContent; // Inject HTML
-
-        // Initialize the specific measurement view's JS logic
-        // Pass the showViewCallback and the global bluetoothControllerInstance
-        await initFunction(showViewCallback, bluetoothControllerInstance);
-
-    } catch (error) {
-        console.error(`Error loading measurement tab ${tabName}:`, error);
-        measurementContentDiv.innerHTML = `<p class="text-red-400">Fout bij het laden van de metingsinterface: ${error.message}</p>`;
-        showNotification(`Fout bij het laden van metingstabblad: ${tabName}`, 'error');
-    } finally {
-        // Hide loading spinner (already replaced by content, but good practice)
-        if (loadingSpinner) loadingSpinner.classList.add('hidden');
-    }
 }

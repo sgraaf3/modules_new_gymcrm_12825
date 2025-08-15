@@ -23,7 +23,7 @@ function formatTime(seconds) {
     return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
 }
 
-// Helper function to determine HR Zone (copied from restMeasurementLiveView_2.js for consistency)
+// Helper function to determine HR Zone
 function getHrvBasedRestZone(rmssd) {
     if (rmssd >= 70) return 'Relaxed';
     if (rmssd >= 50) return 'Rest';

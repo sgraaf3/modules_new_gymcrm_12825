@@ -3,7 +3,7 @@
 
 import { Bodystandard, VO2, RuntimesVo2 } from './body_metrics_utils.js'; // Corrected import path
 
-// HRV-analyse (moved from restMeasurementLiveView_2.js)
+// HRV-analyse (moved from )
 export class HRVAnalyzer {
     constructor(rrIntervals) {
         this.rrIntervals = rrIntervals.filter(n => typeof n === 'number' && !isNaN(n) && n > 0);
@@ -121,7 +121,7 @@ export class HRVAnalyzer {
     }
 }
 
-// Ademhalingsanalyse (moved from restMeasurementLiveView_2.js)
+// Ademhalingsanalyse ()
 export class BreathManager {
     constructor() {
         this.reset();

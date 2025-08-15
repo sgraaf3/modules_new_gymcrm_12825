@@ -4,7 +4,22 @@
     <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
 </div>
 <div class="p-4">
-    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Slaap Logboek</h2>
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4">Slaap Patronen</h2>
+    <div class="bg-gray-700 p-4 rounded-lg shadow-md h-96 mb-4">
+        <canvas id="sleepChart"></canvas>
+    </div>
+
+    <div class="flex justify-center gap-4 mb-6">
+        <button id="startNewSleepLogBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Nieuwe Slaap Log</button>
+        <button id="viewDetailedSleepReportBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Gedetailleerd Rapport</button>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Recente Slaap Logs</h2>
+    <div id="recentSleepLogs" class="flex flex-col gap-3 mb-4">
+        <p class="text-gray-400">Geen slaap logs gevonden.</p>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Slaap Logboek</h2>
     <form id="sleepLogForm" class="flex flex-col gap-3 mb-6">
         <div class="flex flex-col">
             <label for="sleepDate" class="text-sm font-medium text-gray-400 mb-1">Datum:</label>
@@ -24,14 +39,4 @@
         </div>
         <button type="submit" id="saveSleepLogBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Slaap Log Opslaan</button>
     </form>
-
-    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Slaap Patronen</h2>
-    <div class="bg-gray-700 p-4 rounded-lg shadow-md h-96 mb-4">
-        <canvas id="sleepChart"></canvas>
-    </div>
-
-    <h2 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2 mb-4 mt-6">Recente Slaap Logs</h2>
-    <div id="recentSleepLogs" class="flex flex-col gap-3 mb-4">
-        <p class="text-gray-400">Geen slaap logs gevonden.</p>
-    </div>
 </div>

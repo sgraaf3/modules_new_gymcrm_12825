@@ -902,7 +902,10 @@ export async function initLessonPlannerView() {
         lessonIdInput.value = '';
     });
     if (createNewLessonBtn) createNewLessonBtn.addEventListener('click', () => {
-        document.querySelector('.tab-button[data-tab="lesson-builder"]').click();
+                const lessonBuilderTabButton = document.querySelector('.tab-button[data-tab="lesson-builder"]');
+        if (lessonBuilderTabButton) {
+            lessonBuilderTabButton.click();
+        }
         lessonForm.reset();
         lessonIdInput.value = '';
     });
@@ -943,6 +946,10 @@ export async function initLessonPlannerView() {
         await renderAllSavedLessonItems();
         setupDragAndDrop(); // Zorg ervoor dat drag-and-drop na alle DOM-updates wordt ingesteld
         // Activeer standaard de eerste tab
-        document.querySelector('.tab-button[data-tab="lesson-builder"]').click();
+                // Activeer standaard de eerste tab
+        const lessonBuilderTabButton = document.querySelector('.tab-button[data-tab="lesson-builder"]');
+        if (lessonBuilderTabButton) {
+            lessonBuilderTabButton.click();
+        }
     }, 0);
 }

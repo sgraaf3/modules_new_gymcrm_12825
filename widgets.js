@@ -501,9 +501,7 @@ export function initLiveTrainingView() {
     console.log("Live Training weergave geïnitialiseerd.");
 }
 
-export function initRestMeasurementLiveView() {
-    console.log("Rust & Herstel Meting weergave geïnitialiseerd.");
-}
+
 
 export function initTrainingView() {
     console.log("Training weergave geïnitialiseerd.");

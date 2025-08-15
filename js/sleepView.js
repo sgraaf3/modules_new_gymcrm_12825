@@ -164,5 +164,21 @@ export async function initSleepView() {
         });
     }
 
+    const startNewSleepLogBtn = document.getElementById('startNewSleepLogBtn');
+    if (startNewSleepLogBtn) {
+        startNewSleepLogBtn.addEventListener('click', () => {
+            sleepLogForm.scrollIntoView({ behavior: 'smooth' });
+            showNotification('Scrollen naar slaaplog formulier.', 'info');
+        });
+    }
+
+    const viewDetailedSleepReportBtn = document.getElementById('viewDetailedSleepReportBtn');
+    if (viewDetailedSleepReportBtn) {
+        viewDetailedSleepReportBtn.addEventListener('click', () => {
+            showNotification('Gedetailleerd slaaprapport is nog niet geïmplementeerd.', 'info');
+            console.log('Detailed sleep report functionality to be implemented.');
+        });
+    }
+
     await loadSleepLogs(); // Initial load of sleep logs when the view is initialized
 }

@@ -1,5 +1,5 @@
 const DB_NAME = 'SportsCRMDB';
-const DB_VERSION = 20; // VERSIE VERHOOGD NAAR 20 voor invoices en trainerId
+const DB_VERSION = 21; // Updated to match existing DB version in browser
 
 const USER_PROFILE_STORE = 'userProfile';
 const TRAINING_SESSIONS_STORE = 'trainingSessions';

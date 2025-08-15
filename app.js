@@ -1,10 +1,12 @@
 // Bestand: app.js
 // Dit bestand fungeert als de centrale applicatie-controller en router.
 // Het beheert de navigatie tussen verschillende views en initialiseert globale functionaliteiten.
+console.log('app.js: Script execution started.');
 
 import { getData, putData, deleteData, getAllData, getOrCreateUserId, setUserRole } from './database.js'; // Removed getUserRole as it's not used here
 import { BluetoothController } from './bluetooth.js';
 import { getHrZone } from './js/measurement_utils.js';
+import { showNotification } from './js/notifications.js';
 
 // Importeer de initialisatiefuncties voor alle afzonderlijke views
 import { initDashboardView } from './js/dashboardView.js';
@@ -17,7 +19,7 @@ import { initTrainingView } from './js/trainingView.js';
 import { initNutritionView } from './js/nutritionView.js';
 import { initSleepView } from './js/sleepView.js';
 import { initTrainingReportsView } from './js/trainingReportsView.js';
-import { initRestReportsView } from './js/restReportsView.js';
+
 import { initDashboardReportsView } from './js/dashboardReportsView.js';
 import { initSchedulesView } from './js/schedulesView.js';
 import { initLessonSchedulerView } from './js/lessonSchedulerView.js';
@@ -70,8 +72,7 @@ const viewConfig = {
     'trainingView': { html: './views/trainingView.html', init: initTrainingView },
     'nutritionView': { html: './views/nutritionView.html', init: initNutritionView },
     'sleepView': { html: './views/sleepView.html', init: initSleepView },
-    'trainingReportsView': { html: 'views/trainingReportsView.html', init: initTrainingReportsView },
-    'restReportsView': { html: 'views/restReportsView.html', init: initRestReportsView },
+        'trainingReportsView': { html: 'views/trainingReportsView.html', init: initTrainingReportsView },
     'dashboardReportsView': { html: 'views/dashboardReportsView.html', init: initDashboardReportsView },
     'schedulesView': { html: 'views/schedulesView.html', init: initSchedulesView },
     'lessonSchedulerView': { html: 'views/lessonSchedulerView.html', init: initLessonSchedulerView },
@@ -196,6 +197,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const liveTimerDisplay = bluetoothWidget.querySelector('#liveTimerDisplay');
     const startMeasurementBtnLive = bluetoothWidget.querySelector('#startMeasurementBtnLive');
     const stopMeasurementBtnLive = bluetoothWidget.querySelector('#stopMeasurementBtnLive');
+    const bluetoothErrorTooltip = document.getElementById('bluetoothErrorTooltip'); // Get the tooltip element
 
     function updateGlobalWidgetTimer() {
         if (globalWidgetMeasurementStartTime) {
@@ -209,7 +211,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     bluetoothController.onStateChange = async (state, deviceName) => {
         connectionStatusDisplay.textContent = `Status: ${state} ${deviceName ? `(${deviceName})` : ''}`;
         if (state === 'STREAMING') {
-            if (startMeasurementBtnLive) startMeasurementBtnLive.style.display = 'none';
+            if (startMeasurementBtnLive) {
+                startMeasurementBtnLive.style.display = 'block'; // Make visible
+                startMeasurementBtnLive.disabled = false; // Enable the button
+            }
             if (stopMeasurementBtnLive) stopMeasurementBtnLive.style.display = 'block';
             globalWidgetMeasurementStartTime = Date.now();
             globalWidgetMeasurementInterval = setInterval(updateGlobalWidgetTimer, 1000);
@@ -219,13 +224,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             globalWidgetTimestamps = [];
         } else if (state === 'ERROR') {
             showNotification('Bluetooth verbinding mislukt of geannuleerd.', 'error');
-            if (startMeasurementBtnLive) startMeasurementBtnLive.style.display = 'block';
+            if (startMeasurementBtnLive) {
+                startMeasurementBtnLive.style.display = 'block';
+                startMeasurementBtnLive.disabled = true; // Disable the button
+            }
             if (stopMeasurementBtnLive) stopMeasurementBtnLive.style.display = 'none';
         } else if (state === 'STOPPED') {
             showNotification('Bluetooth meting gestopt.', 'info');
             clearInterval(globalWidgetMeasurementInterval);
-            if (startMeasurementBtnLive) startMeasurementBtnLive.style.display = 'block';
-            if (stopMeasurementBtnBtn) stopMeasurementBtnLive.style.display = 'none';
+            if (startMeasurementBtnLive) {
+                startMeasurementBtnLive.style.display = 'block';
+                startMeasurementBtnLive.disabled = true; // Disable the button
+            }
+            if (stopMeasurementBtnLive) stopMeasurementBtnLive.style.display = 'none';
 
             // Save RR data to sessionStorage before navigating
             if (globalWidgetRrData.length > 0) {
@@ -285,8 +296,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (startMeasurementBtnLive) {
         startMeasurementBtnLive.addEventListener('click', () => {
-            bluetoothController.setPreset('resting'); // Default preset for global widget
-            bluetoothController.connect();
+            // Check if Bluetooth is connected (assuming bluetoothController.isConnected() exists)
+            if (bluetoothController.isConnected()) {
+                bluetoothController.setPreset('resting'); // Default preset for global widget
+                bluetoothController.connect();
+                if (bluetoothErrorTooltip) bluetoothErrorTooltip.classList.add('hidden'); // Hide tooltip if connected
+            } else {
+                // Show error tooltip if not connected
+                if (bluetoothErrorTooltip) bluetoothErrorTooltip.classList.remove('hidden');
+                // Optionally hide the tooltip after a few seconds
+                setTimeout(() => {
+                    if (bluetoothErrorTooltip) bluetoothErrorTooltip.classList.add('hidden');
+                }, 5000); // Hide after 5 seconds
+            }
         });
     }
 

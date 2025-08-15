@@ -101,10 +101,9 @@
             </div>
             <div class="card-header mt-2"><h3>Intensiteit Scores</h3></div>
             <div class="grid grid-cols-2 gap-2 text-sm text-gray-300">
-                <div>RPE: <input type="number" id="inputRpe" min="0" max="10" placeholder="0-10" class="p-1 rounded-md bg-gray-800 border border-gray-600 text-gray-200 w-20"></div>
+                <div>RPE: --</div>
                 <div>Intensiteit Score: <span id="scoreIntensity">--</span></div>
                 <div>HR t.o.v. AT: <span id="hrToAt">--</span> %</div>
-                <div>HR t.o.v. Rust HR: <span id="hrToRestHr">--</span> %</div>
             </div>
         </div>
     </div>
@@ -116,10 +115,7 @@
         <div class="chart-container-full" style="min-height: 250px;">
             <canvas id="hrChart"></canvas>
         </div>
-        <!-- RR Interval grafiek (nu de oorspronkelijke RR, niet geschaald) -->
-        <div class="chart-container-full" style="min-height: 250px;">
-            <canvas id="rrChart"></canvas>
-        </div>
+
         <div class="chart-container-full" style="min-height: 250px;">
             <canvas id="rrHistogramChart"></canvas>
         </div>
@@ -129,5 +125,17 @@
         <div class="chart-container-full" style="min-height: 250px;">
             <canvas id="powerSpectrumChart"></canvas>
         </div>
+    </div>
+
+    <!-- Floating Bluetooth Button and Status -->
+    <div class="fixed bottom-4 right-4 flex flex-col items-end space-y-2">
+        <div id="bluetoothErrorTooltip" class="absolute right-full mr-2 p-2 bg-red-600 text-white text-sm rounded-md shadow-lg hidden" style="bottom: 10px; white-space: nowrap;">
+            <i class="fas fa-arrow-right absolute text-red-600 text-xl" style="right: -10px; top: 50%; transform: translateY(-50%);"></i>
+            Verbind eerst met Bluetooth!
+        </div>
+        <span id="bluetoothStatusDisplay" class="text-sm text-gray-400 bg-gray-800 p-2 rounded-md shadow-lg">Bluetooth: Disconnected</span>
+        <button id="bluetoothFabBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg transition-colors duration-200">
+            <i class="fas fa-bluetooth-b text-2xl"></i>
+        </button>
     </div>
 </div>

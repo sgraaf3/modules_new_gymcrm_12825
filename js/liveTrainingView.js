@@ -66,6 +66,8 @@ let measurementStartTime;
 let measurementInterval;
 let hrZoneInterval; // Interval to update HR zone times
 
+let isBluetoothConnected = false; // New variable to track Bluetooth connection status
+
 // showViewCallback is passed from app.js for navigation
 export async function initLiveTrainingView(showViewCallback) {
     console.log("Live Training View geïnitialiseerd.");
@@ -142,7 +144,10 @@ function initUIElements() {
         zoneTimeActiveLow: document.getElementById('zoneTimeActiveLow'),
         zoneTimeActiveHigh: document.getElementById('zoneTimeActiveHigh'),
         zoneTimeTransitionZone: document.getElementById('zoneTimeTransitionZone'),
-        zoneTimeAT: document.getElementById('zoneTimeAT') // Added AT zone display
+        zoneTimeAT: document.getElementById('zoneTimeAT'), // Added AT zone display
+        bluetoothFabBtn: document.getElementById('bluetoothFabBtn'),
+        bluetoothStatusDisplay: document.getElementById('bluetoothStatusDisplay'),
+        bluetoothErrorTooltip: document.getElementById('bluetoothErrorTooltip')
     };
 }
 
@@ -361,8 +366,35 @@ function setupEventListeners(uiElements, bluetoothController, showViewCallback, 
         });
     }
 
+    // Floating Bluetooth Button
+    if (uiElements.bluetoothFabBtn) {
+        uiElements.bluetoothFabBtn.addEventListener('click', async () => {
+            if (!isBluetoothConnected) {
+                showNotification('Verbinden met Bluetooth-apparaat...', 'info');
+                bluetoothController.setPreset(currentSessionData.type); // Use the selected measurement type
+                bluetoothController.connect();
+            } else {
+                showNotification('Bluetooth is al verbonden.', 'info');
+            }
+        });
+    }
+
     if (uiElements.startMeasurementBtnLive) {
+        // Initial button text
+        uiElements.startMeasurementBtnLive.textContent = isBluetoothConnected ? 'Start Meting' : 'Verbind Bluetooth om te starten';
+
         uiElements.startMeasurementBtnLive.addEventListener('click', async () => {
+            if (!isBluetoothConnected) {
+                showNotification('Verbind eerst met een Bluetooth-apparaat via de Bluetooth knop.', 'warning');
+                if (uiElements.bluetoothErrorTooltip) {
+                    uiElements.bluetoothErrorTooltip.classList.remove('hidden');
+                    setTimeout(() => {
+                        uiElements.bluetoothErrorTooltip.classList.add('hidden');
+                    }, 3000);
+                }
+                return; // Stop execution if not connected
+            }
+
             // Reset all data buffers and session data
             hrDataBuffer = [];
             rrIntervalsBuffer = [];
@@ -412,9 +444,15 @@ function setupEventListeners(uiElements, bluetoothController, showViewCallback, 
             if (poincarePlotChart) { poincarePlotChart.data.datasets[0].data = []; poincarePlotChart.update(); }
             if (powerSpectrumChart) { powerSpectrumChart.data.datasets[0].data = [0,0,0]; powerSpectrumChart.update(); }
 
-
-            bluetoothController.setPreset(currentSessionData.type); // Use the selected measurement type
-            bluetoothController.connect();
+            // Start measurement (assuming Bluetooth is already connected)
+            // The actual streaming starts when BluetoothController.onData is called
+            uiElements.startMeasurementBtnLive.style.display = 'none';
+            uiElements.stopMeasurementBtnLive.style.display = 'block';
+            measurementStartTime = Date.now();
+            measurementInterval = setInterval(updateTimer, 1000);
+            hrZoneInterval = setInterval(() => updateHrZoneTimes(uiElements, userProfile.userBaseAtHR, userProfile.userRestHR), 1000);
+            if (uiElements.measurementTypeSelect) uiElements.measurementTypeSelect.disabled = true;
+            showNotification('Meting gestart!', 'success');
         });
     }
 
@@ -482,7 +520,7 @@ function setupEventListeners(uiElements, bluetoothController, showViewCallback, 
                     showNotification('Fout bij opslaan meting.', 'error');
                 }
             } else {
-                showNotification('Geen metingsdata om op te slaan. Start en stop een meting.', 'warning');
+                showNotification('Geen metingsdata om op te slagen. Start en stop een meting.', 'warning');
             }
         });
     }
@@ -490,26 +528,42 @@ function setupEventListeners(uiElements, bluetoothController, showViewCallback, 
 
 function setupBluetoothCallbacks(uiElements, charts, bluetoothController, userBaseAtHR, userRestHR, userMaxHR) {
     bluetoothController.onStateChange = (state, deviceName) => {
+        if (uiElements.bluetoothStatusDisplay) {
+            uiElements.bluetoothStatusDisplay.textContent = `Bluetooth: ${state === 'STREAMING' ? 'Connected' : 'Disconnected'}`; // Update status display
+        }
+
         if (state === 'STREAMING') {
-            if (uiElements.startMeasurementBtnLive) uiElements.startMeasurementBtnLive.style.display = 'none';
-            if (uiElements.stopMeasurementBtnLive) uiElements.stopMeasurementBtnLive.style.display = 'block';
+            isBluetoothConnected = true;
+            if (uiElements.startMeasurementBtnLive) {
+                uiElements.startMeasurementBtnLive.textContent = 'Start Meting';
+                uiElements.startMeasurementBtnLive.style.display = 'block'; // Ensure it's visible when connected
+            }
+            if (uiElements.stopMeasurementBtnLive) uiElements.stopMeasurementBtnLive.style.display = 'none'; // Hide stop button until measurement starts
             measurementStartTime = Date.now();
             measurementInterval = setInterval(updateTimer, 1000);
             hrZoneInterval = setInterval(() => updateHrZoneTimes(uiElements, userBaseAtHR, userRestHR), 1000); // Pass uiElements and user data
             showNotification(`Bluetooth verbonden met ${deviceName || 'apparaat'}!`, 'success');
             if (uiElements.measurementTypeSelect) uiElements.measurementTypeSelect.disabled = true;
         } else if (state === 'ERROR') {
+            isBluetoothConnected = false;
             showNotification('Bluetooth verbinding mislukt of geannuleerd.', 'error');
             clearInterval(measurementInterval);
             clearInterval(hrZoneInterval);
-            if (uiElements.startMeasurementBtnLive) uiElements.startMeasurementBtnLive.style.display = 'block';
+            if (uiElements.startMeasurementBtnLive) {
+                uiElements.startMeasurementBtnLive.textContent = 'Verbind Bluetooth om te starten';
+                uiElements.startMeasurementBtnLive.style.display = 'block';
+            }
             if (uiElements.stopMeasurementBtnLive) uiElements.stopMeasurementBtnLive.style.display = 'none';
             if (uiElements.measurementTypeSelect) uiElements.measurementTypeSelect.disabled = false;
         } else if (state === 'STOPPED') {
+            isBluetoothConnected = false;
             showNotification('Bluetooth meting gestopt.', 'info');
             clearInterval(measurementInterval);
             clearInterval(hrZoneInterval);
-            if (uiElements.startMeasurementBtnLive) uiElements.startMeasurementBtnLive.style.display = 'block';
+            if (uiElements.startMeasurementBtnLive) {
+                uiElements.startMeasurementBtnLive.textContent = 'Verbind Bluetooth om te starten';
+                uiElements.startMeasurementBtnLive.style.display = 'block';
+            }
             if (uiElements.stopMeasurementBtnLive) uiElements.stopMeasurementBtnLive.style.display = 'none';
             if (uiElements.saveMeasurementBtn) uiElements.saveMeasurementBtn.style.display = 'block';
             if (uiElements.measurementTypeSelect) uiElements.measurementTypeSelect.disabled = false;

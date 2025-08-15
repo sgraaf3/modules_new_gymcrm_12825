@@ -1,4 +1,65 @@
-import { getAllData } from '../database.js';
+import { putData, getData, getAllData, getOrCreateUserId } from '../database.js';
+import { showNotification } from './notifications.js';
+
+// Chart instances
+let hrCombinedChart; // Nieuwe naam voor de gecombineerde HR/RR/Breath grafiek
+let rrHistogramChart;
+let poincarePlotChart;
+let powerSpectrumChart;
+
+// Data buffers for charts and calculations
+let hrDataBuffer = [];
+let rrIntervalsBuffer = []; // Stores all filtered RR intervals for analysis
+let breathRateBuffer = []; // Buffer for breath rate data
+let timestampsBuffer = [];
+
+// Session data for saving
+let currentSessionData = {
+    userId: '',
+    type: 'training', // Default, will be set by selection
+    date: '',
+    duration: 0, // in seconds
+    avgHr: 0,
+    maxHr: 0,
+    minHr: 0,
+    rmssd: 0,
+    sdnn: 0,
+    pnn50: 0,
+    lfHfRatio: 0,
+    vlfPower: 0, // Nieuw
+    lfPower: 0,  // Nieuw
+    hfPower: 0,  // Nieuw
+    caloriesBurned: 0,
+    hrZonesTime: { // Time spent in each HR zone (in seconds)
+        'Resting': 0,
+        'Warmup': 0,
+        'Endurance 1': 0,
+        'Endurance 2': 0,
+        'Endurance 3': 0,
+        'Intensive 1': 0,
+        'Intensive 2': 0,
+        'Cooldown': 0,
+        // Nieuwe zones voor HRV-gebaseerde rust
+        'Relaxed': 0,
+        'Rest': 0,
+        'Active Low': 0,
+        'Active High': 0,
+        'Transition Zone': 0,
+        'AT': 0 // Add AT zone
+    },
+    rpe: null, // Rate of Perceived Exertion
+    wellnessScores: { recovery: '--', strain: '--', sleep: '--', conditioning: '--' }, // Placeholders
+    intensityScore: '--', // Placeholder
+    breathData: { lastCycle: '--', avgTotalCycles: '--', currentBf: '--' }, // Placeholders
+    rawHrData: [], // Full HR data for session
+    rawRrData: [], // Full filtered RR data for session
+    rawBreathData: [], // Full breath data for session
+    timestamps: [] // Full timestamps for session
+};
+
+let measurementStartTime;
+let measurementInterval;
+let hrZoneInterval; // Interval to update HR zone times
 
 export async function initTrainingView(showView) {
     console.log("Training View geïnitialiseerd.");
