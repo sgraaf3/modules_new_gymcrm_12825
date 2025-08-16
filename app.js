@@ -72,7 +72,7 @@ const viewConfig = {
     'trainingView': { html: './views/trainingView.html', init: initTrainingView },
     'nutritionView': { html: './views/nutritionView.html', init: initNutritionView },
     'sleepView': { html: './views/sleepView.html', init: initSleepView },
-        'trainingReportsView': { html: 'views/trainingReportsView.html', init: initTrainingReportsView },
+    'trainingReportsView': { html: 'views/trainingReportsView.html', init: initTrainingReportsView },
     'dashboardReportsView': { html: 'views/dashboardReportsView.html', init: initDashboardReportsView },
     'schedulesView': { html: 'views/schedulesView.html', init: initSchedulesView },
     'lessonSchedulerView': { html: 'views/lessonSchedulerView.html', init: initLessonSchedulerView },
@@ -122,50 +122,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             const response = await fetch(config.html);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const htmlContent = await response.text();
             mainContentArea.innerHTML = htmlContent;
 
-            document.querySelectorAll('.bottom-nav-item').forEach(item => {
-                item.classList.remove('active');
-                if (item.dataset.targetView === viewId) {
-                    item.classList.add('active');
-                }
-            });
-
             if (config.init) {
-                // Pass the global bluetoothController instance to the init function
+                // Pass the showView function as a callback for navigation, and the bluetooth controller
                 await config.init(showView, data, bluetoothController);
             }
 
-            // Algemene terug-naar-dashboard knop
-            document.querySelectorAll('[data-action="backToDashboard"]').forEach(button => {
-                button.addEventListener('click', () => {
-                    showView('dashboardView');
-                });
-            });
-
-            // Algemene dashboard widget card listeners (voor navigatie naar gedetailleerde views)
-            document.querySelectorAll('.dashboard-widget-card').forEach(card => {
-                card.addEventListener('click', (event) => {
-                    const targetViewId = event.currentTarget.dataset.targetView;
-                    const graphType = event.currentTarget.dataset.graphType;
-                    if (targetViewId === 'webGraphsView' && graphType) {
-                        showView(targetViewId, { graphType: graphType });
-                    } else if (targetViewId) { // Zorg ervoor dat targetViewId bestaat
-                        showView(targetViewId);
-                    }
-                });
-            });
-
-            // Algemene bottom-nav item listeners
-            document.querySelectorAll('.bottom-nav-item').forEach(item => {
-                item.addEventListener('click', (event) => {
-                    const targetViewId = event.currentTarget.dataset.targetView;
-                    if (targetViewId) {
-                        showView(targetViewId);
-                    }
-                });
-            });
+            // Re-bind general event listeners after loading new content
+            bindGeneralEventListeners();
 
         } catch (error) {
             console.error(`Fout bij het laden van view '${viewId}':`, error);
@@ -174,157 +143,54 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    function bindGeneralEventListeners() {
+        // Algemene terug-naar-dashboard knop
+        document.querySelectorAll('[data-action="backToDashboard"]').forEach(button => {
+            button.addEventListener('click', () => {
+                showView('dashboardView');
+            });
+        });
+
+        // Algemene dashboard widget card listeners (voor navigatie naar gedetailleerde views)
+        document.querySelectorAll('.dashboard-widget-card').forEach(card => {
+            card.addEventListener('click', (event) => {
+                const targetViewId = event.currentTarget.dataset.targetView;
+                const graphType = event.currentTarget.dataset.graphType;
+                if (targetViewId) {
+                    showView(targetViewId, { graphType: graphType });
+                }
+            });
+        });
+    }
+
+    // --- NEW Floating Action Button (FAB) Navigation Logic ---
+    const fabContainer = document.getElementById('fab-container');
+    const fabMain = document.getElementById('fab-main');
+    const openBluetoothWidgetBtn = document.getElementById('openBluetoothWidget');
+
+
+    if (fabMain && fabContainer) {
+        fabMain.addEventListener('click', () => {
+            fabContainer.classList.toggle('active');
+        });
+
+        document.querySelectorAll('.fab-option').forEach(item => {
+            item.addEventListener('click', (event) => {
+                const targetViewId = event.currentTarget.dataset.targetView;
+                if (targetViewId) {
+                    showView(targetViewId);
+                    fabContainer.classList.remove('active'); // Close menu on selection
+                }
+            });
+        });
+    }
+
+    if (openBluetoothWidgetBtn) {
+        openBluetoothWidgetBtn.addEventListener('click', () => {
+             showView('liveTrainingView');
+        });
+    }
+    
     // Start de applicatie met het dashboard
     showView('dashboardView');
-
-    // --- Globale Bluetooth Widget Logica (blijft in app.js omdat het een zwevende widget is) ---
-    const bluetoothWidget = document.getElementById('bluetoothWidget');
-    const openBluetoothWidgetBtn = document.getElementById('openBluetoothWidget');
-    const toggleBluetoothWidgetBtn = document.getElementById('toggleBluetoothWidget');
-
-    // Data collection for global widget
-    let globalWidgetRrData = [];
-    let globalWidgetTimestamps = [];
-    let globalWidgetMeasurementStartTime;
-    let globalWidgetMeasurementInterval;
-
-    const connectionStatusDisplay = bluetoothWidget.querySelector('#connectionStatusDisplay');
-    const liveHrDisplay = bluetoothWidget.querySelector('#liveHrDisplay');
-    const liveHrZoneDisplay = bluetoothWidget.querySelector('#liveHrZoneDisplay');
-    const liveAvgRrDisplay = bluetoothWidget.querySelector('#liveAvgRrDisplay');
-    const liveRmssdDisplay = bluetoothWidget.querySelector('#liveRmssdDisplay');
-    const liveBreathRateDisplay = bluetoothWidget.querySelector('#liveBreathRateDisplay');
-    const liveTimerDisplay = bluetoothWidget.querySelector('#liveTimerDisplay');
-    const startMeasurementBtnLive = bluetoothWidget.querySelector('#startMeasurementBtnLive');
-    const stopMeasurementBtnLive = bluetoothWidget.querySelector('#stopMeasurementBtnLive');
-    const bluetoothErrorTooltip = document.getElementById('bluetoothErrorTooltip'); // Get the tooltip element
-
-    function updateGlobalWidgetTimer() {
-        if (globalWidgetMeasurementStartTime) {
-            const elapsedSeconds = Math.floor((Date.now() - globalWidgetMeasurementStartTime) / 1000);
-            const minutes = Math.floor(elapsedSeconds / 60);
-            const seconds = elapsedSeconds % 60;
-            liveTimerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }
-    }
-
-    bluetoothController.onStateChange = async (state, deviceName) => {
-        connectionStatusDisplay.textContent = `Status: ${state} ${deviceName ? `(${deviceName})` : ''}`;
-        if (state === 'STREAMING') {
-            if (startMeasurementBtnLive) {
-                startMeasurementBtnLive.style.display = 'block'; // Make visible
-                startMeasurementBtnLive.disabled = false; // Enable the button
-            }
-            if (stopMeasurementBtnLive) stopMeasurementBtnLive.style.display = 'block';
-            globalWidgetMeasurementStartTime = Date.now();
-            globalWidgetMeasurementInterval = setInterval(updateGlobalWidgetTimer, 1000);
-            showNotification(`Bluetooth verbonden met ${deviceName || 'apparaat'}!`, 'success');
-            // Reset data for new measurement
-            globalWidgetRrData = [];
-            globalWidgetTimestamps = [];
-        } else if (state === 'ERROR') {
-            showNotification('Bluetooth verbinding mislukt of geannuleerd.', 'error');
-            if (startMeasurementBtnLive) {
-                startMeasurementBtnLive.style.display = 'block';
-                startMeasurementBtnLive.disabled = true; // Disable the button
-            }
-            if (stopMeasurementBtnLive) stopMeasurementBtnLive.style.display = 'none';
-        } else if (state === 'STOPPED') {
-            showNotification('Bluetooth meting gestopt.', 'info');
-            clearInterval(globalWidgetMeasurementInterval);
-            if (startMeasurementBtnLive) {
-                startMeasurementBtnLive.style.display = 'block';
-                startMeasurementBtnLive.disabled = true; // Disable the button
-            }
-            if (stopMeasurementBtnLive) stopMeasurementBtnLive.style.display = 'none';
-
-            // Save RR data to sessionStorage before navigating
-            if (globalWidgetRrData.length > 0) {
-                const rrDataWithTimestamps = globalWidgetRrData.map((value, index) => ({
-                    value: value,
-                    timestamp: globalWidgetTimestamps[index] ? new Date(globalWidgetTimestamps[index]).getTime() : (new Date().getTime() - (globalWidgetRrData.length - 1 - index) * 1000), // Use actual timestamp or estimate
-                    originalIndex: index
-                }));
-                sessionStorage.setItem('lastMeasurementRrData', JSON.stringify(rrDataWithTimestamps));
-            } else {
-                sessionStorage.removeItem('lastMeasurementRrData');
-            }
-
-            // Navigate to reports page after measurement stops
-            showView('reportsView');
-        }
-    };
-
-    bluetoothController.onData = async (dataPacket) => {
-        if (liveHrDisplay) liveHrDisplay.textContent = `${dataPacket.heartRate} BPM`;
-
-        // Store raw RR data and timestamps for global widget
-        if (dataPacket.rawRrIntervals && dataPacket.rawRrIntervals.length > 0) {
-            dataPacket.rawRrIntervals.forEach(rr => {
-                globalWidgetRrData.push(rr);
-                globalWidgetTimestamps.push(new Date().getTime()); // Store current timestamp for each RR
-            });
-        }
-
-        const userProfile = await getData('userProfile', currentAppUserId);
-        const userBaseAtHR = userProfile ? parseFloat(userProfile.userBaseAtHR) : 0;
-        
-        if (liveHrZoneDisplay) {
-            // getHrZone is imported at the top of app.js
-            liveHrZoneDisplay.textContent = getHrZone(dataPacket.heartRate, userBaseAtHR, 0); // Pass 0 for rmssd in global widget context
-        }
-
-        if (dataPacket.filteredRrIntervals && dataPacket.filteredRrIntervals.length > 0) {
-            const avgRr = dataPacket.filteredRrIntervals.reduce((sum, val) => sum + val, 0) / dataPacket.filteredRrIntervals.length;
-            if (liveAvgRrDisplay) liveAvgRrDisplay.textContent = `${avgRr.toFixed(0)} MS`;
-
-            if (dataPacket.filteredRrIntervals.length >= 2) {
-                let sumOfDifferencesSquared = 0;
-                for (let i = 0; i < dataPacket.filteredRrIntervals.length - 1; i++) {
-                    sumOfDifferencesSquared += Math.pow(dataPacket.filteredRrIntervals[i+1] - dataPacket.filteredRrIntervals[i], 2);
-                }
-                const rmssd = Math.sqrt(sumOfDifferencesSquared / (dataPacket.filteredRrIntervals.length - 1));
-                if (liveRmssdDisplay) liveRmssdDisplay.textContent = `RMSSD: ${rmssd.toFixed(2)} MS`;
-            } else {
-                if (liveRmssdDisplay) liveRmssdDisplay.textContent = `RMSSD: -- MS`;
-            }
-        }
-
-        // Simulate breath rate for the global widget if not provided by Bluetooth
-        if (liveBreathRateDisplay) liveBreathRateDisplay.textContent = `${(Math.random() * 10 + 12).toFixed(1)} BPM`;
-    };
-
-    if (startMeasurementBtnLive) {
-        startMeasurementBtnLive.addEventListener('click', () => {
-            // Check if Bluetooth is connected (assuming bluetoothController.isConnected() exists)
-            if (bluetoothController.isConnected()) {
-                bluetoothController.setPreset('resting'); // Default preset for global widget
-                bluetoothController.connect();
-                if (bluetoothErrorTooltip) bluetoothErrorTooltip.classList.add('hidden'); // Hide tooltip if connected
-            } else {
-                // Show error tooltip if not connected
-                if (bluetoothErrorTooltip) bluetoothErrorTooltip.classList.remove('hidden');
-                // Optionally hide the tooltip after a few seconds
-                setTimeout(() => {
-                    if (bluetoothErrorTooltip) bluetoothErrorTooltip.classList.add('hidden');
-                }, 5000); // Hide after 5 seconds
-            }
-        });
-    }
-
-    if (stopMeasurementBtnLive) {
-        stopMeasurementBtnLive.addEventListener('click', () => {
-            bluetoothController.disconnect();
-        });
-    }
-
-    openBluetoothWidgetBtn.addEventListener('click', () => {
-        bluetoothWidget.classList.toggle('hidden');
-        bluetoothWidget.classList.toggle('active');
-    });
-
-    toggleBluetoothWidgetBtn.addEventListener('click', () => {
-        bluetoothWidget.classList.add('hidden');
-        bluetoothWidget.classList.remove('active');
-    });
 });

@@ -1,9 +1,10 @@
 // Bestand: js/liveTrainingView.js
 // Bevat logica voor het uitvoeren en opslaan van live trainingsmetingen, inclusief uitgebreide statistieken en grafieken.
 
-import { BluetoothController } from '../bluetooth.js';
 import { putData, getData, getOrCreateUserId } from '../database.js';
 import { showNotification } from './notifications.js';
+import { getHrZone } from './measurement_utils.js';
+
 
 // Chart instances
 let hrCombinedChart; // Nieuwe naam voor de gecombineerde HR/RR/Breath grafiek
@@ -68,14 +69,45 @@ let hrZoneInterval; // Interval to update HR zone times
 
 let isBluetoothConnected = false; // New variable to track Bluetooth connection status
 
-// showViewCallback is passed from app.js for navigation
-export async function initLiveTrainingView(showViewCallback) {
+// Formats seconds into MM:SS
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+}
+
+// Determines the HR zone based on RMSSD for resting states
+function getHrvBasedRestZone(rmssd) {
+    const RMSSD_RELAXED_THRESHOLD = 70;
+    const RMSSD_REST_THRESHOLD = 50;
+    const RMSSD_ACTIVE_LOW_THRESHOLD = 25;
+    const RMSSD_ACTIVE_HIGH_THRESHOLD = 10;
+
+    if (rmssd >= RMSSD_RELAXED_THRESHOLD) return 'Relaxed';
+    if (rmssd >= RMSSD_REST_THRESHOLD) return 'Rest';
+    if (rmssd >= RMSSD_ACTIVE_LOW_THRESHOLD) return 'Active Low';
+    if (rmssd >= RMSSD_ACTIVE_HIGH_THRESHOLD) return 'Active High';
+    return 'Transition Zone'; // RMSSD < 10
+}
+
+// Determines HRV Recovery Status based on RMSSD
+function getHrvRecoveryStatus(rmssd) {
+    if (rmssd === 0) return '--';
+    // Aangepaste zones voor herstelstatus op basis van RMSSD
+    if (rmssd >= 50) return 'Uitstekend Herstel (RMSSD > 50)'; // Relaxed
+    if (rmssd >= 25) return 'Goed Herstel (RMSSD 25-50)';    // Rest
+    if (rmssd >= 10) return 'Redelijk Herstel (RMSSD 10-25)'; // Light Active
+    if (rmssd < 10) return 'Beperkt Herstel (RMSSD < 10)';  // Active
+    return '--';
+}
+
+
+// bluetoothController is now passed in from app.js
+export async function initLiveTrainingView(showViewCallback, data, bluetoothController) {
     console.log("Live Training View geïnitialiseerd.");
 
     const currentAppUserId = getOrCreateUserId();
     currentSessionData.userId = currentAppUserId;
-
-    const bluetoothController = new BluetoothController();
 
     // Initialize UI elements and charts
     const uiElements = initUIElements();
@@ -147,7 +179,8 @@ function initUIElements() {
         zoneTimeAT: document.getElementById('zoneTimeAT'), // Added AT zone display
         bluetoothFabBtn: document.getElementById('bluetoothFabBtn'),
         bluetoothStatusDisplay: document.getElementById('bluetoothStatusDisplay'),
-        bluetoothErrorTooltip: document.getElementById('bluetoothErrorTooltip')
+        bluetoothErrorTooltip: document.getElementById('bluetoothErrorTooltip'),
+        calculatedAtDisplay: document.getElementById('calculatedAtDisplay')
     };
 }
 
@@ -369,10 +402,10 @@ function setupEventListeners(uiElements, bluetoothController, showViewCallback, 
     // Floating Bluetooth Button
     if (uiElements.bluetoothFabBtn) {
         uiElements.bluetoothFabBtn.addEventListener('click', async () => {
-            if (!isBluetoothConnected) {
+            if (!bluetoothController.isConnected()) {
                 showNotification('Verbinden met Bluetooth-apparaat...', 'info');
                 bluetoothController.setPreset(currentSessionData.type); // Use the selected measurement type
-                bluetoothController.connect();
+                await bluetoothController.connect();
             } else {
                 showNotification('Bluetooth is al verbonden.', 'info');
             }
@@ -381,10 +414,10 @@ function setupEventListeners(uiElements, bluetoothController, showViewCallback, 
 
     if (uiElements.startMeasurementBtnLive) {
         // Initial button text
-        uiElements.startMeasurementBtnLive.textContent = isBluetoothConnected ? 'Start Meting' : 'Verbind Bluetooth om te starten';
+        uiElements.startMeasurementBtnLive.textContent = bluetoothController.isConnected() ? 'Start Meting' : 'Verbind Bluetooth om te starten';
 
         uiElements.startMeasurementBtnLive.addEventListener('click', async () => {
-            if (!isBluetoothConnected) {
+            if (!bluetoothController.isConnected()) {
                 showNotification('Verbind eerst met een Bluetooth-apparaat via de Bluetooth knop.', 'warning');
                 if (uiElements.bluetoothErrorTooltip) {
                     uiElements.bluetoothErrorTooltip.classList.remove('hidden');
@@ -449,7 +482,13 @@ function setupEventListeners(uiElements, bluetoothController, showViewCallback, 
             uiElements.startMeasurementBtnLive.style.display = 'none';
             uiElements.stopMeasurementBtnLive.style.display = 'block';
             measurementStartTime = Date.now();
-            measurementInterval = setInterval(updateTimer, 1000);
+            measurementInterval = setInterval(() => {
+                if (measurementStartTime) {
+                    const elapsedSeconds = Math.floor((Date.now() - measurementStartTime) / 1000);
+                    currentSessionData.duration = elapsedSeconds;
+                    uiElements.liveTimerDisplay.textContent = formatTime(elapsedSeconds);
+                }
+            }, 1000);
             hrZoneInterval = setInterval(() => updateHrZoneTimes(uiElements, userProfile.userBaseAtHR, userProfile.userRestHR), 1000);
             if (uiElements.measurementTypeSelect) uiElements.measurementTypeSelect.disabled = true;
             showNotification('Meting gestart!', 'success');
@@ -458,7 +497,9 @@ function setupEventListeners(uiElements, bluetoothController, showViewCallback, 
 
     if (uiElements.stopMeasurementBtnLive) {
         uiElements.stopMeasurementBtnLive.addEventListener('click', async () => {
-            bluetoothController.disconnect();
+             if (bluetoothController.isConnected()) {
+                await bluetoothController.disconnect();
+            }
             // Finalize calculations after stopping
             if (hrDataBuffer.length > 0) {
                 currentSessionData.avgHr = hrDataBuffer.reduce((sum, hr) => sum + hr, 0) / hrDataBuffer.length;
@@ -512,7 +553,7 @@ function setupEventListeners(uiElements, bluetoothController, showViewCallback, 
                         if (storeToSave === 'trainingSessions') {
                             showViewCallback('trainingReportsView');
                         } else if (storeToSave === 'restSessionsAdvanced' || storeToSave === 'restSessionsFree') {
-                            showViewCallback('restReportsView');
+                            showViewCallback('reportsView'); // Or a dedicated rest reports view
                         }
                     }
                 } catch (error) {
@@ -528,52 +569,63 @@ function setupEventListeners(uiElements, bluetoothController, showViewCallback, 
 
 function setupBluetoothCallbacks(uiElements, charts, bluetoothController, userBaseAtHR, userRestHR, userMaxHR) {
     bluetoothController.onStateChange = (state, deviceName) => {
-        if (uiElements.bluetoothStatusDisplay) {
-            uiElements.bluetoothStatusDisplay.textContent = `Bluetooth: ${state === 'STREAMING' ? 'Connected' : 'Disconnected'}`; // Update status display
-        }
+        const fabIcon = uiElements.bluetoothFabBtn.querySelector('i');
 
-        if (state === 'STREAMING') {
-            isBluetoothConnected = true;
-            if (uiElements.startMeasurementBtnLive) {
-                uiElements.startMeasurementBtnLive.textContent = 'Start Meting';
-                uiElements.startMeasurementBtnLive.style.display = 'block'; // Ensure it's visible when connected
-            }
-            if (uiElements.stopMeasurementBtnLive) uiElements.stopMeasurementBtnLive.style.display = 'none'; // Hide stop button until measurement starts
-            measurementStartTime = Date.now();
-            measurementInterval = setInterval(updateTimer, 1000);
-            hrZoneInterval = setInterval(() => updateHrZoneTimes(uiElements, userBaseAtHR, userRestHR), 1000); // Pass uiElements and user data
-            showNotification(`Bluetooth verbonden met ${deviceName || 'apparaat'}!`, 'success');
-            if (uiElements.measurementTypeSelect) uiElements.measurementTypeSelect.disabled = true;
-        } else if (state === 'ERROR') {
-            isBluetoothConnected = false;
-            showNotification('Bluetooth verbinding mislukt of geannuleerd.', 'error');
-            clearInterval(measurementInterval);
-            clearInterval(hrZoneInterval);
-            if (uiElements.startMeasurementBtnLive) {
-                uiElements.startMeasurementBtnLive.textContent = 'Verbind Bluetooth om te starten';
-                uiElements.startMeasurementBtnLive.style.display = 'block';
-            }
-            if (uiElements.stopMeasurementBtnLive) uiElements.stopMeasurementBtnLive.style.display = 'none';
-            if (uiElements.measurementTypeSelect) uiElements.measurementTypeSelect.disabled = false;
-        } else if (state === 'STOPPED') {
-            isBluetoothConnected = false;
-            showNotification('Bluetooth meting gestopt.', 'info');
-            clearInterval(measurementInterval);
-            clearInterval(hrZoneInterval);
-            if (uiElements.startMeasurementBtnLive) {
-                uiElements.startMeasurementBtnLive.textContent = 'Verbind Bluetooth om te starten';
-                uiElements.startMeasurementBtnLive.style.display = 'block';
-            }
-            if (uiElements.stopMeasurementBtnLive) uiElements.stopMeasurementBtnLive.style.display = 'none';
-            if (uiElements.saveMeasurementBtn) uiElements.saveMeasurementBtn.style.display = 'block';
-            if (uiElements.measurementTypeSelect) uiElements.measurementTypeSelect.disabled = false;
-            updateSummaryStatistics(uiElements, { userBaseAtHR, userRestHR, userMaxHR }); // Pass user data for calculations
-            updateHrvCharts();
-            updatePowerSpectrumChart(); // Update power spectrum on stop
+        if (uiElements.bluetoothStatusDisplay) {
+            uiElements.bluetoothStatusDisplay.textContent = `Bluetooth: ${state}`;
+        }
+        
+        switch(state) {
+            case 'SEARCHING':
+                isBluetoothConnected = false;
+                fabIcon.className = 'fas fa-spinner fa-spin';
+                if (uiElements.startMeasurementBtnLive) uiElements.startMeasurementBtnLive.textContent = 'Zoeken...';
+                break;
+            case 'CONNECTING':
+                isBluetoothConnected = false;
+                fabIcon.className = 'fas fa-spinner fa-spin';
+                if (uiElements.startMeasurementBtnLive) uiElements.startMeasurementBtnLive.textContent = 'Verbinden...';
+                break;
+            case 'STREAMING':
+                isBluetoothConnected = true;
+                fabIcon.className = 'fas fa-check text-green-400';
+                if (uiElements.startMeasurementBtnLive) {
+                    uiElements.startMeasurementBtnLive.textContent = 'Start Meting';
+                    uiElements.startMeasurementBtnLive.disabled = false;
+                }
+                showNotification(`Bluetooth verbonden met ${deviceName || 'apparaat'}!`, 'success');
+                break;
+            case 'ERROR':
+                isBluetoothConnected = false;
+                fabIcon.className = 'fas fa-times text-red-400';
+                if (uiElements.startMeasurementBtnLive) {
+                    uiElements.startMeasurementBtnLive.textContent = 'Verbind Bluetooth om te starten';
+                    uiElements.startMeasurementBtnLive.disabled = true;
+                }
+                showNotification('Bluetooth verbinding mislukt.', 'error');
+                break;
+            case 'STOPPED':
+                isBluetoothConnected = false;
+                fabIcon.className = 'fas fa-bluetooth-b';
+                if (uiElements.startMeasurementBtnLive) {
+                    uiElements.startMeasurementBtnLive.textContent = 'Verbind Bluetooth om te starten';
+                    uiElements.startMeasurementBtnLive.disabled = true;
+                }
+                if (uiElements.stopMeasurementBtnLive) uiElements.stopMeasurementBtnLive.style.display = 'none';
+                if (uiElements.saveMeasurementBtn) uiElements.saveMeasurementBtn.style.display = 'block';
+                if (uiElements.measurementTypeSelect) uiElements.measurementTypeSelect.disabled = false;
+                clearInterval(measurementInterval);
+                clearInterval(hrZoneInterval);
+                measurementInterval = null;
+                hrZoneInterval = null;
+                showNotification('Meting gestopt.', 'info');
+                break;
         }
     };
 
-    bluetoothController.onData = async (dataPacket) => {
+    bluetoothController.onData = (dataPacket) => {
+        if (!measurementInterval) return; // Don't process data if measurement hasn't started
+
         const now = new Date().toLocaleTimeString();
 
         // Update HR data and charts
@@ -590,7 +642,7 @@ function setupBluetoothCallbacks(uiElements, charts, bluetoothController, userBa
                     uiElements.liveHrZoneDisplay.textContent = getHrvBasedRestZone(currentSessionData.rmssd);
                 } else {
                     // Use AT-based zone otherwise
-                    uiElements.liveHrZoneDisplay.textContent = getHrZone(currentHr, userBaseAtHR);
+                    uiElements.liveHrZoneDisplay.textContent = getHrZone(currentHr, userBaseAtHR, 0);
                 }
             } else if (uiElements.liveHrZoneDisplay) {
                 uiElements.liveHrZoneDisplay.textContent = '-- Zone';
@@ -614,7 +666,7 @@ function setupBluetoothCallbacks(uiElements, charts, bluetoothController, userBa
 
             // Calculate and update RMSSD live
             if (rrIntervalsBuffer.length >= 2) {
-                const hrvMetrics = calculateHrvMetrics(rrIntervalsBuffer);
+                const hrvMetrics = new HRVAnalyzer(rrIntervalsBuffer);
                 currentSessionData.rmssd = hrvMetrics.rmssd;
                 currentSessionData.sdnn = hrvMetrics.sdnn;
                 currentSessionData.pnn50 = hrvMetrics.pnn50;
@@ -663,12 +715,6 @@ function setupBluetoothCallbacks(uiElements, charts, bluetoothController, userBa
     };
 }
 
-// Formats seconds into MM:SS
-function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
-}
 
 // Updates time spent in each HR zone
 function updateHrZoneTimes(uiElements, userBaseAtHR, userRestHR) {
@@ -680,7 +726,7 @@ function updateHrZoneTimes(uiElements, userBaseAtHR, userRestHR) {
         if (userBaseAtHR > 0 && currentHr < (userBaseAtHR * 0.65)) {
             zone = getHrvBasedRestZone(currentSessionData.rmssd); // Gebruik de berekende RMSSD
         } else if (userBaseAtHR > 0) {
-            zone = getHrZone(currentHr, userBaseAtHR); // Gebruik bestaande AT-gebaseerde zones
+            zone = getHrZone(currentHr, userBaseAtHR, 0); // Gebruik bestaande AT-gebaseerde zones
         } else {
             zone = 'Resting'; // Fallback als AT niet beschikbaar is
         }
@@ -707,57 +753,6 @@ function updateHrZoneTimes(uiElements, userBaseAtHR, userRestHR) {
         if (uiElements.zoneTimeActiveHigh) uiElements.zoneTimeActiveHigh.textContent = formatTime(currentSessionData.hrZonesTime['Active High'] || 0);
         if (uiElements.zoneTimeTransitionZone) uiElements.zoneTimeTransitionZone.textContent = formatTime(currentSessionData.hrZonesTime['Transition Zone'] || 0);
     }
-}
-
-// NIEUWE FUNCTIE: Bepaalt de HR-zone op basis van RMSSD
-function getHrvBasedRestZone(rmssd) {
-    // Specifieke numerieke drempelwaarden voor RMSSD
-    const RMSSD_RELAXED_THRESHOLD = 70;
-    const RMSSD_REST_THRESHOLD = 50;
-    const RMSSD_ACTIVE_LOW_THRESHOLD = 25;
-    const RMSSD_ACTIVE_HIGH_THRESHOLD = 10;
-
-    if (rmssd >= RMSSD_RELAXED_THRESHOLD) return 'Relaxed';
-    if (rmssd >= RMSSD_REST_THRESHOLD) return 'Rest';
-    if (rmssd >= RMSSD_ACTIVE_LOW_THRESHOLD) return 'Active Low';
-    if (rmssd >= RMSSD_ACTIVE_HIGH_THRESHOLD) return 'Active High';
-    return 'Transition Zone'; // RMSSD < 10
-}
-
-
-// Calculates HRV metrics (SDNN, pNN50)
-function calculateHrvMetrics(rrIntervals) {
-    if (rrIntervals.length < 2) return { rmssd: 0, sdnn: 0, pnn50: 0 };
-
-    let sumOfDifferencesSquared = 0;
-    let nn50Count = 0; // Number of pairs of successive NNs that differ by more than 50 ms
-    let previousRr = rrIntervals[0];
-
-    for (let i = 1; i < rrIntervals.length; i++) {
-        const currentRr = rrIntervals[i];
-        sumOfDifferencesSquared += Math.pow(currentRr - previousRr, 2);
-        if (Math.abs(currentRr - previousRr) > 50) {
-            nn50Count++;
-        }
-        previousRr = currentRr;
-    }
-
-    const rmssd = Math.sqrt(sumOfDifferencesSquared / (rrIntervals.length - 1));
-    const sdnn = Math.sqrt(rrIntervals.reduce((sum, val) => sum + Math.pow(val - (rrIntervals.reduce((a, b) => a + b, 0) / rrIntervals.length), 2), 0) / (rrIntervals.length - 1));
-    const pnn50 = (nn50Count / (rrIntervals.length - 1)) * 100;
-
-    return { rmssd: rmssd, sdnn: sdnn, pnn50: pnn50 };
-}
-
-// Determines HRV Recovery Status based on RMSSD
-function getHrvRecoveryStatus(rmssd) {
-    if (rmssd === 0) return '--';
-    // Aangepaste zones voor herstelstatus op basis van RMSSD
-    if (rmssd >= 50) return 'Uitstekend Herstel (RMSSD > 50)'; // Relaxed
-    if (rmssd >= 25) return 'Goed Herstel (RMSSD 25-50)';    // Rest
-    if (rmssd >= 10) return 'Redelijk Herstel (RMSSD 10-25)'; // Light Active
-    if (rmssd < 10) return 'Beperkt Herstel (RMSSD < 10)';  // Active
-    return '--';
 }
 
 // Updates all summary statistics in the UI
@@ -800,7 +795,7 @@ function updateSummaryStatistics(uiElements, userProfile) {
 
     // HRV Summary
     if (rrIntervalsBuffer.length > 0) {
-        const hrvMetrics = calculateHrvMetrics(rrIntervalsBuffer);
+        const hrvMetrics = new HRVAnalyzer(rrIntervalsBuffer);
         if (uiElements.summaryRmssd) uiElements.summaryRmssd.textContent = hrvMetrics.rmssd.toFixed(2);
         if (uiElements.summarySdnn) uiElements.summarySdnn.textContent = hrvMetrics.sdnn.toFixed(2);
         if (uiElements.summaryPnn50) uiElements.summaryPnn50.textContent = hrvMetrics.pnn50.toFixed(2);
@@ -809,6 +804,26 @@ function updateSummaryStatistics(uiElements, userProfile) {
         currentSessionData.rmssd = hrvMetrics.rmssd;
         currentSessionData.sdnn = hrvMetrics.sdnn;
         currentSessionData.pnn50 = hrvMetrics.pnn50;
+
+        // Wellness Scores
+        if(uiElements.scoreRecovery && hrvMetrics.recoveryScore) uiElements.scoreRecovery.textContent = hrvMetrics.recoveryScore.toFixed(1);
+        if(uiElements.scoreStrain && hrvMetrics.strainScore) uiElements.scoreStrain.textContent = hrvMetrics.strainScore.toFixed(1);
+        if(uiElements.scoreSleep && hrvMetrics.sleepQualityScore) uiElements.scoreSleep.textContent = hrvMetrics.sleepQualityScore.toFixed(1);
+        if(uiElements.scoreConditioning && hrvMetrics.conditioningScore) uiElements.scoreConditioning.textContent = hrvMetrics.conditioningScore.toFixed(1);
+        currentSessionData.wellnessScores = {
+            recovery: hrvMetrics.recoveryScore,
+            strain: hrvMetrics.strainScore,
+            sleep: hrvMetrics.sleepQualityScore,
+            conditioning: hrvMetrics.conditioningScore
+        };
+
+        // Intensity Score
+        const { rpe, intensity } = estimateRpe({ currentHR: hrDataBuffer[hrDataBuffer.length - 1], anaerobicThresholdHR: userProfile.userBaseAtHR, durationMinutes: currentSessionData.duration / 60 });
+        if(uiElements.inputRpe) uiElements.inputRpe.value = rpe || '';
+        if(uiElements.scoreIntensity) uiElements.scoreIntensity.textContent = intensity;
+        currentSessionData.rpe = rpe;
+        currentSessionData.intensityScore = intensity;
+
 
         // Simplified LF/HF Ratio and VLF/LF/HF Power (placeholders/heuristics)
         let vlf = 0;
@@ -845,25 +860,28 @@ function updateSummaryStatistics(uiElements, userProfile) {
         currentSessionData.hfPower = 0;
     }
 
-    // Wellness Scores (Placeholders)
-    if (uiElements.scoreRecovery) uiElements.scoreRecovery.textContent = '--';
-    if (uiElements.scoreStrain) uiElements.scoreStrain.textContent = '--';
-    if (uiElements.scoreSleep) uiElements.scoreSleep.textContent = '--';
-    if (uiElements.scoreConditioning) uiElements.scoreConditioning.textContent = '--';
-    currentSessionData.wellnessScores = { recovery: '--', strain: '--', sleep: '--', conditioning: '--' };
+    // Breath Data
+    if (breathRateBuffer.length >= 6) {
+        const lastSixCycles = breathRateBuffer.slice(-6);
+        const avgLastSix = lastSixCycles.reduce((sum, val) => sum + val, 0) / lastSixCycles.length;
+        if (uiElements.breathLastCycle) uiElements.breathLastCycle.textContent = `${avgLastSix.toFixed(1)} BPM`;
+    } else if (uiElements.breathLastCycle) {
+        uiElements.breathLastCycle.textContent = '-- BPM';
+    }
 
-    // Intensity Score (Placeholder)
-    if (uiElements.scoreIntensity) uiElements.scoreIntensity.textContent = '--';
-    currentSessionData.intensityScore = '--';
+    // Simulate Ti/Te ratio for display
+    const simulatedTi = (Math.random() * 1.5 + 1.5).toFixed(2); // e.g., 1.5-3.0s
+    const simulatedTe = (Math.random() * 1.5 + 2.0).toFixed(2); // e.g., 2.0-3.5s
+    const simulatedRatio = (simulatedTi / simulatedTe).toFixed(2);
 
-    // Breath Data (Placeholders/Basic)
-    if (uiElements.breathLastCycle && uiElements.liveBreathRateDisplay) uiElements.breathLastCycle.textContent = uiElements.liveBreathRateDisplay.textContent;
-    if (uiElements.breathAvgTotalCycles) uiElements.breathAvgTotalCycles.textContent = '--';
-    if (uiElements.breathCurrentBf) uiElements.breathCurrentBf.textContent = '--';
+    if (uiElements.breathAvgTotalCycles) uiElements.breathAvgTotalCycles.textContent = `${simulatedTi}s / ${simulatedTe}s`;
+    if (uiElements.breathCurrentBf) uiElements.breathCurrentBf.textContent = simulatedRatio;
+    
     currentSessionData.breathData = {
-        lastCycle: uiElements.liveBreathRateDisplay ? uiElements.liveBreathRateDisplay.textContent : '--',
-        avgTotalCycles: '--',
-        currentBf: '--'
+        lastCycle: uiElements.breathLastCycle ? uiElements.breathLastCycle.textContent : '--',
+        avgTiTeRatio: simulatedRatio,
+        avgTi: simulatedTi,
+        avgTe: simulatedTe
     };
 }
 
@@ -912,15 +930,133 @@ function updatePowerSpectrumChart() {
     }
 }
 
+// --- Option 2: Additional Calculation Functions ---
 
-// Helper for HR Zone Calculation (can be moved to a utility file if needed elsewhere)
-function getHrZone(currentHR, at) {
-    if (currentHR >= at * 1.1) return 'Intensive 2';
-    if (currentHR >= at * 1.05) return 'Intensive 1';
-    if (currentHR >= at * 0.95) return 'Endurance 3';
-    if (currentHR >= at * 0.85) return 'Endurance 2';
-    if (currentHR >= at * 0.75) return 'Endurance 1';
-    if (currentHR >= at * 0.7 + 5) return 'Cooldown';
-    if (currentHR >= at * 0.7) return 'Warmup';
-    return 'Resting';
+// This is a helper function used only by simulateBreathingFromRr, so it is not exported.
+function smooth(data, windowSize = 5) {
+    const smoothed = [];
+    for (let i = 0; i < data.length; i++) {
+        const start = Math.max(0, i - windowSize + 1);
+        const window = data.slice(start, i + 1);
+        const avg = window.reduce((sum, val) => sum + val, 0) / window.length;
+        smoothed.push(avg);
+    }
+    return smoothed;
+}
+
+function getPredictedRunTimes(vo2max) {
+    const vo2ToRunTimesMap = new Map([
+        [36,{"3k":1143,"5k":2039,"10k":4514,"21k":10785,"42k":24674}],
+        [40,{"3k":1026,"5k":1819,"10k":3988,"21k":9399,"42k":21133}],
+        [50,{"3k":810,"5k":1420,"10k":3058,"21k":7036,"42k":15380}],
+        [60,{"3k":662,"5k":1152,"10k":2451,"21k":5555,"42k":11938}],
+        [70,{"3k":555,"5k":961,"10k":2027,"21k":4545,"42k":9656}],
+        [85,{"3k":441,"5k":759,"10k":1587,"21k":3521,"42k":7397}]
+    ]);
+    const vo2Keys = Array.from(vo2ToRunTimesMap.keys());
+    const closestVo2 = vo2Keys.reduce((prev, curr) => Math.abs(curr - vo2max) < Math.abs(prev - vo2max) ? curr : prev);
+    return vo2ToRunTimesMap.get(closestVo2) || { note: "No data for this VO2max level." };
+}
+
+function estimateVo2max(hr) {
+    if (!hr || hr < 40) return null;
+    const vo2max = 30 + (hr - 60) * (30 / 130);
+    return Math.max(30, Math.min(60, vo2max));
+}
+
+function calculateFitnessScore(currentVo2, potentialVo2, theoreticalMaxVo2) {
+    if (!currentVo2 || !potentialVo2 || !theoreticalMaxVo2 || potentialVo2 <= 0 || theoreticalMaxVo2 <= 0) return null;
+    const ratio1 = currentVo2 / potentialVo2;
+    const ratio2 = potentialVo2 / theoreticalMaxVo2;
+    return (ratio1 + ratio2) / 2;
+}
+
+function getVo2maxRating(vo2max, age, gender) {
+    const scoreData = {
+        male: { "20-29": [[31,"Poor"],[35,"Fair"],[42,"Average"],[48,"Good"],[53,"Excellent"]], "30-39": [[29,"Poor"],[34,"Fair"],[40,"Average"],[45,"Good"],[51,"Excellent"]], "40-49": [[26,"Poor"],[31,"Fair"],[36,"Average"],[41,"Good"],[48,"Excellent"]], "50-99": [[24,"Poor"],[29,"Fair"],[34,"Average"],[39,"Good"],[45,"Excellent"]] },
+        female: { "20-29": [[26,"Poor"],[30,"Fair"],[35,"Average"],[40,"Good"],[44,"Excellent"]], "30-39": [[24,"Poor"],[28,"Fair"],[33,"Average"],[37,"Good"],[41,"Excellent"]], "40-49": [[21,"Poor"],[25,"Fair"],[30,"Average"],[34,"Good"],[38,"Excellent"]], "50-99": [[19,"Poor"],[23,"Fair"],[28,"Average"],[32,"Good"],[36,"Excellent"]] }
+    };
+    const genderKey = gender.toLowerCase();
+    const ageBrackets = Object.keys(scoreData[genderKey]);
+    let selectedBracketKey = ageBrackets[ageBrackets.length - 1];
+    for (const bracket of ageBrackets) {
+        const [minAge, maxAge] = bracket.split('-').map(Number);
+        if (age >= minAge && age <= maxAge) {
+            selectedBracketKey = bracket;
+            break;
+        }
+    }
+    const standards = scoreData[genderKey][selectedBracketKey];
+    for (const [maxScore, rating] of standards) {
+        if (vo2max <= maxScore) return rating;
+    }
+    return "Superior";
+}
+
+function getFitnessNote(score) {
+    if (score < 0.50) return "Not fit at all. Start training.";
+    if (score < 0.65) return "The minimum is there. Go/continue training.";
+    if (score < 0.75) return "You are pretty fit!";
+    if (score < 0.85) return "You are better than just fit!";
+    if (score < 0.95) return "You are an advanced athlete!";
+    return "You are the best you can be!";
+}
+
+function calculateVo2MaxPotential({ maxOxygenUptake, weightKg, fatPercentage }) {
+    if (weightKg <= 0) return 0;
+    return (2 * maxOxygenUptake * 1000 / weightKg) * (1 - (fatPercentage / 100));
+}
+
+function calculateVo2TheoreticalMax({ maxOxygenUptake, heightCm, gender }) {
+    const idealBmi = gender === 'male' ? 20.5 : 22.5;
+    const idealWeight = idealBmi * Math.pow(heightCm / 100, 2);
+    if (idealWeight <= 0) return 0;
+    return (2 * maxOxygenUptake * 1000) / idealWeight;
+}
+
+function calculateRespiratoryRate(durationSeconds, breaths) {
+    if (durationSeconds <= 0) {
+        return { bpm: 0, interpretation: 'Invalid duration' };
+    }
+    const bpm = (breaths / durationSeconds) * 60;
+    let interpretation = 'N/A';
+    if (bpm > 20) interpretation = 'Fast (potential stress/exertion)';
+    else if (bpm >= 12) interpretation = 'Normal (12-20 breaths/min)';
+    else if (bpm >= 8) interpretation = 'Slow (relaxed/trained)';
+    else interpretation = 'Very Slow (may indicate sleep/deep relaxation)';
+    return { bpm, interpretation };
+}
+
+function simulateBreathingFromRr(rrIntervals) {
+    if (!rrIntervals || rrIntervals.length === 0) {
+        return [];
+    }
+    const breathingWave = [];
+    for (const rr of rrIntervals) {
+        const hr = 60000 / rr;
+        let amplitude = hr * 4 - 200;
+        amplitude = Math.min(Math.max(amplitude, 20), 120);
+        breathingWave.push(amplitude);
+    }
+    return smooth(breathingWave, 5);
+}
+
+function estimateRpe({ currentHR, anaerobicThresholdHR, durationMinutes }) {
+    if (!currentHR || !anaerobicThresholdHR || !durationMinutes || anaerobicThresholdHR <= 0) {
+        return { rpe: null, intensity: 'Invalid input', percentAT: null };
+    }
+    const percentAT = (currentHR / anaerobicThresholdHR) * 100;
+    let baseRPE = 0, intensity = '';
+    if (percentAT < 50) { baseRPE = 1; intensity = "Very Light"; }
+    else if (percentAT < 60) { baseRPE = 2; intensity = "Light"; }
+    else if (percentAT < 70) { baseRPE = 4; intensity = "Moderate"; }
+    else if (percentAT < 80) { baseRPE = 6; intensity = "Vigorous"; }
+    else if (percentAT < 90) { baseRPE = 8; intensity = "Hard"; }
+    else { baseRPE = 10; intensity = "Maximal Effort"; }
+    let timeAdjustment = 0;
+    if (percentAT >= 90 && durationMinutes > 10) timeAdjustment = 2;
+    else if (percentAT >= 80 && durationMinutes > 20) timeAdjustment = 1;
+    else if (percentAT >= 70 && durationMinutes > 30) timeAdjustment = 1;
+    const rpe = Math.min(baseRPE + timeAdjustment, 10);
+    return { rpe, intensity, percentAT: parseFloat(percentAT.toFixed(1)) };
 }
